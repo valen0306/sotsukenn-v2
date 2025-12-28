@@ -1,0 +1,11 @@
+{
+  "name": "test1-fixture-phase2-ts2614",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

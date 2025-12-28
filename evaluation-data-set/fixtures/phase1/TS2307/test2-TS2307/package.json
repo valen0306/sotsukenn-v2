@@ -1,0 +1,11 @@
+{
+  "name": "test2-fixture-phase1-ts2307",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "test10-fixture-phase1-ts7016-downstream",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "fixture-lib-no-types": "file:../fixture-lib-no-types"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

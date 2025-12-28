@@ -1,0 +1,1 @@
+exports.g = (x) => x;

@@ -1,0 +1,1001 @@
+url	slug	skipped	skipReason	timedOut	exitCode	libraryCallLike	codeCount	codes
+https://github.com/BabylonJS/Babylon.js.git	BabylonJS__Babylon.js__7b02d284	False		False	2	True	25	TS1192;TS1203;TS1259;TS2307;TS2322;TS2339;TS2345;TS2511;TS2531;TS2540;TS2554;TS2694;TS2724;TS2732;TS2740;TS2769;TS4114;TS6053;TS6133;TS6196;TS7005;TS7006;TS7016;TS7030;TS7034
+https://github.com/BetterDiscord/BetterDiscord.git	BetterDiscord__BetterDiscord__1deb94c7	False		False	2	True	23	TS1804;TS2322;TS2339;TS2345;TS2349;TS2353;TS2362;TS2363;TS2409;TS2488;TS2532;TS2538;TS2554;TS2576;TS2683;TS2741;TS2769;TS6133;TS7005;TS7006;TS7031;TS7034;TS7053
+https://github.com/Bistutu/FluentRead.git	Bistutu__FluentRead__69bd9237	False		False	2	True	4	TS2304;TS2307;TS2322;TS7006
+https://github.com/CapSoftware/Cap.git	CapSoftware__Cap__2c5347de	False		False	2	True	1	TS2304
+https://github.com/DIYgod/RSSHub-Radar.git	DIYgod__RSSHub-Radar__2bfdfe01	False		False	2	True	3	TS2322;TS2339;TS2741
+https://github.com/DIYgod/RSSHub.git	DIYgod__RSSHub__52eac1f3	False		False	2	True	42	TS1192;TS1360;TS1804;TS2304;TS2305;TS2307;TS2322;TS2339;TS2344;TS2345;TS2349;TS2352;TS2353;TS2362;TS2363;TS2365;TS2366;TS2367;TS2488;TS2531;TS2532;TS2533;TS2538;TS2551;TS2552;TS2554;TS2555;TS2558;TS2561;TS2571;TS2614;TS2677;TS2683;TS2694;TS2698;TS2721;TS2739;TS2740;TS2741;TS2769;TS2790;TS2820
+https://github.com/DouyinFE/semi-design.git	DouyinFE__semi-design__acd1fc1c	False		False	2	True	23	TS2307;TS2322;TS2339;TS2345;TS2550;TS2551;TS2614;TS2694;TS2741;TS2769;TS7005;TS7006;TS7008;TS7011;TS7015;TS7016;TS7018;TS7019;TS7023;TS7030;TS7031;TS7034;TS7053
+https://github.com/EvolutionAPI/evolution-api.git	EvolutionAPI__evolution-api__df5f5cb3	False		False	2	True	3	TS2305;TS2339;TS2694
+https://github.com/FaridSafi/react-native-gifted-chat.git	FaridSafi__react-native-gifted-chat__6225b829	False		False	2	True	2	TS2322;TS2349
+https://github.com/FormidableLabs/victory.git	FormidableLabs__victory__20f1df79	False		False	2	True	12	TS2305;TS2307;TS2322;TS2339;TS2345;TS2353;TS2538;TS2578;TS2709;TS2722;TS2740;TS2786
+https://github.com/FullHuman/purgecss.git	FullHuman__purgecss__866cca31	False		False	2	True	5	TS1804;TS2307;TS2339;TS2430;TS7006
+https://github.com/Mail-0/Zero.git	Mail-0__Zero__28cb1ede	False		False	2	True	22	TS1205;TS1484;TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2347;TS2352;TS2353;TS2416;TS2554;TS2584;TS2693;TS2722;TS2739;TS2741;TS2769;TS7006;TS7031;TS7053
+https://github.com/MuiseDestiny/zotero-gpt.git	MuiseDestiny__zotero-gpt__1c3dc281	False		False	2	True	8	TS1804;TS2307;TS2339;TS2345;TS2365;TS7005;TS7006;TS7034
+https://github.com/NG-ZORRO/ng-zorro-antd.git	NG-ZORRO__ng-zorro-antd__245757b0	False		False	2	True	7	TS1005;TS1068;TS1128;TS1135;TS1136;TS1146;TS1434
+https://github.com/NangoHQ/nango.git	NangoHQ__nango__311f89c2	False		False	2	True	38	TS1700;TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2347;TS2351;TS2353;TS2366;TS2375;TS2379;TS2532;TS2538;TS2554;TS2571;TS2578;TS2584;TS2683;TS2698;TS2731;TS2740;TS2769;TS2812;TS2834;TS2835;TS4111;TS4112;TS5097;TS6133;TS6142;TS7006;TS7022;TS7027;TS7030;TS7031;TS7053
+https://github.com/Nutlope/llamacoder.git	Nutlope__llamacoder__9b809aa0	False		False	2	True	1	TS2307
+https://github.com/OpenCTI-Platform/opencti.git	OpenCTI-Platform__opencti__c0713082	False		False	2	True	1	TS2307
+https://github.com/QwikDev/qwik.git	QwikDev__qwik__2fe71fde	False		False	2	True	10	TS1804;TS2307;TS2322;TS2339;TS2525;TS2559;TS2683;TS7006;TS7031;TS7053
+https://github.com/Redocly/redoc.git	Redocly__redoc__34252cf6	False		False	2	True	5	TS1259;TS2300;TS2315;TS2403;TS2552
+https://github.com/Snouzy/workout-cool.git	Snouzy__workout-cool__30d7af52	False		False	2	True	1	TS2307
+https://github.com/Stability-AI/StableStudio.git	Stability-AI__StableStudio__9b3735b4	False		False	2	True	11	TS1700;TS2307;TS2322;TS2339;TS2345;TS2571;TS2794;TS6142;TS7006;TS7031;TS7053
+https://github.com/TahaSh/swapy.git	TahaSh__swapy__657f3668	False		False	2	True	1	TS2307
+https://github.com/TanStack/router.git	TanStack__router__0f35f271	False		False	2	True	2	TS7006;TS7053
+https://github.com/Vencord/Vesktop.git	Vencord__Vesktop__3c2481ba	False		False	2	True	1	TS2307
+https://github.com/Zettlr/Zettlr.git	Zettlr__Zettlr__150fb0bf	False		False	2	True	1	TS2307
+https://github.com/abhivaikar/howtheytest.git	abhivaikar__howtheytest__00437735	False		False	2	True	2	TS2304;TS2582
+https://github.com/afadil/wealthfolio.git	afadil__wealthfolio__6469bcb5	False		False	2	True	3	TS6305;TS7006;TS7031
+https://github.com/aidenybai/react-scan.git	aidenybai__react-scan__93be22b5	False		False	2	True	13	TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2694;TS2717;TS2769;TS2875;TS7006;TS7031;TS7053
+https://github.com/airbnb/react-sketchapp.git	airbnb__react-sketchapp__3bcaa222	False		False	1	True	1	TS2345
+https://github.com/ajayyy/SponsorBlock.git	ajayyy__SponsorBlock__5d5d205a	False		False	2	True	8	TS2304;TS2307;TS2322;TS2339;TS2554;TS2614;TS2687;TS2717
+https://github.com/akveo/nebular.git	akveo__nebular__2d179796	False		False	2	True	7	TS1003;TS1005;TS1109;TS1110;TS1128;TS1139;TS1434
+https://github.com/alibaba/formily.git	alibaba__formily__de0f81d8	False		False	2	True	12	TS2304;TS2307;TS2322;TS2339;TS2345;TS2551;TS2555;TS2584;TS2590;TS2693;TS2740;TS2812
+https://github.com/angular/angular-cli.git	angular__angular-cli__b212673a	False		False	2	True	16	TS1343;TS1378;TS1804;TS2304;TS2307;TS2322;TS2339;TS2349;TS2353;TS2536;TS2724;TS2731;TS5097;TS7006;TS7031;TS7053
+https://github.com/angular/angularfire.git	angular__angularfire__6c9b11cc	False		False	2	True	7	TS1503;TS2304;TS2307;TS2339;TS2345;TS2724;TS2769
+https://github.com/angular/components.git	angular__components__f1462eaa	False		False	2	True	7	TS2305;TS2307;TS2339;TS2451;TS4111;TS4114;TS7030
+https://github.com/antvis/G6.git	antvis__G6__beda9e98	False		False	2	True	23	TS1700;TS1804;TS2307;TS2322;TS2339;TS2345;TS2352;TS2353;TS2358;TS2365;TS2551;TS2554;TS2561;TS2578;TS2683;TS2722;TS2740;TS6142;TS7006;TS7016;TS7026;TS7031;TS7053
+https://github.com/anyproto/anytype-ts.git	anyproto__anytype-ts__f022bf79	False		False	2	True	3	TS2307;TS2430;TS2552
+https://github.com/apollographql/apollo-client.git	apollographql__apollo-client__1b10e474	False		False	0	True	1	TS2307
+https://github.com/aws-amplify/amplify-js.git	aws-amplify__amplify-js__b39a8679	False		False	2	True	35	TS1700;TS1804;TS2305;TS2307;TS2322;TS2339;TS2341;TS2344;TS2345;TS2352;TS2420;TS2454;TS2488;TS2531;TS2564;TS2578;TS2684;TS2739;TS2740;TS2741;TS2769;TS7005;TS7006;TS7008;TS7010;TS7015;TS7016;TS7019;TS7022;TS7023;TS7024;TS7031;TS7032;TS7034;TS7053
+https://github.com/babel/babel.git	babel__babel__9a66cb4a	False		False	2	True	4	TS2578;TS6305;TS7006;TS7031
+https://github.com/balena-io/etcher.git	balena-io__etcher__242c577b	False		False	2	True	11	TS1170;TS2304;TS2307;TS2322;TS2339;TS2344;TS2694;TS2769;TS6133;TS7016;TS7030
+https://github.com/barvian/number-flow.git	barvian__number-flow__c99bd048	False		False	2	True	11	TS1700;TS1804;TS2304;TS2307;TS2339;TS2614;TS6142;TS7006;TS7016;TS7031;TS7053
+https://github.com/ben-rogerson/twin.macro.git	ben-rogerson__twin.macro__0f2badcb	False		False	2	True	1	TS1005
+https://github.com/bepass-org/oblivion-desktop.git	bepass-org__oblivion-desktop__f43ecd4e	False		False	2	True	5	TS2345;TS2687;TS2689;TS2717;TS6200
+https://github.com/blitz-js/blitz.git	blitz-js__blitz__07419906	False		False	2	True	35	TS1056;TS1184;TS1208;TS1232;TS1252;TS1700;TS1802;TS2300;TS2304;TS2305;TS2307;TS2315;TS2322;TS2339;TS2345;TS2454;TS2472;TS2532;TS2540;TS2564;TS2571;TS2614;TS2664;TS2732;TS2769;TS2801;TS2802;TS6142;TS7005;TS7006;TS7017;TS7019;TS7031;TS7034;TS7053
+https://github.com/botpress/botpress.git	botpress__botpress__361cf283	False		False	2	True	37	TS1064;TS1241;TS1360;TS1378;TS1700;TS1804;TS2305;TS2307;TS2322;TS2339;TS2344;TS2345;TS2347;TS2352;TS2353;TS2420;TS2456;TS2488;TS2502;TS2532;TS2536;TS2538;TS2554;TS2664;TS2698;TS2700;TS2731;TS2741;TS2769;TS6133;TS6142;TS7006;TS7017;TS7022;TS7030;TS7031;TS7053
+https://github.com/browserbase/stagehand.git	browserbase__stagehand__9aeec529	False		False	2	True	6	TS2307;TS2322;TS2339;TS2345;TS2769;TS7006
+https://github.com/bytedance/UI-TARS-desktop.git	bytedance__UI-TARS-desktop__9f093b1f	False		False	2	True	40	TS1117;TS1804;TS2304;TS2305;TS2307;TS2314;TS2322;TS2339;TS2345;TS2347;TS2351;TS2352;TS2353;TS2367;TS2448;TS2454;TS2459;TS2503;TS2532;TS2538;TS2540;TS2551;TS2554;TS2571;TS2578;TS2604;TS2614;TS2677;TS2694;TS2722;TS2769;TS2786;TS4112;TS4114;TS6133;TS6138;TS6192;TS6196;TS6198;TS7030
+https://github.com/caorushizi/mediago.git	caorushizi__mediago__916470eb	False		False	2	True	10	TS1700;TS1804;TS2307;TS2339;TS2345;TS2531;TS6142;TS7006;TS7031;TS7053
+https://github.com/civitai/civitai.git	civitai__civitai__20eaa6d9	False		False	2	True	3	TS2307;TS7006;TS7031
+https://github.com/cline/cline.git	cline__cline__4537a5e8	False		False	2	True	7	TS1804;TS2307;TS2322;TS2525;TS2531;TS7006;TS7053
+https://github.com/colinhacks/zod.git	colinhacks__zod__50d76d66	False		False	2	True	5	TS1479;TS2307;TS6133;TS6196;TS7016
+https://github.com/colyseus/colyseus.git	colyseus__colyseus__567404a0	False		False	2	True	11	TS1176;TS2304;TS2305;TS2307;TS2339;TS2345;TS2460;TS2551;TS2552;TS2664;TS2740
+https://github.com/continuedev/continue.git	continuedev__continue__c3d6b79c	False		False	2	True	52	TS1039;TS1192;TS1251;TS1252;TS1259;TS1343;TS1378;TS1501;TS1503;TS1700;TS1802;TS2300;TS2304;TS2305;TS2307;TS2314;TS2318;TS2322;TS2339;TS2341;TS2345;TS2347;TS2353;TS2416;TS2461;TS2468;TS2469;TS2495;TS2503;TS2504;TS2550;TS2551;TS2554;TS2559;TS2580;TS2582;TS2583;TS2585;TS2617;TS2664;TS2687;TS2688;TS2698;TS2705;TS2712;TS2717;TS2720;TS2731;TS2739;TS2740;TS2741;TS6142
+https://github.com/cuixueshe/earthworm.git	cuixueshe__earthworm__f37116d1	False		False	2	True	42	TS1036;TS1039;TS1040;TS1046;TS1183;TS1206;TS1238;TS1240;TS1241;TS1254;TS1270;TS1804;TS1805;TS2304;TS2307;TS2321;TS2322;TS2339;TS2344;TS2345;TS2420;TS2428;TS2430;TS2536;TS2538;TS2551;TS2552;TS2564;TS2688;TS2694;TS2708;TS2717;TS2774;TS6133;TS6192;TS6200;TS7005;TS7006;TS7016;TS7031;TS7034;TS7053
+https://github.com/cyrildiagne/ar-cutpaste.git	cyrildiagne__ar-cutpaste__ce6796b4	False		False	1	True	5	TS2339;TS2345;TS2531;TS2551;TS2769
+https://github.com/darkroomengineering/lenis.git	darkroomengineering__lenis__7e3612d2	False		False	2	True	4	TS2307;TS2322;TS7006;TS7017
+https://github.com/dataelement/bisheng.git	dataelement__bisheng__b6d0f73f	False		False	2	True	25	TS1501;TS2300;TS2304;TS2305;TS2307;TS2322;TS2339;TS2345;TS2349;TS2353;TS2362;TS2365;TS2367;TS2461;TS2474;TS2538;TS2551;TS2554;TS2561;TS2698;TS2739;TS2740;TS2741;TS2769;TS2802
+https://github.com/developit/mitt.git	developit__mitt__e12bd9f4	False		False	2	True	3	TS2307;TS2578;TS7006
+https://github.com/dexie/Dexie.js.git	dexie__Dexie.js__ae4c1881	False		False	2	True	43	TS1259;TS1343;TS1700;TS1802;TS1804;TS2300;TS2304;TS2305;TS2307;TS2309;TS2314;TS2315;TS2320;TS2322;TS2339;TS2344;TS2347;TS2352;TS2374;TS2386;TS2403;TS2428;TS2430;TS2451;TS2493;TS2498;TS2538;TS2614;TS2649;TS2664;TS2687;TS2694;TS2698;TS2717;TS2720;TS2724;TS2732;TS2769;TS2786;TS2802;TS6053;TS6142;TS6200
+https://github.com/dilanx/craco.git	dilanx__craco__ac03f022	False		False	2	True	2	TS2307;TS7006
+https://github.com/drizzle-team/drizzle-orm.git	drizzle-team__drizzle-orm__cbcb9778	False		False	2	True	32	TS1166;TS1804;TS2304;TS2305;TS2307;TS2322;TS2339;TS2344;TS2345;TS2347;TS2349;TS2365;TS2454;TS2532;TS2536;TS2538;TS2551;TS2554;TS2564;TS2578;TS2769;TS4111;TS4112;TS4113;TS6053;TS7005;TS7006;TS7028;TS7030;TS7031;TS7036;TS7053
+https://github.com/egoist/tsup.git	egoist__tsup__1d8b7d89	False		False	2	True	1	TS2613
+https://github.com/electron/fiddle.git	electron__fiddle__2ec62d9f	False		False	2	True	1	TS2307
+https://github.com/element-hq/element-web.git	element-hq__element-web__da91ee16	False		False	2	True	2	TS2341;TS2540
+https://github.com/elie222/inbox-zero.git	elie222__inbox-zero__ff733a16	False		False	2	True	40	TS1036;TS1192;TS1259;TS1501;TS1700;TS1802;TS1804;TS2304;TS2305;TS2307;TS2308;TS2320;TS2322;TS2339;TS2344;TS2345;TS2353;TS2366;TS2416;TS2430;TS2488;TS2493;TS2503;TS2536;TS2550;TS2552;TS2554;TS2571;TS2578;TS2589;TS2607;TS2613;TS2694;TS2707;TS2717;TS2741;TS2769;TS2786;TS2802;TS6142
+https://github.com/elysiajs/elysia.git	elysiajs__elysia__b80fd587	False		False	2	True	8	TS2322;TS2339;TS2345;TS2558;TS2578;TS2769;TS7006;TS7031
+https://github.com/emilkowalski/sonner.git	emilkowalski__sonner__e5e36c19	False		False	2	True	1	TS2307
+https://github.com/enricoros/big-AGI.git	enricoros__big-AGI__3e5ce9f0	False		False	2	True	1	TS2307
+https://github.com/evershopcommerce/evershop.git	evershopcommerce__evershop__3e56f21a	False		False	2	True	7	TS2307;TS2322;TS2339;TS2352;TS2362;TS2363;TS2554
+https://github.com/fabricjs/fabric.js.git	fabricjs__fabric.js__91443006	False		False	2	True	1	TS2307
+https://github.com/faker-js/faker.git	faker-js__faker__08a4faf4	False		False	2	True	1	TS2307
+https://github.com/feathersjs/feathers.git	feathersjs__feathers__8e02e134	False		False	2	True	19	TS1343;TS2304;TS2305;TS2307;TS2339;TS2353;TS2551;TS2552;TS2554;TS2664;TS2732;TS2769;TS7005;TS7006;TS7010;TS7011;TS7016;TS7030;TS7031
+https://github.com/felixrieseberg/windows95.git	felixrieseberg__windows95__9ab28222	False		False	2	True	3	TS2322;TS2339;TS6133
+https://github.com/fkhadra/react-toastify.git	fkhadra__react-toastify__33d8b537	False		False	2	True	3	TS2307;TS2322;TS2739
+https://github.com/fmhy/edit.git	fmhy__edit__43d3a814	False		False	2	True	1	TS6133
+https://github.com/fonoster/fonoster.git	fonoster__fonoster__a5fa04a9	False		False	2	True	14	TS1343;TS1700;TS2304;TS2307;TS2322;TS2339;TS2367;TS2503;TS2554;TS2694;TS2698;TS2741;TS2745;TS6142
+https://github.com/formatjs/formatjs.git	formatjs__formatjs__ab6aae1b	False		False	2	True	1	TS1005
+https://github.com/formkit/auto-animate.git	formkit__auto-animate__eb9054e6	False		False	2	True	12	TS1700;TS2304;TS2305;TS2307;TS2315;TS2322;TS2440;TS2769;TS2786;TS7006;TS7016;TS7031
+https://github.com/fuma-nama/fumadocs.git	fuma-nama__fumadocs__5852ce9c	False		False	2	True	46	TS1192;TS1252;TS1259;TS1343;TS1378;TS1501;TS1503;TS1700;TS1802;TS2300;TS2304;TS2305;TS2307;TS2309;TS2320;TS2322;TS2339;TS2344;TS2345;TS2353;TS2370;TS2374;TS2386;TS2403;TS2416;TS2428;TS2430;TS2439;TS2495;TS2498;TS2503;TS2550;TS2578;TS2613;TS2664;TS2687;TS2688;TS2694;TS2720;TS2732;TS2739;TS2740;TS2741;TS2802;TS6142;TS6200
+https://github.com/getmaxun/maxun.git	getmaxun__maxun__c474b15f	False		False	2	True	2	TS2339;TS2540
+https://github.com/gitroomhq/postiz-app.git	gitroomhq__postiz-app__07a76f24	False		False	2	True	13	TS1700;TS2307;TS2339;TS2345;TS2554;TS2698;TS2769;TS6142;TS7006;TS7008;TS7010;TS7011;TS7018
+https://github.com/glideapps/quicktype.git	glideapps__quicktype__6c1a4ea1	False		False	2	True	7	TS1804;TS2307;TS2339;TS2353;TS2554;TS2769;TS7006
+https://github.com/google/A2UI.git	google__A2UI__6060af8e	False		False	2	True	1	TS2307
+https://github.com/graphql-hive/graphql-yoga.git	graphql-hive__graphql-yoga__d33038af	False		False	2	True	1	TS2307
+https://github.com/heyform/heyform.git	heyform__heyform__541d624d	False		False	2	True	7	TS2307;TS2322;TS2345;TS2503;TS2554;TS7006;TS7031
+https://github.com/highcharts/highcharts.git	highcharts__highcharts__17866136	False		False	2	True	24	TS1192;TS1259;TS1323;TS1343;TS2300;TS2307;TS2322;TS2339;TS2341;TS2345;TS2352;TS2353;TS2362;TS2367;TS2374;TS2409;TS2451;TS2503;TS2550;TS2694;TS2708;TS2719;TS2769;TS6053
+https://github.com/immutable-js/immutable-js.git	immutable-js__immutable-js__2c0a14fd	False		False	2	True	10	TS1005;TS1109;TS1128;TS1131;TS1434;TS8006;TS8008;TS8009;TS8010;TS8011
+https://github.com/jackocnr/intl-tel-input.git	jackocnr__intl-tel-input__edc84ed3	False		False	2	True	1	TS2307
+https://github.com/jestjs/jest.git	jestjs__jest__e74bf6c4	False		False	2	True	4	TS2307;TS2664;TS2683;TS7006
+https://github.com/jimp-dev/jimp.git	jimp-dev__jimp__ae3b1edd	False		False	2	True	12	TS1700;TS1804;TS2307;TS2344;TS2345;TS2358;TS2469;TS2578;TS2835;TS7006;TS7031;TS7053
+https://github.com/jnsahaj/tweakcn.git	jnsahaj__tweakcn__98080afc	False		False	2	True	1	TS2307
+https://github.com/joe-bell/cva.git	joe-bell__cva__754618e6	False		False	2	True	6	TS1343;TS1378;TS1700;TS2307;TS6142;TS7031
+https://github.com/kamranahmedse/developer-roadmap.git	kamranahmedse__developer-roadmap__2ae15a4d	False		False	2	True	9	TS2304;TS2307;TS2322;TS2345;TS2503;TS2554;TS2578;TS2769;TS7006
+https://github.com/latentcat/qrbtf.git	latentcat__qrbtf__643b3833	False		False	2	True	1	TS2307
+https://github.com/liupan1890/aliyunpan.git	liupan1890__aliyunpan__5b85eb18	False		False	2	True	1	TS2307
+https://github.com/logaretm/vee-validate.git	logaretm__vee-validate__c4ee3495	False		False	2	True	3	TS2307;TS2322;TS7006
+https://github.com/lucide-icons/lucide.git	lucide-icons__lucide__e44552d7	False		False	2	True	23	TS1206;TS1700;TS1804;TS2304;TS2305;TS2307;TS2322;TS2339;TS2345;TS2430;TS2488;TS2561;TS2571;TS2578;TS2582;TS2614;TS2769;TS2786;TS6142;TS7006;TS7016;TS7031;TS7053
+https://github.com/lyswhut/lx-music-desktop.git	lyswhut__lx-music-desktop__4ed8becc	False		False	2	True	9	TS1804;TS2307;TS2322;TS2339;TS2578;TS2724;TS7006;TS7031;TS7053
+https://github.com/lyswhut/lx-music-mobile.git	lyswhut__lx-music-mobile__17c4c345	False		False	2	True	3	TS2345;TS2558;TS2769
+https://github.com/mantinedev/mantine.git	mantinedev__mantine__860a9b6f	False		False	2	True	6	TS2307;TS2322;TS2339;TS7006;TS7031;TS7053
+https://github.com/marmelab/react-admin.git	marmelab__react-admin__8cae5159	False		False	2	True	23	TS1343;TS1378;TS1503;TS2305;TS2307;TS2322;TS2339;TS2345;TS2347;TS2349;TS2353;TS2456;TS2551;TS2554;TS2555;TS2559;TS2578;TS2686;TS2732;TS2739;TS2741;TS2769;TS2802
+https://github.com/material-components/material-web.git	material-components__material-web__5640eb58	False		False	2	True	1	TS2307
+https://github.com/mattermost-community/focalboard.git	mattermost-community__focalboard__029d9994	False		False	2	True	6	TS2305;TS2339;TS2403;TS2451;TS2551;TS7006
+https://github.com/mckaywrigley/chatbot-ui.git	mckaywrigley__chatbot-ui__22b88ade	False		False	2	True	2	TS2307;TS7031
+https://github.com/mermaid-js/mermaid.git	mermaid-js__mermaid__c0535d5c	False		False	2	True	13	TS1804;TS2339;TS2345;TS2349;TS2351;TS2531;TS2551;TS2578;TS2835;TS5097;TS7006;TS7016;TS7053
+https://github.com/mfts/papermark.git	mfts__papermark__bb6300a1	False		False	2	True	1	TS2307
+https://github.com/microsoft/playwright.git	microsoft__playwright__afe54cbe	False		False	2	True	9	TS1804;TS2307;TS2339;TS2366;TS2503;TS2749;TS7006;TS7016;TS7019
+https://github.com/midwayjs/midway.git	midwayjs__midway__558f91dc	False		False	2	True	19	TS1259;TS1700;TS2305;TS2307;TS2322;TS2339;TS2345;TS2352;TS2353;TS2367;TS2416;TS2459;TS2540;TS2551;TS2554;TS2694;TS2698;TS2769;TS6142
+https://github.com/mikro-orm/mikro-orm.git	mikro-orm__mikro-orm__4c25f1cb	False		False	2	True	6	TS1206;TS1238;TS1240;TS1241;TS1270;TS4114
+https://github.com/mobxjs/mobx-state-tree.git	mobxjs__mobx-state-tree__54dec6bf	False		False	2	True	2	TS2345;TS2578
+https://github.com/mobxjs/mobx.git	mobxjs__mobx__8ce29c4d	False		False	2	True	5	TS1240;TS1271;TS2307;TS6133;TS6196
+https://github.com/mockoon/mockoon.git	mockoon__mockoon__2927d2c3	False		False	2	True	19	TS1802;TS1804;TS2300;TS2304;TS2307;TS2322;TS2339;TS2345;TS2353;TS2367;TS2454;TS2493;TS2531;TS2532;TS2550;TS2571;TS2581;TS2769;TS7030
+https://github.com/mountain-loop/yaak.git	mountain-loop__yaak__3aef1f9d	False		False	2	True	6	TS2305;TS2307;TS2322;TS2347;TS7006;TS7031
+https://github.com/musistudio/claude-code-router.git	musistudio__claude-code-router__12fc499b	False		False	2	True	9	TS2307;TS2339;TS2344;TS2345;TS2794;TS7005;TS7006;TS7016;TS7034
+https://github.com/nat/openplayground.git	nat__openplayground__f08ea5f9	False		False	2	True	22	TS1804;TS2300;TS2304;TS2307;TS2322;TS2339;TS2345;TS2349;TS2353;TS2362;TS2363;TS2552;TS2741;TS2769;TS2802;TS7005;TS7006;TS7016;TS7019;TS7031;TS7034;TS7053
+https://github.com/ng-bootstrap/ng-bootstrap.git	ng-bootstrap__ng-bootstrap__68024f9b	False		False	2	True	9	TS1804;TS2307;TS2322;TS2339;TS2345;TS2378;TS2454;TS2532;TS2769
+https://github.com/ngrx/platform.git	ngrx__platform__7f5d6d68	False		False	2	True	42	TS1804;TS2300;TS2304;TS2305;TS2307;TS2314;TS2321;TS2322;TS2339;TS2345;TS2352;TS2374;TS2386;TS2403;TS2416;TS2428;TS2430;TS2451;TS2484;TS2488;TS2493;TS2503;TS2551;TS2559;TS2564;TS2571;TS2687;TS2717;TS2720;TS2721;TS2722;TS2724;TS2741;TS2769;TS4114;TS7005;TS7006;TS7008;TS7015;TS7016;TS7034;TS7053
+https://github.com/nitrojs/nitro.git	nitrojs__nitro__29750a4a	False		False	2	True	12	TS1804;TS2307;TS2322;TS2339;TS2345;TS2578;TS2664;TS2698;TS2769;TS7006;TS7031;TS7053
+https://github.com/noodle-run/noodle.git	noodle-run__noodle__e06a8d72	False		False	2	True	1	TS2724
+https://github.com/nuxt/nuxt.git	nuxt__nuxt__1d6d0b1f	False		False	2	True	13	TS1804;TS2305;TS2307;TS2339;TS2345;TS2571;TS2578;TS2677;TS2698;TS2731;TS7006;TS7031;TS7053
+https://github.com/oldj/SwitchHosts.git	oldj__SwitchHosts__02b6a5c2	False		False	2	True	3	TS2307;TS2411;TS7016
+https://github.com/openai/openai-node.git	openai__openai-node__300585b0	False		False	2	True	1	TS2307
+https://github.com/openapi-ts/openapi-typescript.git	openapi-ts__openapi-typescript__492497a4	False		False	2	True	31	TS1206;TS1238;TS1240;TS1241;TS1270;TS1294;TS1700;TS1804;TS2300;TS2304;TS2307;TS2315;TS2320;TS2322;TS2339;TS2344;TS2345;TS2349;TS2425;TS2554;TS2578;TS2582;TS2584;TS2611;TS2693;TS2694;TS2717;TS2834;TS2835;TS7016;TS7031
+https://github.com/ourongxing/newsnow.git	ourongxing__newsnow__4500b715	False		False	2	True	5	TS2304;TS2322;TS2552;TS7006;TS7031
+https://github.com/pavlobu/deskreen.git	pavlobu__deskreen__b40cb4d2	False		False	2	True	2	TS2307;TS7016
+https://github.com/pear-devs/pear-desktop.git	pear-devs__pear-desktop__7c7216f7	False		False	2	True	2	TS2345;TS2503
+https://github.com/photoview/photoview.git	photoview__photoview__d5c63cee	False		False	2	True	6	TS2307;TS2322;TS2339;TS2344;TS2739;TS7031
+https://github.com/plouc/nivo.git	plouc__nivo__ee7146a0	False		False	2	True	1	TS2307
+https://github.com/pmndrs/react-spring.git	pmndrs__react-spring__74879af4	False		False	2	True	15	TS1804;TS2307;TS2322;TS2339;TS2344;TS2345;TS2349;TS2362;TS2556;TS2571;TS2578;TS7006;TS7019;TS7031;TS7053
+https://github.com/popcorntime/popcorntime.git	popcorntime__popcorntime__40178716	False		False	2	True	14	TS1700;TS1804;TS2307;TS2339;TS2345;TS2532;TS2538;TS2554;TS2740;TS2769;TS2835;TS6142;TS7006;TS7053
+https://github.com/prevwong/craft.js.git	prevwong__craft.js__0fd93522	False		False	2	True	4	TS2307;TS2322;TS2339;TS2686
+https://github.com/primefaces/primeng.git	primefaces__primeng__3ddde67a	False		False	2	True	1	TS2352
+https://github.com/prisma/prisma.git	prisma__prisma__babb673c	False		False	2	True	18	TS1700;TS1804;TS2300;TS2304;TS2305;TS2307;TS2322;TS2344;TS2345;TS2349;TS2353;TS2503;TS2551;TS2552;TS2554;TS2578;TS2741;TS7030
+https://github.com/pubkey/rxdb.git	pubkey__rxdb__7e2941a9	False		False	2	True	9	TS1804;TS2305;TS2339;TS2345;TS2571;TS2578;TS7006;TS7023;TS7031
+https://github.com/react-cosmos/react-cosmos.git	react-cosmos__react-cosmos__f2b768e0	False		False	2	True	7	TS1804;TS2305;TS2307;TS2339;TS2345;TS7006;TS7031
+https://github.com/refinedev/refine.git	refinedev__refine__f52aa04a	False		False	2	True	22	TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2366;TS2454;TS2503;TS2532;TS2538;TS2540;TS2554;TS2686;TS2769;TS2783;TS2802;TS7006;TS7016;TS7030;TS7031;TS7053
+https://github.com/remotely-save/remotely-save.git	remotely-save__remotely-save__1521c158	False		False	2	True	8	TS2307;TS2322;TS2345;TS2374;TS2403;TS2717;TS2769;TS6200
+https://github.com/retorquere/zotero-better-bibtex.git	retorquere__zotero-better-bibtex__42be9f8d	False		False	2	True	5	TS2307;TS2322;TS2339;TS2345;TS2578
+https://github.com/sass/sass.git	sass__sass__9afad7a9	False		False	2	True	1	TS2307
+https://github.com/scalar/scalar.git	scalar__scalar__7323aa93	False		False	2	True	32	TS1241;TS1270;TS1700;TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2349;TS2352;TS2353;TS2532;TS2538;TS2552;TS2554;TS2564;TS2578;TS2582;TS2614;TS2698;TS2731;TS2739;TS2740;TS2769;TS2790;TS4112;TS6142;TS7006;TS7016;TS7031;TS7053
+https://github.com/sequelize/sequelize.git	sequelize__sequelize__29a1f2ab	False		False	2	True	23	TS1240;TS1241;TS1804;TS2307;TS2322;TS2339;TS2345;TS2351;TS2353;TS2375;TS2488;TS2551;TS2554;TS2559;TS2578;TS2700;TS2722;TS2769;TS4112;TS7006;TS7019;TS7031;TS7053
+https://github.com/shadcn-ui/ui.git	shadcn-ui__ui__1fe2ad8b	False		False	1	True	8	TS1804;TS2307;TS2322;TS2345;TS2538;TS2571;TS7006;TS7053
+https://github.com/shikijs/shiki.git	shikijs__shiki__5ec6318f	False		False	2	True	1	TS2307
+https://github.com/shoelace-style/shoelace.git	shoelace-style__shoelace__50e03c98	False		False	2	True	6	TS1804;TS2307;TS2339;TS2741;TS2769;TS7006
+https://github.com/signalapp/Signal-Desktop.git	signalapp__Signal-Desktop__bae0c844	False		False	2	True	12	TS2307;TS2322;TS2345;TS2352;TS2367;TS2538;TS2559;TS2731;TS2739;TS2769;TS7006;TS7031
+https://github.com/slab/quill.git	slab__quill__1e3d7c29	False		False	2	True	2	TS2307;TS2417
+https://github.com/slidevjs/slidev.git	slidevjs__slidev__a13f77c8	False		False	2	True	2	TS1005;TS1134
+https://github.com/software-mansion/react-native-gesture-handler.git	software-mansion__react-native-gesture-handler__48843dbc	False		False	2	True	12	TS1804;TS2307;TS2322;TS2345;TS2503;TS2532;TS2564;TS2722;TS2769;TS6133;TS7006;TS7031
+https://github.com/software-mansion/react-native-reanimated.git	software-mansion__react-native-reanimated__d73707cd	False		False	2	True	29	TS1804;TS2307;TS2322;TS2339;TS2345;TS2351;TS2353;TS2403;TS2503;TS2531;TS2538;TS2551;TS2554;TS2578;TS2739;TS2740;TS2741;TS2769;TS2774;TS2776;TS7005;TS7006;TS7008;TS7016;TS7019;TS7023;TS7031;TS7034;TS7053
+https://github.com/stagewise-io/stagewise.git	stagewise-io__stagewise__82685396	False		False	2	True	2	TS2307;TS7006
+https://github.com/stalniy/casl.git	stalniy__casl__e1a658c7	False		False	2	True	10	TS1206;TS1700;TS2304;TS2307;TS2582;TS2769;TS7005;TS7006;TS7016;TS7034
+https://github.com/stenciljs/core.git	stenciljs__core__7072e426	False		False	2	True	5	TS2305;TS2497;TS2554;TS2578;TS4112
+https://github.com/streetwriters/notesnook.git	streetwriters__notesnook__9242af03	False		False	2	True	36	TS1378;TS1700;TS1804;TS2300;TS2304;TS2307;TS2322;TS2339;TS2345;TS2349;TS2352;TS2353;TS2420;TS2451;TS2504;TS2538;TS2551;TS2554;TS2578;TS2582;TS2687;TS2698;TS2717;TS2722;TS2731;TS2739;TS2741;TS2769;TS2786;TS4112;TS5097;TS6142;TS7006;TS7016;TS7031;TS7053
+https://github.com/the1812/Bilibili-Evolved.git	the1812__Bilibili-Evolved__132e9ed3	False		False	2	True	1	TS2307
+https://github.com/thedotmack/claude-mem.git	thedotmack__claude-mem__b8da1063	False		False	2	True	9	TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2584;TS2812;TS7006
+https://github.com/timlrx/tailwind-nextjs-starter-blog.git	timlrx__tailwind-nextjs-starter-blog__44ccdce5	False		False	2	True	2	TS2307;TS2339
+https://github.com/toss/es-toolkit.git	toss__es-toolkit__364757b7	False		False	2	True	8	TS2304;TS2307;TS2339;TS2552;TS2578;TS2580;TS7006;TS7031
+https://github.com/total-typescript/beginners-typescript-tutorial.git	total-typescript__beginners-typescript-tutorial__a99e58f5	False		False	2	True	10	TS1064;TS1804;TS2339;TS2344;TS2345;TS2554;TS2578;TS2739;TS7006;TS7053
+https://github.com/tradingview/lightweight-charts.git	tradingview__lightweight-charts__0cfb3123	False		False	2	True	1	TS7016
+https://github.com/triggerdotdev/jsonhero-web.git	triggerdotdev__jsonhero-web__235de0ea	False		False	2	True	1	TS2307
+https://github.com/tsparticles/tsparticles.git	tsparticles__tsparticles__32fc7ab6	False		False	2	True	8	TS2307;TS2322;TS2339;TS2345;TS2538;TS2550;TS7006;TS7015
+https://github.com/tutao/tutanota.git	tutao__tutanota__500f9e3e	False		False	2	True	14	TS1804;TS2307;TS2322;TS2339;TS2345;TS2366;TS2531;TS2538;TS2551;TS2571;TS2769;TS7006;TS7031;TS7053
+https://github.com/type-challenges/type-challenges.git	type-challenges__type-challenges__fbeeb66c	False		False	2	True	13	TS1804;TS2300;TS2304;TS2314;TS2315;TS2339;TS2344;TS2345;TS2558;TS2578;TS6133;TS6205;TS7023
+https://github.com/typestack/class-validator.git	typestack__class-validator__2ef13d25	False		False	2	True	6	TS1804;TS2322;TS2345;TS2454;TS2564;TS2769
+https://github.com/uber/baseweb.git	uber__baseweb__75ce90aa	False		False	2	True	11	TS2304;TS2305;TS2322;TS2339;TS2344;TS2345;TS2365;TS2554;TS2559;TS2582;TS2694
+https://github.com/ueberdosis/tiptap.git	ueberdosis__tiptap__f9710003	False		False	2	True	30	TS1479;TS1541;TS1804;TS2300;TS2305;TS2307;TS2320;TS2322;TS2339;TS2344;TS2345;TS2349;TS2353;TS2416;TS2428;TS2430;TS2451;TS2484;TS2554;TS2571;TS2590;TS2717;TS2834;TS2875;TS7006;TS7016;TS7022;TS7023;TS7031;TS7053
+https://github.com/umami-software/umami.git	umami-software__umami__03f35764	False		False	2	True	5	TS2305;TS2307;TS2322;TS2339;TS2345
+https://github.com/umijs/qiankun.git	umijs__qiankun__9f53e952	False		False	2	True	13	TS1700;TS2300;TS2307;TS2320;TS2353;TS2417;TS2430;TS2590;TS2687;TS2717;TS6133;TS6142;TS7006
+https://github.com/unjs/consola.git	unjs__consola__126ea75e	False		False	2	True	1	TS2307
+https://github.com/usememos/memos.git	usememos__memos__7fe5e072	False		False	2	True	2	TS1203;TS2307
+https://github.com/vanilla-extract-css/vanilla-extract.git	vanilla-extract-css__vanilla-extract__f8b6e1c6	False		False	2	True	13	TS1804;TS2307;TS2322;TS2339;TS2345;TS2353;TS2430;TS2578;TS2731;TS2769;TS7006;TS7031;TS7053
+https://github.com/vendure-ecommerce/vendure.git	vendure-ecommerce__vendure__b6b29107	False		False	2	True	53	TS1501;TS1700;TS1804;TS2300;TS2304;TS2305;TS2307;TS2315;TS2322;TS2339;TS2341;TS2345;TS2352;TS2353;TS2358;TS2362;TS2366;TS2416;TS2420;TS2454;TS2488;TS2493;TS2503;TS2533;TS2538;TS2551;TS2554;TS2559;TS2571;TS2584;TS2664;TS2693;TS2694;TS2708;TS2724;TS2731;TS2739;TS2740;TS2741;TS2769;TS2783;TS2835;TS6142;TS7006;TS7008;TS7010;TS7016;TS7017;TS7019;TS7023;TS7024;TS7031;TS7053
+https://github.com/vercel/next-forge.git	vercel__next-forge__2a20c561	False		False	2	True	20	TS1309;TS1700;TS1804;TS2304;TS2305;TS2307;TS2322;TS2339;TS2345;TS2353;TS2724;TS2741;TS2769;TS2783;TS2835;TS2856;TS6142;TS7006;TS7026;TS7031
+https://github.com/visgl/deck.gl.git	visgl__deck.gl__9be3ede6	False		False	2	True	36	TS1804;TS2305;TS2307;TS2314;TS2322;TS2339;TS2341;TS2345;TS2348;TS2349;TS2353;TS2416;TS2420;TS2445;TS2454;TS2511;TS2531;TS2532;TS2538;TS2551;TS2554;TS2561;TS2564;TS2571;TS2578;TS2686;TS2698;TS2721;TS2722;TS2724;TS2739;TS2740;TS2741;TS2769;TS2786;TS2794
+https://github.com/vitest-dev/vitest.git	vitest-dev__vitest__45855739	False		False	2	True	6	TS2305;TS2307;TS2322;TS2339;TS4112;TS7006
+https://github.com/vuejs/language-tools.git	vuejs__language-tools__6abbdd15	False		False	2	True	3	TS6305;TS7006;TS7031
+https://github.com/vuejs/vitepress.git	vuejs__vitepress__3822eab2	False		False	2	True	9	TS1804;TS2304;TS2305;TS2307;TS2339;TS2582;TS2724;TS7006;TS7031
+https://github.com/vueuse/vueuse.git	vueuse__vueuse__48b824ad	False		False	2	True	1	TS2307
+https://github.com/webclipper/web-clipper.git	webclipper__web-clipper__a6d942f1	False		False	2	True	24	TS1804;TS2300;TS2304;TS2314;TS2315;TS2320;TS2322;TS2323;TS2339;TS2344;TS2345;TS2353;TS2403;TS2416;TS2420;TS2550;TS2560;TS2582;TS2694;TS2717;TS6133;TS7006;TS7016;TS7057
+https://github.com/webdriverio/webdriverio.git	webdriverio__webdriverio__e1947c99	False		False	2	True	55	TS1470;TS1700;TS1804;TS2300;TS2304;TS2305;TS2307;TS2322;TS2339;TS2341;TS2344;TS2345;TS2349;TS2352;TS2353;TS2362;TS2403;TS2411;TS2451;TS2503;TS2532;TS2538;TS2551;TS2554;TS2559;TS2564;TS2578;TS2683;TS2684;TS2688;TS2698;TS2717;TS2731;TS2739;TS2740;TS2741;TS2769;TS2786;TS2790;TS2794;TS2835;TS2856;TS5097;TS6053;TS6142;TS6229;TS7005;TS7006;TS7008;TS7016;TS7017;TS7026;TS7031;TS7034;TS7053
+https://github.com/webiny/webiny-js.git	webiny__webiny-js__f09a8264	False		False	2	True	35	TS1064;TS1804;TS2304;TS2305;TS2307;TS2308;TS2322;TS2339;TS2344;TS2345;TS2347;TS2353;TS2366;TS2540;TS2551;TS2552;TS2554;TS2571;TS2578;TS2664;TS2677;TS2698;TS2719;TS2731;TS2739;TS2740;TS2741;TS2769;TS4112;TS4113;TS7006;TS7019;TS7023;TS7031;TS7053
+https://github.com/whyour/qinglong.git	whyour__qinglong__7e078a90	False		False	2	True	14	TS1804;TS2305;TS2307;TS2315;TS2322;TS2344;TS2345;TS2403;TS2532;TS2551;TS2694;TS2739;TS7006;TS7016
+https://github.com/withastro/astro.git	withastro__astro__2cecd22e	False		False	2	True	55	TS1055;TS1192;TS1251;TS1252;TS1259;TS1343;TS1378;TS1501;TS1700;TS1802;TS2300;TS2304;TS2305;TS2307;TS2322;TS2339;TS2344;TS2345;TS2347;TS2349;TS2352;TS2374;TS2416;TS2420;TS2430;TS2439;TS2451;TS2456;TS2461;TS2495;TS2503;TS2515;TS2536;TS2538;TS2550;TS2552;TS2554;TS2559;TS2578;TS2677;TS2688;TS2694;TS2709;TS2717;TS2724;TS2732;TS2741;TS2749;TS2769;TS2786;TS2802;TS5097;TS6053;TS6142;TS6200
+https://github.com/xitanggg/open-resume.git	xitanggg__open-resume__0dc4f75b	False		False	2	True	1	TS2307
+https://github.com/yamadashy/repomix.git	yamadashy__repomix__168c95fe	False		False	2	True	1	TS1501
+https://github.com/yarnpkg/berry.git	yarnpkg__berry__ae65bc8a	False		False	2	True	27	TS1804;TS2304;TS2307;TS2322;TS2339;TS2345;TS2347;TS2349;TS2354;TS2503;TS2538;TS2551;TS2554;TS2571;TS2578;TS2580;TS2582;TS2584;TS2664;TS2698;TS2700;TS2741;TS2769;TS7006;TS7019;TS7031;TS7053
+https://github.com/yikart/AiToEarn.git	yikart__AiToEarn__1af51839	False		False	2	True	1	TS2307
+https://github.com/youzan/vant.git	youzan__vant__0da9a63e	False		False	2	True	19	TS1378;TS1804;TS2300;TS2304;TS2307;TS2315;TS2322;TS2339;TS2345;TS2349;TS2352;TS2353;TS2503;TS2551;TS2582;TS2774;TS7006;TS7016;TS7031
+https://github.com/GoogleChromeLabs/comlink.git	GoogleChromeLabs__comlink__abb4cea1	False		False	2	False	8	TS1165;TS1169;TS2304;TS2339;TS2430;TS2502;TS2726;TS5084
+https://github.com/Kilo-Org/kilocode.git	Kilo-Org__kilocode__ff12d91d	False		False	2	False	1	TS1800
+https://github.com/OneUptime/oneuptime.git	OneUptime__oneuptime__f94c1ca4	False		False	2	False	1	TS2688
+https://github.com/Portkey-AI/gateway.git	Portkey-AI__gateway__00a0f291	False		False	2	False	1	TS2339
+https://github.com/QwenLM/qwen-code.git	QwenLM__qwen-code__5ad23f0e	False		False	2	False	7	TS1804;TS2322;TS2345;TS2578;TS6305;TS7006;TS7053
+https://github.com/RooCodeInc/Roo-Code.git	RooCodeInc__Roo-Code__7901e559	False		False	2	False	1	TS1800
+https://github.com/alibaba/lowcode-engine.git	alibaba__lowcode-engine__d9605460	False		False	2	False	4	TS1005;TS1109;TS1128;TS1359
+https://github.com/anus-dev/ANUS.git	anus-dev__ANUS__3d07f307	False		False	2	False	7	TS1804;TS2322;TS2339;TS4112;TS6305;TS7006;TS7053
+https://github.com/cookpete/react-player.git	cookpete__react-player__d5acaa29	False		False	2	False	1	TS5053
+https://github.com/google-gemini/gemini-cli.git	google-gemini__gemini-cli__9ad5ce51	False		False	2	False	10	TS1804;TS2322;TS2339;TS2345;TS2698;TS4112;TS6305;TS7006;TS7031;TS7053
+https://github.com/gridstack/gridstack.js.git	gridstack__gridstack.js__cbddb1a0	False		False	2	False	6	TS2322;TS2339;TS2352;TS2445;TS2511;TS2741
+https://github.com/huggingface/chat-ui.git	huggingface__chat-ui__acd6fb9a	False		False	2	False	2	TS5070;TS5083
+https://github.com/ianstormtaylor/superstruct.git	ianstormtaylor__superstruct__5fce19d5	False		False	2	False	1	TS2726
+https://github.com/interstellard/chatgpt-advanced.git	interstellard__chatgpt-advanced__47dc5b5b	False		False	2	False	2	TS1005;TS1136
+https://github.com/javascript-obfuscator/javascript-obfuscator.git	javascript-obfuscator__javascript-obfuscator__9403ecac	False		False	2	False	1	TS2430
+https://github.com/kulshekhar/ts-jest.git	kulshekhar__ts-jest__0e537b86	False		False	2	False	2	TS5095;TS5109
+https://github.com/mcp-use/mcp-use.git	mcp-use__mcp-use__7ab959a2	False		False	2	False	1	TS6305
+https://github.com/mlc-ai/web-llm.git	mlc-ai__web-llm__e77ccb8b	False		False	2	False	12	TS1165;TS1169;TS2300;TS2304;TS2320;TS2339;TS2374;TS2403;TS2687;TS2717;TS2726;TS6200
+https://github.com/novuhq/novu.git	novuhq__novu__91d37555	False		False	2	False	1	TS1005
+https://github.com/payloadcms/payload.git	payloadcms__payload__380405ca	False		False	2	False	1	TS6059
+https://github.com/siyuan-note/siyuan.git	siyuan-note__siyuan__408c8d55	False		False	2	False	1	TS5053
+https://github.com/thx/rap2-delos.git	thx__rap2-delos__86dce699	False		False	1	False	6	TS1005;TS1109;TS1110;TS1128;TS1135;TS1160
+https://github.com/timolins/react-hot-toast.git	timolins__react-hot-toast__3bd2358e	False		False	2	False	1	TS6059
+https://github.com/tremorlabs/tremor-npm.git	tremorlabs__tremor-npm__efaf634a	False		False	2	False	1	TS5053
+https://github.com/tsconfig/bases.git	tsconfig__bases__b8f848fe	False		False	2	False	1	TS6053
+https://github.com/vuetifyjs/vuetify.git	vuetifyjs__vuetify__00d6cdf0	False		False	2	False	1	TS2688
+https://github.com/wechaty/wechaty.git	wechaty__wechaty__b2930319	False		False	2	False	1	TS5102
+https://github.com/witheve/Eve.git	witheve__Eve__96a1309d	False		False	2	False	1	TS1084
+https://github.com/wix/react-native-ui-lib.git	wix__react-native-ui-lib__8930f1ab	False		False	2	False	1	TS5053
+https://github.com/xojs/xo.git	xojs__xo__4d117968	False		False	1	False	5	TS1804;TS2578;TS2698;TS4111;TS7053
+https://github.com/yang991178/fluent-reader.git	yang991178__fluent-reader__b4392892	False		False	2	False	7	TS2300;TS2313;TS2315;TS2344;TS2456;TS2536;TS2717
+https://github.com/7kms/react-illustration-series.git	7kms__react-illustration-series__2d954239	False		False	1	False	0	
+https://github.com/AIsouler/GKD_subscription.git	AIsouler__GKD_subscription__11862809	False		False	0	False	0	
+https://github.com/APIs-guru/graphql-voyager.git	APIs-guru__graphql-voyager__943c6fcc	False		False	0	False	0	
+https://github.com/AmruthPillai/Reactive-Resume.git	AmruthPillai__Reactive-Resume__fd3589c1	False		False	1	False	0	
+https://github.com/AykutSarac/jsoncrack.com.git	AykutSarac__jsoncrack.com__e57639a6	False		False	0	False	0	
+https://github.com/BartoszJarocki/cv.git	BartoszJarocki__cv__b4ee55ee	False		False	1	False	0	
+https://github.com/BishopFox/unredacter.git	BishopFox__unredacter__1b2daaf1	False		False	1	False	0	
+https://github.com/Blazity/next-enterprise.git	Blazity__next-enterprise__c79e2106	False		False	1	False	0	
+https://github.com/BrainJS/brain.js.git	BrainJS__brain.js__7dc658a0	False		False	1	False	0	
+https://github.com/Budibase/budibase.git	Budibase__budibase__7895df97	False		False	1	False	0	
+https://github.com/BuilderIO/gpt-crawler.git	BuilderIO__gpt-crawler__bbaf256c	False		False	0	False	0	
+https://github.com/BuilderIO/mitosis.git	BuilderIO__mitosis__61a24da5	False		False	0	False	0	
+https://github.com/C4illin/ConvertX.git	C4illin__ConvertX__42f50470	False		False	0	False	0	
+https://github.com/Canner/WrenAI.git	Canner__WrenAI__7cc42753	False		False	1	False	0	
+https://github.com/ChatAnyTeam/ChatAny.git	ChatAnyTeam__ChatAny__b396e6e2	False		False	0	False	0	
+https://github.com/ChatGPTNextWeb/NextChat.git	ChatGPTNextWeb__NextChat__a99407ca	False		False	0	False	0	
+https://github.com/CherryHQ/cherry-studio.git	CherryHQ__cherry-studio__6060aca4	False		False	1	False	0	
+https://github.com/Chocobozzz/PeerTube.git	Chocobozzz__PeerTube__9804cecf	False		False	1	False	0	
+https://github.com/ChromeDevTools/chrome-devtools-mcp.git	ChromeDevTools__chrome-devtools-mcp__a67bb8d2	False		False	1	False	0	
+https://github.com/Comcast/react-data-grid.git	Comcast__react-data-grid__071de89e	False		False	0	False	0	
+https://github.com/ComposioHQ/composio.git	ComposioHQ__composio__729b258f	False		False	0	False	0	
+https://github.com/CopyTranslator/CopyTranslator.git	CopyTranslator__CopyTranslator__300941cc	False		False		False	0	
+https://github.com/DayuanJiang/next-ai-draw-io.git	DayuanJiang__next-ai-draw-io__b3a404e8	False		False	0	False	0	
+https://github.com/DefinitelyTyped/DefinitelyTyped.git	DefinitelyTyped__DefinitelyTyped__897b7a16	False		False	-1	False	0	
+https://github.com/DylanVann/react-native-fast-image.git	DylanVann__react-native-fast-image__5c31a1c6	False		False	1	False	0	
+https://github.com/EcoPasteHub/EcoPaste.git	EcoPasteHub__EcoPaste__d0b5c637	False		False	0	False	0	
+https://github.com/Effect-TS/effect.git	Effect-TS__effect__4543fe55	False		False	0	False	0	
+https://github.com/Eugeny/tabby.git	Eugeny__tabby__7cff4a6d	False		False	1	False	0	
+https://github.com/EutropicAI/Final2x.git	EutropicAI__Final2x__6885a811	False		False	0	False	0	
+https://github.com/Fission-AI/OpenSpec.git	Fission-AI__OpenSpec__aab5296b	False		False	0	False	0	
+https://github.com/FormidableLabs/spectacle.git	FormidableLabs__spectacle__4b8e34c7	False		False	1	False	0	
+https://github.com/FuelLabs/fuels-ts.git	FuelLabs__fuels-ts__d7fc1b26	False		False	0	False	0	
+https://github.com/GLips/Figma-Context-MCP.git	GLips__Figma-Context-MCP__dfb83ac8	False		False	0	False	0	
+https://github.com/GeekyAnts/NativeBase.git	GeekyAnts__NativeBase__e8aee927	False		False	1	False	0	
+https://github.com/GoogleChromeLabs/squoosh.git	GoogleChromeLabs__squoosh__91af41ac	False		False	0	False	0	
+https://github.com/Grsmto/simplebar.git	Grsmto__simplebar__06be9c72	False		False	1	False	0	
+https://github.com/Hacker0x01/react-datepicker.git	Hacker0x01__react-datepicker__21533b39	False		False	0	False	0	
+https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher.git	Heroic-Games-Launcher__HeroicGamesLauncher__0193faf9	False		False	0	False	0	
+https://github.com/Hiram-Wong/ZyPlayer.git	Hiram-Wong__ZyPlayer__74cdc240	False		False	1	False	0	
+https://github.com/Hopding/pdf-lib.git	Hopding__pdf-lib__b6cbabb3	False		False	1	False	0	
+https://github.com/HumanSignal/label-studio.git	HumanSignal__label-studio__16bb1518	False		False	1	False	0	
+https://github.com/ItzCrazyKns/Perplexica.git	ItzCrazyKns__Perplexica__a043cb7f	False		False	1	False	0	
+https://github.com/James-Yu/LaTeX-Workshop.git	James-Yu__LaTeX-Workshop__6c0d5525	False		False	0	False	0	
+https://github.com/JedWatson/react-select.git	JedWatson__react-select__ac1aa91e	False		False	1	False	0	
+https://github.com/Koenkk/zigbee2mqtt.git	Koenkk__zigbee2mqtt__62821e06	False		False	0	False	0	
+https://github.com/LasCC/HackTools.git	LasCC__HackTools__8a055527	False		False	1	False	0	
+https://github.com/LeetCode-OpenSource/vscode-leetcode.git	LeetCode-OpenSource__vscode-leetcode__895e91b1	False		False	0	False	0	
+https://github.com/Lissy93/personal-security-checklist.git	Lissy93__personal-security-checklist__4ee25ffe	False		False	1	False	0	
+https://github.com/Lissy93/web-check.git	Lissy93__web-check__2ae23c18	False		False	1	False	0	
+https://github.com/MetaMask/metamask-extension.git	MetaMask__metamask-extension__efffdfe5	False		False	1	False	0	
+https://github.com/MichalLytek/type-graphql.git	MichalLytek__type-graphql__e8555e2d	False		False	0	False	0	
+https://github.com/Milkdown/milkdown.git	Milkdown__milkdown__8ced365e	False		False	0	False	0	
+https://github.com/Molunerfinn/PicGo.git	Molunerfinn__PicGo__53dd716e	False		False	0	False	0	
+https://github.com/MoonTechLab/LunaTV.git	MoonTechLab__LunaTV__2ab57a9c	False		False	0	False	0	
+https://github.com/NapNeko/NapCatQQ.git	NapNeko__NapCatQQ__46ecd22f	False		False	0	False	0	
+https://github.com/NativeScript/NativeScript.git	NativeScript__NativeScript__7ba85e7b	False		False	1	False	0	
+https://github.com/NervJS/taro.git	NervJS__taro__0edeae1f	False		False	1	False	0	
+https://github.com/Nutlope/aicommits.git	Nutlope__aicommits__ed8910d8	False		False	0	False	0	
+https://github.com/Nutlope/roomGPT.git	Nutlope__roomGPT__cbb981d2	False		False	0	False	0	
+https://github.com/OI-wiki/OI-wiki.git	OI-wiki__OI-wiki__fc3971c4	False		False	0	False	0	
+https://github.com/Open-Dev-Society/OpenStock.git	Open-Dev-Society__OpenStock__16db2e3f	False		False	0	False	0	
+https://github.com/OpenCut-app/OpenCut.git	OpenCut-app__OpenCut__e8363556	False		False	1	False	0	
+https://github.com/Project-DARC/DARC.git	Project-DARC__DARC__a07d70bf	False		False	1	False	0	
+https://github.com/QwikDev/partytown.git	QwikDev__partytown__239de106	False		False	0	False	0	
+https://github.com/RSSNext/Folo.git	RSSNext__Folo__3ce0a431	False		False		False	0	
+https://github.com/Raathigesh/majestic.git	Raathigesh__majestic__81180be3	False		False	1	False	0	
+https://github.com/RaspberryPiFoundation/blockly.git	RaspberryPiFoundation__blockly__1352eaaf	False		False	0	False	0	
+https://github.com/RealKai42/qwerty-learner.git	RealKai42__qwerty-learner__60078a0e	False		False	1	False	0	
+https://github.com/SBoudrias/Inquirer.js.git	SBoudrias__Inquirer.js__fb308a7c	False		False	0	False	0	
+https://github.com/Sairyss/domain-driven-hexagon.git	Sairyss__domain-driven-hexagon__d4692df3	False		False	1	False	0	
+https://github.com/SawyerHood/draw-a-ui.git	SawyerHood__draw-a-ui__992cd64a	False		False	0	False	0	
+https://github.com/Shopify/flash-list.git	Shopify__flash-list__03295977	False		False	1	False	0	
+https://github.com/SigNoz/signoz.git	SigNoz__signoz__fc8ed5aa	False		False	1	False	0	
+https://github.com/SoftwareBrothers/adminjs.git	SoftwareBrothers__adminjs__b280a72c	False		False	1	False	0	
+https://github.com/SteamDeckHomebrew/decky-loader.git	SteamDeckHomebrew__decky-loader__b8152d75	False		False	0	False	0	
+https://github.com/TanStack/form.git	TanStack__form__e6ebc042	False		False	0	False	0	
+https://github.com/TanStack/query.git	TanStack__query__52091be1	False		False	0	False	0	
+https://github.com/TanStack/table.git	TanStack__table__2b3ea53e	False		False	0	False	0	
+https://github.com/TanStack/virtual.git	TanStack__virtual__7c54f158	False		False	0	False	0	
+https://github.com/Tencent/omi.git	Tencent__omi__96fa83cd	False		False	0	False	0	
+https://github.com/Tencent/vConsole.git	Tencent__vConsole__b03c9635	False		False	1	False	0	
+https://github.com/Termix-SSH/Termix.git	Termix-SSH__Termix__ba43a7f6	False		False	0	False	0	
+https://github.com/Tonejs/Tone.js.git	Tonejs__Tone.js__776770c0	False		False	0	False	0	
+https://github.com/TriliumNext/Trilium.git	TriliumNext__Trilium__385b0d87	False		False	0	False	0	
+https://github.com/Turfjs/turf.git	Turfjs__turf__3ae95916	False		False	1	False	0	
+https://github.com/TypeStrong/ts-node.git	TypeStrong__ts-node__feb7e78a	False		False	1	False	0	
+https://github.com/TypeStrong/typedoc.git	TypeStrong__typedoc__4b949cf7	False		False	1	False	0	
+https://github.com/Unleash/unleash.git	Unleash__unleash__4037c0f6	False		False	0	False	0	
+https://github.com/VSCodeVim/Vim.git	VSCodeVim__Vim__086759ef	False		False	1	False	0	
+https://github.com/Vanessa219/vditor.git	Vanessa219__vditor__6c43f095	False		False	0	False	0	
+https://github.com/Vendicated/Vencord.git	Vendicated__Vencord__cc85f3c1	False		False	0	False	0	
+https://github.com/Vinzent03/obsidian-git.git	Vinzent03__obsidian-git__a298aa9e	False		False	0	False	0	
+https://github.com/a16z-infra/ai-town.git	a16z-infra__ai-town__94ad6226	False		False	0	False	0	
+https://github.com/actions/checkout.git	actions__checkout__0f8a20be	False		False	0	False	0	
+https://github.com/actions/starter-workflows.git	actions__starter-workflows__a28457c1	False		False	0	False	0	
+https://github.com/activepieces/activepieces.git	activepieces__activepieces__51d69abc	False		False	1	False	0	
+https://github.com/actualbudget/actual.git	actualbudget__actual__4ce34f27	False		False	0	False	0	
+https://github.com/adobe/react-spectrum.git	adobe__react-spectrum__abb10358	False		False	0	False	0	
+https://github.com/adonisjs/core.git	adonisjs__core__f36d46ad	False		False	1	False	0	
+https://github.com/ag-grid/ag-grid.git	ag-grid__ag-grid__27a96fd6	False		False	1	False	0	
+https://github.com/agenda/agenda.git	agenda__agenda__3ba44269	False		False	1	False	0	
+https://github.com/agentsmd/agents.md.git	agentsmd__agents.md__504fc7e7	False		False	0	False	0	
+https://github.com/ahmedkhaleel2004/gitdiagram.git	ahmedkhaleel2004__gitdiagram__5a9d819f	False		False	0	False	0	
+https://github.com/aidenybai/million.git	aidenybai__million__f551df97	False		False		False	0	
+https://github.com/airbnb/visx.git	airbnb__visx__c0f030fd	False		False	0	False	0	
+https://github.com/ajv-validator/ajv.git	ajv-validator__ajv__a0006edf	False		False	0	False	0	
+https://github.com/akveo/eva-icons.git	akveo__eva-icons__ea67715d	False		False	1	False	0	
+https://github.com/akveo/kittenTricks.git	akveo__kittenTricks__c9940ca3	False		False	1	False	0	
+https://github.com/akveo/ngx-admin.git	akveo__ngx-admin__9bc44a0a	False		False	1	False	0	
+https://github.com/akveo/react-native-ui-kitten.git	akveo__react-native-ui-kitten__dab0f87a	False		False	1	False	0	
+https://github.com/alibaba/BizCharts.git	alibaba__BizCharts__75047b7d	False		False	1	False	0	
+https://github.com/alibaba/hooks.git	alibaba__hooks__70232635	False		False	1	False	0	
+https://github.com/alibaba/ice.git	alibaba__ice__4e163784	False		False		False	0	
+https://github.com/alibaba/x-render.git	alibaba__x-render__c93500b0	False		False	1	False	0	
+https://github.com/amplication/amplication.git	amplication__amplication__f54bb746	False		False	1	False	0	
+https://github.com/angular-ui/ui-router.git	angular-ui__ui-router__5b48fb6e	False		False	0	False	0	
+https://github.com/anse-app/chatgpt-demo.git	anse-app__chatgpt-demo__38473afb	False		False	1	False	0	
+https://github.com/ant-design/ant-design-mobile.git	ant-design__ant-design-mobile__03d7cbea	False		False	1	False	0	
+https://github.com/ant-design/ant-design-pro.git	ant-design__ant-design-pro__a4d72144	False		False	0	False	0	
+https://github.com/ant-design/ant-design.git	ant-design__ant-design__bee97b2f	False		False		False	0	
+https://github.com/antfu-collective/ni.git	antfu-collective__ni__fc1ca6a3	False		False	0	False	0	
+https://github.com/antfu-collective/vitesse.git	antfu-collective__vitesse__9a452113	False		False	0	False	0	
+https://github.com/antvis/G2.git	antvis__G2__15185f72	False		False	0	False	0	
+https://github.com/antvis/X6.git	antvis__X6__c3c59b08	False		False	0	False	0	
+https://github.com/any86/any-rule.git	any86__any-rule__c351b3ac	False		False	1	False	0	
+https://github.com/apache/echarts.git	apache__echarts__45996e52	False		False	0	False	0	
+https://github.com/apache/superset.git	apache__superset__8649cf99	False		False	0	False	0	
+https://github.com/api-platform/api-platform.git	api-platform__api-platform__651d0222	False		False	0	False	0	
+https://github.com/apify/crawlee.git	apify__crawlee__c594c2ba	False		False	1	False	0	
+https://github.com/apitable/apitable.git	apitable__apitable__4d907d05	False		False	1	False	0	
+https://github.com/apollographql/apollo-server.git	apollographql__apollo-server__81be1a34	False		False	0	False	0	
+https://github.com/appsmithorg/appsmith.git	appsmithorg__appsmith__bceabf0e	False		False	1	False	0	
+https://github.com/ariakit/ariakit.git	ariakit__ariakit__208c0834	False		False	0	False	0	
+https://github.com/arktypeio/arktype.git	arktypeio__arktype__69e5629b	False		False	0	False	0	
+https://github.com/arwes/arwes.git	arwes__arwes__a9ea2aa0	False		False	1	False	0	
+https://github.com/atlassian/pragmatic-drag-and-drop.git	atlassian__pragmatic-drag-and-drop__08a64112	False		False	1	False	0	
+https://github.com/aurelia/framework.git	aurelia__framework__34873cae	False		False	0	False	0	
+https://github.com/ayangweb/BongoCat.git	ayangweb__BongoCat__132ddbe3	False		False	0	False	0	
+https://github.com/backstage/backstage.git	backstage__backstage__e872a8f6	False		False	-1	False	0	
+https://github.com/baconjs/bacon.js.git	baconjs__bacon.js__e906f6d2	False		False	0	False	0	
+https://github.com/baidu/amis.git	baidu__amis__02873789	False		False		False	0	
+https://github.com/baptisteArno/typebot.io.git	baptisteArno__typebot.io__566aee22	False		False	1	False	0	
+https://github.com/barbajs/barba.git	barbajs__barba__10c4799e	False		False	1	False	0	
+https://github.com/basarat/typescript-book.git	basarat__typescript-book__179a4972	False		False	0	False	0	
+https://github.com/bda-research/node-crawler.git	bda-research__node-crawler__e23e3312	False		False	1	False	0	
+https://github.com/beekeeper-studio/beekeeper-studio.git	beekeeper-studio__beekeeper-studio__24315708	False		False	1	False	0	
+https://github.com/berty/berty.git	berty__berty__590cac82	False		False	1	False	0	
+https://github.com/better-auth/better-auth.git	better-auth__better-auth__4f5a9429	False		False	0	False	0	
+https://github.com/bia-pain-bache/BPB-Worker-Panel.git	bia-pain-bache__BPB-Worker-Panel__32d9e6b1	False		False	0	False	0	
+https://github.com/bigint/hey.git	bigint__hey__333132b8	False		False	0	False	0	
+https://github.com/birobirobiro/awesome-shadcn-ui.git	birobirobiro__awesome-shadcn-ui__726caa7d	False		False	0	False	0	
+https://github.com/bitwarden/clients.git	bitwarden__clients__326ec78b	False		False	0	False	0	
+https://github.com/blacksmithgu/obsidian-dataview.git	blacksmithgu__obsidian-dataview__a4cfab31	False		False	0	False	0	
+https://github.com/blakeblackshear/frigate.git	blakeblackshear__frigate__3b188410	False		False	0	False	0	
+https://github.com/blinkospace/blinko.git	blinkospace__blinko__e5969eed	False		False	1	False	0	
+https://github.com/bluesky-social/atproto.git	bluesky-social__atproto__2a29c22d	False		False	1	False	0	
+https://github.com/bluesky-social/social-app.git	bluesky-social__social-app__12005196	False		False		False	0	
+https://github.com/boardgameio/boardgame.io.git	boardgameio__boardgame.io__18546620	False		False	0	False	0	
+https://github.com/bokeh/bokeh.git	bokeh__bokeh__b1bf1147	False		False	254	False	0	
+https://github.com/bombshell-dev/clack.git	bombshell-dev__clack__705586e7	False		False	0	False	0	
+https://github.com/browserless/browserless.git	browserless__browserless__a5bea549	False		False	0	False	0	
+https://github.com/bubkoo/html-to-image.git	bubkoo__html-to-image__8efdddc9	False		False	1	False	0	
+https://github.com/bvaughn/react-error-boundary.git	bvaughn__react-error-boundary__f4dbd68a	False		False	0	False	0	
+https://github.com/bvaughn/react-window.git	bvaughn__react-window__0c1ade55	False		False	0	False	0	
+https://github.com/bytebot-ai/bytebot.git	bytebot-ai__bytebot__2f2b6600	False		False	0	False	0	
+https://github.com/bytedance/flowgram.ai.git	bytedance__flowgram.ai__7aaf4ae7	False		False	1	False	0	
+https://github.com/callstack/linaria.git	callstack__linaria__2c707892	False		False	0	False	0	
+https://github.com/callstack/react-native-paper.git	callstack__react-native-paper__73f772df	False		False	0	False	0	
+https://github.com/caprover/caprover.git	caprover__caprover__1993a2de	False		False	0	False	0	
+https://github.com/catppuccin/catppuccin.git	catppuccin__catppuccin__3b22ec45	False		False		False	0	
+https://github.com/chaitin/PandaWiki.git	chaitin__PandaWiki__0068ea9e	False		False	1	False	0	
+https://github.com/chakra-ui/chakra-ui.git	chakra-ui__chakra-ui__213f816c	False		False	0	False	0	
+https://github.com/changesets/changesets.git	changesets__changesets__b0f738f5	False		False	0	False	0	
+https://github.com/chartdb/chartdb.git	chartdb__chartdb__578f0b5d	False		False	0	False	0	
+https://github.com/chartist-js/chartist.git	chartist-js__chartist__d2e07b45	False		False	1	False	0	
+https://github.com/chatboxai/chatbox.git	chatboxai__chatbox__c9ae1a12	False		False	1	False	0	
+https://github.com/chathub-dev/chathub.git	chathub-dev__chathub__eeb1943e	False		False	0	False	0	
+https://github.com/cheeriojs/cheerio.git	cheeriojs__cheerio__02640a11	False		False	0	False	0	
+https://github.com/chimurai/http-proxy-middleware.git	chimurai__http-proxy-middleware__9e84aa34	False		False	1	False	0	
+https://github.com/chrismaltby/gb-studio.git	chrismaltby__gb-studio__77c64adb	False		False	0	False	0	
+https://github.com/cjpais/Handy.git	cjpais__Handy__4e0cc916	False		False	0	False	0	
+https://github.com/clash-verge-rev/clash-verge-rev.git	clash-verge-rev__clash-verge-rev__fdbb0496	False		False	0	False	0	
+https://github.com/clauderic/dnd-kit.git	clauderic__dnd-kit__695d235d	False		False	1	False	0	
+https://github.com/coaidev/coai.git	coaidev__coai__a5789a2e	False		False	0	False	0	
+https://github.com/coder/code-server.git	coder__code-server__1fadb02d	False		False	1	False	0	
+https://github.com/codex-team/editor.js.git	codex-team__editor.js__5ba1c5d7	False		False	1	False	0	
+https://github.com/codexu/note-gen.git	codexu__note-gen__01f639eb	False		False	0	False	0	
+https://github.com/compiler-explorer/compiler-explorer.git	compiler-explorer__compiler-explorer__f46ae4c0	False		False		False	0	
+https://github.com/conventional-changelog/commitlint.git	conventional-changelog__commitlint__8d19a021	False		False	1	False	0	
+https://github.com/conventional-changelog/conventional-changelog.git	conventional-changelog__conventional-changelog__756d28c0	False		False	0	False	0	
+https://github.com/conwnet/github1s.git	conwnet__github1s__9fe9a11a	False		False	0	False	0	
+https://github.com/cooderl/wewe-rss.git	cooderl__wewe-rss__785fdfa7	False		False	1	False	0	
+https://github.com/cosscom/coss.git	cosscom__coss__c195c9ed	False		False	1	False	0	
+https://github.com/coze-dev/coze-studio.git	coze-dev__coze-studio__fc00bdb0	False		False	1	False	0	
+https://github.com/creativetimofficial/ui.git	creativetimofficial__ui__3dbb02e0	False		False	1	False	0	
+https://github.com/crimx/ext-saladict.git	crimx__ext-saladict__d8a99306	False		False	1	False	0	
+https://github.com/cs01/gdbgui.git	cs01__gdbgui__3bdcd188	False		False	1	False	0	
+https://github.com/cuixiaorui/mini-vue.git	cuixiaorui__mini-vue__d7925882	False		False	1	False	0	
+https://github.com/curlconverter/curlconverter.git	curlconverter__curlconverter__ad2403ae	False		False	1	False	0	
+https://github.com/cyclejs/cyclejs.git	cyclejs__cyclejs__90c1e4ab	False		False	1	False	0	
+https://github.com/czlonkowski/n8n-mcp.git	czlonkowski__n8n-mcp__8be844b5	False		False	0	False	0	
+https://github.com/danilowoz/react-content-loader.git	danilowoz__react-content-loader__fb63ee13	False		False	1	False	0	
+https://github.com/date-fns/date-fns.git	date-fns__date-fns__dfb5c26b	False		False		False	0	
+https://github.com/daytonaio/daytona.git	daytonaio__daytona__33b64f4e	False		False	1	False	0	
+https://github.com/deepstreamIO/deepstream.io.git	deepstreamIO__deepstream.io__5e831dc6	False		False	0	False	0	
+https://github.com/dendronhq/dendron.git	dendronhq__dendron__b644092e	False		False	1	False	0	
+https://github.com/denoland/fresh.git	denoland__fresh__8fa2466f	False		False		False	0	
+https://github.com/desktop/desktop.git	desktop__desktop__0932ad77	False		False	1	False	0	
+https://github.com/devhubapp/devhub.git	devhubapp__devhub__71fce658	False		False	1	False	0	
+https://github.com/didi/LogicFlow.git	didi__LogicFlow__cb9080c8	False		False	1	False	0	
+https://github.com/dilame/instagram-private-api.git	dilame__instagram-private-api__bb5cdbd4	False		False	0	False	0	
+https://github.com/dinerojs/dinero.js.git	dinerojs__dinero.js__5ae2b7ce	False		False	1	False	0	
+https://github.com/dip/cmdk.git	dip__cmdk__d4049f49	False		False	1	False	0	
+https://github.com/discordjs/discord.js.git	discordjs__discord.js__ac9e0ac0	False		False	-1	False	0	
+https://github.com/documenso/documenso.git	documenso__documenso__0a04f539	False		False	1	False	0	
+https://github.com/dotansimha/graphql-code-generator.git	dotansimha__graphql-code-generator__79d3a681	False		False	0	False	0	
+https://github.com/ds300/patch-package.git	ds300__patch-package__0f87f603	False		False	0	False	0	
+https://github.com/dyad-sh/dyad.git	dyad-sh__dyad__fda36feb	False		False		False	0	
+https://github.com/dzhng/deep-research.git	dzhng__deep-research__4f089ca2	False		False		False	0	
+https://github.com/eclipse-che/che.git	eclipse-che__che__cca70362	False		False	0	False	0	
+https://github.com/ecomfe/vue-echarts.git	ecomfe__vue-echarts__551d28e6	False		False	0	False	0	
+https://github.com/ecomfe/zrender.git	ecomfe__zrender__97003edb	False		False	0	False	0	
+https://github.com/eggjs/egg.git	eggjs__egg__2b7de391	False		False	0	False	0	
+https://github.com/elastic/kibana.git	elastic__kibana__bcc9c6da	False		False	1	False	0	
+https://github.com/electric-sql/pglite.git	electric-sql__pglite__f83d4339	False		False	0	False	0	
+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git	electron-react-boilerplate__electron-react-boilerplate__a33e73ed	False		False	0	False	0	
+https://github.com/electron-userland/electron-builder.git	electron-userland__electron-builder__3ea5bc53	False		False	0	False	0	
+https://github.com/electron/forge.git	electron__forge__e0dea9c3	False		False	1	False	0	
+https://github.com/element-plus/element-plus.git	element-plus__element-plus__f77bd205	False		False	0	False	0	
+https://github.com/elizaOS/eliza.git	elizaOS__eliza__45c80aa9	False		False		False	0	
+https://github.com/emilkowalski/vaul.git	emilkowalski__vaul__d9eb09e2	False		False	0	False	0	
+https://github.com/ether/etherpad-lite.git	ether__etherpad-lite__1fee623c	False		False		False	0	
+https://github.com/ethers-io/ethers.js.git	ethers-io__ethers.js__6259ec1d	False		False	1	False	0	
+https://github.com/excalidraw/excalidraw.git	excalidraw__excalidraw__be38ee50	False		False	0	False	0	
+https://github.com/expo/expo.git	expo__expo__64c239ef	False		False	1	False	0	
+https://github.com/express-validator/express-validator.git	express-validator__express-validator__ac3f64b8	False		False	0	False	0	
+https://github.com/f/awesome-chatgpt-prompts.git	f__awesome-chatgpt-prompts__2a8e47c5	False		False	1	False	0	
+https://github.com/facebook/docusaurus.git	facebook__docusaurus__07e29605	False		False	1	False	0	
+https://github.com/facebook/lexical.git	facebook__lexical__c095fc52	False		False	0	False	0	
+https://github.com/farion1231/cc-switch.git	farion1231__cc-switch__b1b56e3e	False		False	0	False	0	
+https://github.com/fastapi/full-stack-fastapi-template.git	fastapi__full-stack-fastapi-template__ef0b0b41	False		False	0	False	0	
+https://github.com/fastrepl/hyprnote.git	fastrepl__hyprnote__59ab84ba	False		False	0	False	0	
+https://github.com/fengyuanchen/cropperjs.git	fengyuanchen__cropperjs__a62d8991	False		False	0	False	0	
+https://github.com/fingerprintjs/fingerprintjs.git	fingerprintjs__fingerprintjs__b2b727f5	False		False	1	False	0	
+https://github.com/firecrawl/open-lovable.git	firecrawl__open-lovable__6be26f30	False		False	0	False	0	
+https://github.com/flatpickr/flatpickr.git	flatpickr__flatpickr__33b133ac	False		False	0	False	0	
+https://github.com/foambubble/foam.git	foambubble__foam__57b46605	False		False	1	False	0	
+https://github.com/fosrl/pangolin.git	fosrl__pangolin__f300c3f9	False		False		False	0	
+https://github.com/freeCodeCamp/freeCodeCamp.git	freeCodeCamp__freeCodeCamp__f7b39099	False		False	0	False	0	
+https://github.com/fuergaosi233/wechat-chatgpt.git	fuergaosi233__wechat-chatgpt__9af64327	False		False	0	False	0	
+https://github.com/gaearon/overreacted.io.git	gaearon__overreacted.io__01c249f5	False		False	0	False	0	
+https://github.com/garmeeh/next-seo.git	garmeeh__next-seo__6f1e845f	False		False	0	False	0	
+https://github.com/gcanti/fp-ts.git	gcanti__fp-ts__22436155	False		False	0	False	0	
+https://github.com/gcanti/io-ts.git	gcanti__io-ts__e98ccacd	False		False	0	False	0	
+https://github.com/getgridea/gridea.git	getgridea__gridea__92b19f07	False		False	1	False	0	
+https://github.com/getsentry/sentry-javascript.git	getsentry__sentry-javascript__ed3891b0	False		False	1	False	0	
+https://github.com/getumbrel/llama-gpt.git	getumbrel__llama-gpt__0dfdd590	False		False	0	False	0	
+https://github.com/ghostfolio/ghostfolio.git	ghostfolio__ghostfolio__7caa66af	False		False	1	False	0	
+https://github.com/gilbarbara/react-joyride.git	gilbarbara__react-joyride__20bb454a	False		False	0	False	0	
+https://github.com/giscus/giscus.git	giscus__giscus__ae932c87	False		False	1	False	0	
+https://github.com/github/docs.git	github__docs__0554b3f1	False		False		False	0	
+https://github.com/gitkraken/vscode-gitlens.git	gitkraken__vscode-gitlens__3d4fc2ce	False		False	0	False	0	
+https://github.com/gitname/react-gh-pages.git	gitname__react-gh-pages__dddcdcce	False		False	0	False	0	
+https://github.com/goenning/google-indexing-script.git	goenning__google-indexing-script__812d409d	False		False	0	False	0	
+https://github.com/google/wireit.git	google__wireit__f7fb24b9	False		False	0	False	0	
+https://github.com/googleapis/google-api-nodejs-client.git	googleapis__google-api-nodejs-client__b1d073b5	False		False	0	False	0	
+https://github.com/googleapis/release-please.git	googleapis__release-please__f1bf766d	False		False	0	False	0	
+https://github.com/gorhom/react-native-bottom-sheet.git	gorhom__react-native-bottom-sheet__adb66e30	False		False	1	False	0	
+https://github.com/gothinkster/realworld.git	gothinkster__realworld__80c03f6f	False		False	1	False	0	
+https://github.com/gpbl/react-day-picker.git	gpbl__react-day-picker__90ef8e06	False		False	0	False	0	
+https://github.com/grafana/grafana.git	grafana__grafana__2b5f5b4f	False		False	1	False	0	
+https://github.com/graphile/crystal.git	graphile__crystal__41224924	False		False	0	False	0	
+https://github.com/graphql/graphiql.git	graphql__graphiql__16b8d960	False		False	0	False	0	
+https://github.com/graphql/graphql-js.git	graphql__graphql-js__db924999	False		False	0	False	0	
+https://github.com/gregberge/svgr.git	gregberge__svgr__2f60be93	False		False	1	False	0	
+https://github.com/gristlabs/grist-core.git	gristlabs__grist-core__40ec2e16	False		False	1	False	0	
+https://github.com/guess-js/guess.git	guess-js__guess__5c71d82e	False		False	1	False	0	
+https://github.com/gvergnaud/ts-pattern.git	gvergnaud__ts-pattern__365d36f3	False		False	0	False	0	
+https://github.com/hcengineering/platform.git	hcengineering__platform__88036dda	False		False	1	False	0	
+https://github.com/hediet/vscode-drawio.git	hediet__vscode-drawio__2ac76cb0	False		False	1	False	0	
+https://github.com/helmetjs/helmet.git	helmetjs__helmet__da012c45	False		False	0	False	0	
+https://github.com/heroui-inc/heroui.git	heroui-inc__heroui__c6c42f10	False		False	0	False	0	
+https://github.com/hexojs/hexo.git	hexojs__hexo__655d4061	False		False	0	False	0	
+https://github.com/highlight/highlight.git	highlight__highlight__c7c849ce	False		False	1	False	0	
+https://github.com/homebridge/homebridge.git	homebridge__homebridge__da9aa736	False		False	0	False	0	
+https://github.com/honojs/hono.git	honojs__hono__a9b88789	False		False	0	False	0	
+https://github.com/hotwired/stimulus.git	hotwired__stimulus__419d6ba2	False		False	1	False	0	
+https://github.com/howtographql/howtographql.git	howtographql__howtographql__7ab359e9	False		False	1	False	0	
+https://github.com/humanlayer/12-factor-agents.git	humanlayer__12-factor-agents__66d41b8a	False		False		False	0	
+https://github.com/humanlayer/humanlayer.git	humanlayer__humanlayer__ca17644e	False		False	1	False	0	
+https://github.com/hydralauncher/hydra.git	hydralauncher__hydra__a46f03f0	False		False	0	False	0	
+https://github.com/hyperdxio/hyperdx.git	hyperdxio__hyperdx__6173e401	False		False	1	False	0	
+https://github.com/ianstormtaylor/slate.git	ianstormtaylor__slate__7d2da1ac	False		False	0	False	0	
+https://github.com/idootop/mi-gpt.git	idootop__mi-gpt__14f55e56	False		False	0	False	0	
+https://github.com/idosal/git-mcp.git	idosal__git-mcp__8aee5c59	False		False	0	False	0	
+https://github.com/iib0011/omni-tools.git	iib0011__omni-tools__d8d9f813	False		False	1	False	0	
+https://github.com/ikatyang/emoji-cheat-sheet.git	ikatyang__emoji-cheat-sheet__e577f696	False		False	0	False	0	
+https://github.com/infinitered/ignite.git	infinitered__ignite__f0ea200e	False		False	0	False	0	
+https://github.com/infinitered/nsfwjs.git	infinitered__nsfwjs__32d3f29b	False		False	0	False	0	
+https://github.com/infinitered/reactotron.git	infinitered__reactotron__4f2eca35	False		False	0	False	0	
+https://github.com/inorganik/countUp.js.git	inorganik__countUp.js__10d7c941	False		False	0	False	0	
+https://github.com/inversify/InversifyJS.git	inversify__InversifyJS__8c255133	False		False	1	False	0	
+https://github.com/invertase/react-native-firebase.git	invertase__react-native-firebase__d5ee5211	False		False	0	False	0	
+https://github.com/invoke-ai/InvokeAI.git	invoke-ai__InvokeAI__5354984c	False		False	0	False	0	
+https://github.com/ionic-team/ionic-framework.git	ionic-team__ionic-framework__843bce1c	False		False		False	0	
+https://github.com/ionic-team/ionicons.git	ionic-team__ionicons__3c963952	False		False		False	0	
+https://github.com/iorate/ublacklist.git	iorate__ublacklist__45a0e8ff	False		False	0	False	0	
+https://github.com/iptv-org/iptv.git	iptv-org__iptv__31a178eb	False		False	0	False	0	
+https://github.com/isaacs/node-glob.git	isaacs__node-glob__1521c255	False		False	0	False	0	
+https://github.com/ixartz/Next-js-Boilerplate.git	ixartz__Next-js-Boilerplate__06643563	False		False	0	False	0	
+https://github.com/ixartz/SaaS-Boilerplate.git	ixartz__SaaS-Boilerplate__0cc18e89	False		False	0	False	0	
+https://github.com/jackyzha0/quartz.git	jackyzha0__quartz__14be8917	False		False	0	False	0	
+https://github.com/jacomyal/sigma.js.git	jacomyal__sigma.js__c6fea282	False		False	0	False	0	
+https://github.com/jaredpalmer/formik.git	jaredpalmer__formik__d76810dd	False		False	0	False	0	
+https://github.com/jaywcjlove/hotkeys-js.git	jaywcjlove__hotkeys-js__821b65d5	False		False	0	False	0	
+https://github.com/jhipster/generator-jhipster.git	jhipster__generator-jhipster__f2ca6bad	False		False	0	False	0	
+https://github.com/jina-ai/reader.git	jina-ai__reader__4eaa4d84	False		False	1	False	0	
+https://github.com/jitsi/jitsi-meet.git	jitsi__jitsi-meet__e29ad562	False		False	1	False	0	
+https://github.com/jlfwong/speedscope.git	jlfwong__speedscope__d9f6dd01	False		False	0	False	0	
+https://github.com/johannesjo/super-productivity.git	johannesjo__super-productivity__8aaedccf	False		False	0	False	0	
+https://github.com/josStorer/RWKV-Runner.git	josStorer__RWKV-Runner__259a76c9	False		False	0	False	0	
+https://github.com/jquense/yup.git	jquense__yup__370c3f5b	False		False	0	False	0	
+https://github.com/juice-shop/juice-shop.git	juice-shop__juice-shop__d362510e	False		False	0	False	0	
+https://github.com/jupyterlab/jupyterlab.git	jupyterlab__jupyterlab__570abd3f	False		False	1	False	0	
+https://github.com/justadudewhohacks/face-api.js.git	justadudewhohacks__face-api.js__12feb793	False		False		False	0	
+https://github.com/kamranahmedse/driver.js.git	kamranahmedse__driver.js__376c0f3f	False		False	0	False	0	
+https://github.com/katspaugh/wavesurfer.js.git	katspaugh__wavesurfer.js__31409389	False		False	0	False	0	
+https://github.com/kelektiv/node-cron.git	kelektiv__node-cron__66c89226	False		False	0	False	0	
+https://github.com/keplergl/kepler.gl.git	keplergl__kepler.gl__1b075f47	False		False	1	False	0	
+https://github.com/kern/filepizza.git	kern__filepizza__726e12f5	False		False	0	False	0	
+https://github.com/keystonejs/keystone.git	keystonejs__keystone__f45bfb8b	False		False	0	False	0	
+https://github.com/konvajs/konva.git	konvajs__konva__ca450897	False		False	0	False	0	
+https://github.com/konvajs/react-konva.git	konvajs__react-konva__338650bd	False		False	0	False	0	
+https://github.com/kortix-ai/suna.git	kortix-ai__suna__8691a53c	False		False		False	0	
+https://github.com/kriasoft/react-starter-kit.git	kriasoft__react-starter-kit__d2a7c3f5	False		False	1	False	0	
+https://github.com/kusti8/proton-native.git	kusti8__proton-native__9a6d368c	False		False	1	False	0	
+https://github.com/kysely-org/kysely.git	kysely-org__kysely__79d48011	False		False	0	False	0	
+https://github.com/l0o0/jasminum.git	l0o0__jasminum__fdd18e94	False		False	0	False	0	
+https://github.com/labring/FastGPT.git	labring__FastGPT__2de07541	False		False	1	False	0	
+https://github.com/labring/sealos.git	labring__sealos__fd763c7c	False		False	1	False	0	
+https://github.com/labs42io/clean-code-typescript.git	labs42io__clean-code-typescript__bb4fd6e8	False		False		False	0	
+https://github.com/langchain-ai/chat-langchain.git	langchain-ai__chat-langchain__51913ba4	False		False	0	False	0	
+https://github.com/langgenius/dify.git	langgenius__dify__da322066	False		False	0	False	0	
+https://github.com/laurent22/joplin.git	laurent22__joplin__b0e746db	False		False	1	False	0	
+https://github.com/leerob/next-mdx-blog.git	leerob__next-mdx-blog__7fde1170	False		False	0	False	0	
+https://github.com/leon-ai/leon.git	leon-ai__leon__5c8cabb6	False		False		False	0	
+https://github.com/lerna/lerna.git	lerna__lerna__cc1842fd	False		False		False	0	
+https://github.com/lfnovo/open-notebook.git	lfnovo__open-notebook__a3851124	False		False	0	False	0	
+https://github.com/linkedin/css-blocks.git	linkedin__css-blocks__c97ca095	False		False	1	False	0	
+https://github.com/linnovate/mean.git	linnovate__mean__28b473fb	False		False	1	False	0	
+https://github.com/linshenkx/prompt-optimizer.git	linshenkx__prompt-optimizer__3ee3cc6d	False		False		False	0	
+https://github.com/lobehub/lobe-chat.git	lobehub__lobe-chat__b247bdc2	False		False	1	False	0	
+https://github.com/louislam/dockge.git	louislam__dockge__f1e7e19d	False		False	1	False	0	
+https://github.com/luckjiawei/frpc-desktop.git	luckjiawei__frpc-desktop__c9fc7623	False		False	0	False	0	
+https://github.com/majodev/google-webfonts-helper.git	majodev__google-webfonts-helper__f0094a6c	False		False	1	False	0	
+https://github.com/maotoumao/MusicFree.git	maotoumao__MusicFree__c438e3a4	False		False	1	False	0	
+https://github.com/maotoumao/MusicFreeDesktop.git	maotoumao__MusicFreeDesktop__36114c86	False		False	0	False	0	
+https://github.com/mapbox/mapbox-gl-js.git	mapbox__mapbox-gl-js__052a37cc	False		False	0	False	0	
+https://github.com/maplibre/maplibre-gl-js.git	maplibre__maplibre-gl-js__5b9ef5d5	False		False	0	False	0	
+https://github.com/markdoc/markdoc.git	markdoc__markdoc__7256093f	False		False	0	False	0	
+https://github.com/markedjs/marked.git	markedjs__marked__87d86785	False		False		False	0	
+https://github.com/markmap/markmap.git	markmap__markmap__c0fe8d82	False		False	0	False	0	
+https://github.com/marp-team/marp.git	marp-team__marp__1aec2be5	False		False	1	False	0	
+https://github.com/mastra-ai/mastra.git	mastra-ai__mastra__355f618a	False		False	2	False	0	
+https://github.com/material-shell/material-shell.git	material-shell__material-shell__79c9c2e4	False		False	0	False	0	
+https://github.com/mattermost/mattermost.git	mattermost__mattermost__7bd795e6	False		False		False	0	
+https://github.com/mattpocock/ts-reset.git	mattpocock__ts-reset__aa0a2646	False		False	0	False	0	
+https://github.com/max-mapper/menubar.git	max-mapper__menubar__e281cc5f	False		False	0	False	0	
+https://github.com/mediar-ai/screenpipe.git	mediar-ai__screenpipe__b2f87543	False		False	0	False	0	
+https://github.com/microsoft/azuredatastudio.git	microsoft__azuredatastudio__a564d400	False		False	1	False	0	
+https://github.com/microsoft/data-formulator.git	microsoft__data-formulator__deb1176f	False		False	1	False	0	
+https://github.com/microsoft/fast.git	microsoft__fast__c02dd87c	False		False	1	False	0	
+https://github.com/microsoft/fluentui.git	microsoft__fluentui__3750e1bd	False		False	1	False	0	
+https://github.com/microsoft/inshellisense.git	microsoft__inshellisense__c789e480	False		False	1	False	0	
+https://github.com/microsoft/reactxp.git	microsoft__reactxp__91b53df1	False		False	1	False	0	
+https://github.com/microsoft/rushstack.git	microsoft__rushstack__99960a8d	False		False	1	False	0	
+https://github.com/microsoft/vscode-copilot-chat.git	microsoft__vscode-copilot-chat__cbc56f99	False		False	0	False	0	
+https://github.com/midday-ai/midday.git	midday-ai__midday__13504d26	False		False	1	False	0	
+https://github.com/midudev/aprendiendo-react.git	midudev__aprendiendo-react__736926f9	False		False	1	False	0	
+https://github.com/mifi/lossless-cut.git	mifi__lossless-cut__0d760090	False		False		False	0	
+https://github.com/mihomo-party-org/clash-party.git	mihomo-party-org__clash-party__e37d4556	False		False	0	False	0	
+https://github.com/millsp/ts-toolbelt.git	millsp__ts-toolbelt__69b8ed29	False		False	0	False	0	
+https://github.com/mishushakov/llm-scraper.git	mishushakov__llm-scraper__ad3fedc9	False		False	0	False	0	
+https://github.com/missive/emoji-mart.git	missive__emoji-mart__22c085b4	False		False	1	False	0	
+https://github.com/miurla/morphic.git	miurla__morphic__108400ab	False		False	1	False	0	
+https://github.com/modelcontextprotocol/modelcontextprotocol.git	modelcontextprotocol__modelcontextprotocol__21d38592	False		False	0	False	0	
+https://github.com/modelcontextprotocol/servers.git	modelcontextprotocol__servers__fca8ba21	False		False	0	False	0	
+https://github.com/moeru-ai/airi.git	moeru-ai__airi__b887f733	False		False	0	False	0	
+https://github.com/molefrog/wouter.git	molefrog__wouter__a62fc1d4	False		False	1	False	0	
+https://github.com/mongodb/node-mongodb-native.git	mongodb__node-mongodb-native__2d075ad8	False		False	0	False	0	
+https://github.com/mqttjs/MQTT.js.git	mqttjs__MQTT.js__f392851e	False		False	0	False	0	
+https://github.com/mswjs/msw.git	mswjs__msw__7c0cfa67	False		False		False	0	
+https://github.com/mui/base-ui.git	mui__base-ui__28d7f130	False		False	0	False	0	
+https://github.com/n4ze3m/page-assist.git	n4ze3m__page-assist__403ec966	False		False	1	False	0	
+https://github.com/n8n-io/n8n.git	n8n-io__n8n__f791d596	False		False	0	False	0	
+https://github.com/nanostores/nanostores.git	nanostores__nanostores__de6c663d	False		False	0	False	0	
+https://github.com/nativescript-vue/nativescript-vue.git	nativescript-vue__nativescript-vue__2a12e798	False		False	0	False	0	
+https://github.com/nativewind/nativewind.git	nativewind__nativewind__cdc75003	False		False	0	False	0	
+https://github.com/neoclide/coc.nvim.git	neoclide__coc.nvim__f1136f44	False		False	0	False	0	
+https://github.com/nestjs/nest.git	nestjs__nest__686b3c8e	False		False	1	False	0	
+https://github.com/netless-io/flat.git	netless-io__flat__4f997f80	False		False	1	False	0	
+https://github.com/nexe/nexe.git	nexe__nexe__ad788aab	False		False	2	False	0	
+https://github.com/nextai-translator/nextai-translator.git	nextai-translator__nextai-translator__4d9160f7	False		False	0	False	0	
+https://github.com/nextjs/saas-starter.git	nextjs__saas-starter__b91c9524	False		False	0	False	0	
+https://github.com/nhn/tui.editor.git	nhn__tui.editor__08e06075	False		False	1	False	0	
+https://github.com/niklasvh/html2canvas.git	niklasvh__html2canvas__3f869071	False		False	0	False	0	
+https://github.com/nocobase/nocobase.git	nocobase__nocobase__5bffc438	False		False	1	False	0	
+https://github.com/nodegui/react-nodegui.git	nodegui__react-nodegui__5dbbb1bd	False		False	1	False	0	
+https://github.com/nrwl/nx.git	nrwl__nx__ec2f9988	False		False	0	False	0	
+https://github.com/nteract/nteract.git	nteract__nteract__5cfe5776	False		False	1	False	0	
+https://github.com/nukeop/nuclear.git	nukeop__nuclear__ba3644ef	False		False	1	False	0	
+https://github.com/oblador/react-native-vector-icons.git	oblador__react-native-vector-icons__d45cc109	False		False		False	0	
+https://github.com/oclif/oclif.git	oclif__oclif__222f7bb8	False		False	1	False	0	
+https://github.com/octokit/octokit.js.git	octokit__octokit.js__abd25d0c	False		False	0	False	0	
+https://github.com/omnivore-app/omnivore.git	omnivore-app__omnivore__3ccdeb2b	False		False	1	False	0	
+https://github.com/open-cli-tools/concurrently.git	open-cli-tools__concurrently__405eed84	False		False	0	False	0	
+https://github.com/openai/openai-realtime-agents.git	openai__openai-realtime-agents__ca142458	False		False	0	False	0	
+https://github.com/openblocks-dev/openblocks.git	openblocks-dev__openblocks__82e8992e	False		False	0	False	0	
+https://github.com/openobserve/openobserve.git	openobserve__openobserve__c5bbc35a	False		False		False	0	
+https://github.com/outline/outline.git	outline__outline__a253878b	False		False		False	0	
+https://github.com/owncast/owncast.git	owncast__owncast__7ccad67b	False		False	1	False	0	
+https://github.com/panva/jose.git	panva__jose__d15718ea	False		False	0	False	0	
+https://github.com/paulmillr/chokidar.git	paulmillr__chokidar__6f91af96	False		False	0	False	0	
+https://github.com/peers/peerjs.git	peers__peerjs__59e43895	False		False	0	False	0	
+https://github.com/penrose/penrose.git	penrose__penrose__2730ee9f	False		False	1	False	0	
+https://github.com/pillarjs/path-to-regexp.git	pillarjs__path-to-regexp__b3ce4f38	False		False	0	False	0	
+https://github.com/pixijs/pixijs.git	pixijs__pixijs__86dc9819	False		False	0	False	0	
+https://github.com/plait-board/drawnix.git	plait-board__drawnix__5472e465	False		True	-1	False	0	
+https://github.com/plasmicapp/plasmic.git	plasmicapp__plasmic__eba0bee0	False		False		False	0	
+https://github.com/pmndrs/jotai.git	pmndrs__jotai__80f689f4	False		False	0	False	0	
+https://github.com/pmndrs/react-three-fiber.git	pmndrs__react-three-fiber__c48e6a19	False		False	0	False	0	
+https://github.com/pmndrs/use-gesture.git	pmndrs__use-gesture__fafe5e0f	False		False	1	False	0	
+https://github.com/pmndrs/valtio.git	pmndrs__valtio__d828ca15	False		False	0	False	0	
+https://github.com/pmndrs/zustand.git	pmndrs__zustand__e2b0829d	False		False	0	False	0	
+https://github.com/pnpm/pnpm.git	pnpm__pnpm__6e6fb961	False		False	1	False	0	
+https://github.com/portainer/portainer.git	portainer__portainer__557a51da	False		False		False	0	
+https://github.com/postcss/postcss.git	postcss__postcss__3a82154b	False		False	0	False	0	
+https://github.com/pqoqubbw/icons.git	pqoqubbw__icons__80c19c67	False		False	0	False	0	
+https://github.com/privatenumber/tsx.git	privatenumber__tsx__47b2de8a	False		False	1	False	0	
+https://github.com/probot/probot.git	probot__probot__42c9ec38	False		False	0	False	0	
+https://github.com/projectstorm/react-diagrams.git	projectstorm__react-diagrams__d892d896	False		False	0	False	0	
+https://github.com/promptfoo/promptfoo.git	promptfoo__promptfoo__bfbf32c9	False		False	0	False	0	
+https://github.com/puppeteer/puppeteer.git	puppeteer__puppeteer__4b470729	False		False	1	False	0	
+https://github.com/purocean/yn.git	purocean__yn__8a3d4625	False		False	1	False	0	
+https://github.com/rahuldkjain/github-profile-readme-generator.git	rahuldkjain__github-profile-readme-generator__603d6eaa	False		False	0	False	0	
+https://github.com/raidendotai/cofounder.git	raidendotai__cofounder__24838a44	False		False	1	False	0	
+https://github.com/raineorshine/npm-check-updates.git	raineorshine__npm-check-updates__00dd7c3a	False		False	0	False	0	
+https://github.com/rancher-sandbox/rancher-desktop.git	rancher-sandbox__rancher-desktop__36ee1871	False		False	1	False	0	
+https://github.com/raycast/extensions.git	raycast__extensions__6f75e482	False		False		False	0	
+https://github.com/react-bootstrap/react-bootstrap.git	react-bootstrap__react-bootstrap__bf7b8070	False		False	0	False	0	
+https://github.com/react-dnd/react-dnd.git	react-dnd__react-dnd__d6435198	False		False	1	False	0	
+https://github.com/react-grid-layout/react-grid-layout.git	react-grid-layout__react-grid-layout__ddad41d1	False		False	1	False	0	
+https://github.com/react-hook-form/react-hook-form.git	react-hook-form__react-hook-form__20777188	False		False	0	False	0	
+https://github.com/react-native-device-info/react-native-device-info.git	react-native-device-info__react-native-device-info__3f45ec06	False		False	1	False	0	
+https://github.com/react-native-maps/react-native-maps.git	react-native-maps__react-native-maps__1caab8b0	False		False	0	False	0	
+https://github.com/react-native-webview/react-native-webview.git	react-native-webview__react-native-webview__afb8c435	False		False	0	False	0	
+https://github.com/react-navigation/react-navigation.git	react-navigation__react-navigation__3b42c6c3	False		False	0	False	0	
+https://github.com/react95-io/React95.git	react95-io__React95__05c86fe7	False		False	1	False	0	
+https://github.com/reactchartjs/react-chartjs-2.git	reactchartjs__react-chartjs-2__87542ea5	False		False	0	False	0	
+https://github.com/reactjs/react.dev.git	reactjs__react.dev__f3a19b3a	False		False	0	False	0	
+https://github.com/readest/readest.git	readest__readest__3140b74d	False		False	0	False	0	
+https://github.com/recharts/recharts.git	recharts__recharts__706c4445	False		False	0	False	0	
+https://github.com/redis/RedisInsight.git	redis__RedisInsight__4c1ebde7	False		False	1	False	0	
+https://github.com/redis/ioredis.git	redis__ioredis__9254add0	False		False	0	False	0	
+https://github.com/redis/node-redis.git	redis__node-redis__35ed9020	False		False		False	0	
+https://github.com/redux-observable/redux-observable.git	redux-observable__redux-observable__5b8c1bb0	False		False	0	False	0	
+https://github.com/reduxjs/react-redux.git	reduxjs__react-redux__f84cc112	False		False	0	False	0	
+https://github.com/reduxjs/redux-devtools.git	reduxjs__redux-devtools__584a95f4	False		False	1	False	0	
+https://github.com/reduxjs/redux-thunk.git	reduxjs__redux-thunk__dfa35708	False		False		False	0	
+https://github.com/reduxjs/redux.git	reduxjs__redux__830b6ec3	False		False	0	False	0	
+https://github.com/reduxjs/reselect.git	reduxjs__reselect__5014342d	False		False	0	False	0	
+https://github.com/redwoodjs/graphql.git	redwoodjs__graphql__53ef9891	False		False		False	0	
+https://github.com/refined-github/refined-github.git	refined-github__refined-github__0b9b38d8	False		False	0	False	0	
+https://github.com/remotion-dev/remotion.git	remotion-dev__remotion__465423fa	False		False	1	False	0	
+https://github.com/renovatebot/renovate.git	renovatebot__renovate__e97102a2	False		False	0	False	0	
+https://github.com/resend/react-email.git	resend__react-email__60312dd7	False		False		False	0	
+https://github.com/retejs/rete.git	retejs__rete__4f4ac12e	False		False	0	False	0	
+https://github.com/reworkd/AgentGPT.git	reworkd__AgentGPT__f007b77f	False		False		False	0	
+https://github.com/ritwickdey/vscode-live-server.git	ritwickdey__vscode-live-server__3d551e53	False		False	1	False	0	
+https://github.com/ritz078/transform.git	ritz078__transform__d0e47866	False		False	1	False	0	
+https://github.com/rjsf-team/react-jsonschema-form.git	rjsf-team__react-jsonschema-form__657ebcc3	False		False	0	False	0	
+https://github.com/rockbenben/ChatGPT-Shortcut.git	rockbenben__ChatGPT-Shortcut__b2d13335	False		False	1	False	0	
+https://github.com/rough-stuff/rough-notation.git	rough-stuff__rough-notation__d7ec6687	False		False	0	False	0	
+https://github.com/rough-stuff/wired-elements.git	rough-stuff__wired-elements__161717de	False		False	0	False	0	
+https://github.com/rowyio/rowy.git	rowyio__rowy__b5ff2361	False		False	0	False	0	
+https://github.com/rrweb-io/rrweb.git	rrweb-io__rrweb__6aaa0e5b	False		False	1	False	0	
+https://github.com/rsuite/rsuite.git	rsuite__rsuite__1a136b50	False		False	0	False	0	
+https://github.com/rt2zz/redux-persist.git	rt2zz__redux-persist__0dedd903	False		False	0	False	0	
+https://github.com/rubickCenter/rubick.git	rubickCenter__rubick__ca2156b9	False		False	1	False	0	
+https://github.com/rybbit-io/rybbit.git	rybbit-io__rybbit__f690f387	False		False	0	False	0	
+https://github.com/ryo-ma/github-profile-trophy.git	ryo-ma__github-profile-trophy__96c526b0	False		False		False	0	
+https://github.com/sachinchoolur/lightGallery.git	sachinchoolur__lightGallery__4a9b989f	False		False	1	False	0	
+https://github.com/sahat/satellizer.git	sahat__satellizer__ad6ee778	False		False	1	False	0	
+https://github.com/satnaing/shadcn-admin.git	satnaing__shadcn-admin__6a1b1fa8	False		False	0	False	0	
+https://github.com/sb2nov/mac-setup.git	sb2nov__mac-setup__e4f045db	False		False	1	False	0	
+https://github.com/seerr-team/seerr.git	seerr-team__seerr__9cec526e	False		False	1	False	0	
+https://github.com/shadcn-ui/taxonomy.git	shadcn-ui__taxonomy__889e1dbc	False		False	1	False	0	
+https://github.com/shardeum/shardeum.git	shardeum__shardeum__0ac02204	False		False	1	False	0	
+https://github.com/sinclairzx81/typebox.git	sinclairzx81__typebox__6dc8546f	False		False		False	0	
+https://github.com/sindresorhus/caprine.git	sindresorhus__caprine__d4be5107	False		False	0	False	0	
+https://github.com/sindresorhus/got.git	sindresorhus__got__eb0e333b	False		False	0	False	0	
+https://github.com/sindresorhus/ky.git	sindresorhus__ky__908323fc	False		False	0	False	0	
+https://github.com/sindresorhus/pageres.git	sindresorhus__pageres__9c0fc069	False		False	0	False	0	
+https://github.com/sindresorhus/type-fest.git	sindresorhus__type-fest__526e6099	False		False	-1	False	0	
+https://github.com/sismo-core/sismo-badges.git	sismo-core__sismo-badges__82e9d054	False		False	1	False	0	
+https://github.com/snabbdom/snabbdom.git	snabbdom__snabbdom__fa3d6ba3	False		False	0	False	0	
+https://github.com/software-mansion/react-native-svg.git	software-mansion__react-native-svg__b92bc138	False		False	0	False	0	
+https://github.com/solidjs/solid.git	solidjs__solid__0edb7431	False		False		False	0	
+https://github.com/soybeanjs/soybean-admin.git	soybeanjs__soybean-admin__1a50853b	False		False	0	False	0	
+https://github.com/sst/opencode.git	sst__opencode__a4d1e572	False		False	1	False	0	
+https://github.com/stackblitz/bolt.new.git	stackblitz__bolt.new__53819fad	False		False	0	False	0	
+https://github.com/stan-smith/FossFLOW.git	stan-smith__FossFLOW__c2aa20b0	False		False	1	False	0	
+https://github.com/star-history/star-history.git	star-history__star-history__6503b64e	False		False	0	False	0	
+https://github.com/statelyai/xstate.git	statelyai__xstate__3a765c2b	False		False	0	False	0	
+https://github.com/strapi/strapi.git	strapi__strapi__49cc340b	False		False		False	0	
+https://github.com/streamich/react-use.git	streamich__react-use__1a14bf2b	False		False	1	False	0	
+https://github.com/styleguidist/react-styleguidist.git	styleguidist__react-styleguidist__2406c97a	False		False	0	False	0	
+https://github.com/subquery/subql.git	subquery__subql__2c2d9ebe	False		False	1	False	0	
+https://github.com/supabase/supabase.git	supabase__supabase__2a2c1478	False		False	0	False	0	
+https://github.com/supermacro/neverthrow.git	supermacro__neverthrow__5fe89e5a	False		False	0	False	0	
+https://github.com/szimek/signature_pad.git	szimek__signature_pad__5baafd68	False		False	0	False	0	
+https://github.com/t3-oss/create-t3-app.git	t3-oss__create-t3-app__8cebe982	False		False	0	False	0	
+https://github.com/t4t5/sweetalert.git	t4t5__sweetalert__4c56c13e	False		False	127	False	0	
+https://github.com/tailwindlabs/prettier-plugin-tailwindcss.git	tailwindlabs__prettier-plugin-tailwindcss__8de5fb1f	False		False	0	False	0	
+https://github.com/tamagui/tamagui.git	tamagui__tamagui__9ae7544e	False		False	0	False	0	
+https://github.com/taniarascia/takenote.git	taniarascia__takenote__35e536ba	False		False	1	False	0	
+https://github.com/taskforcesh/bullmq.git	taskforcesh__bullmq__5a121c22	False		False	1	False	0	
+https://github.com/taye/interact.js.git	taye__interact.js__b5b99c3f	False		False	1	False	0	
+https://github.com/teableio/teable.git	teableio__teable__aa0f92ab	False		False	1	False	0	
+https://github.com/teambit/bit.git	teambit__bit__1f207728	False		False		False	0	
+https://github.com/telegraf/telegraf.git	telegraf__telegraf__248885d8	False		False	0	False	0	
+https://github.com/tensorflow/playground.git	tensorflow__playground__02de1190	False		False	0	False	0	
+https://github.com/tensorflow/tensorboard.git	tensorflow__tensorboard__0b6f3b68	False		False	1	False	0	
+https://github.com/tensorflow/tfjs-models.git	tensorflow__tfjs-models__8a8760f7	False		False	1	False	0	
+https://github.com/tensorflow/tfjs.git	tensorflow__tfjs__26933dde	False		False	1	False	0	
+https://github.com/theatre-js/theatre.git	theatre-js__theatre__68a4d8a6	False		False	0	False	0	
+https://github.com/tinymce/tinymce.git	tinymce__tinymce__32fa6210	False		False	1	False	0	
+https://github.com/toeverything/AFFiNE.git	toeverything__AFFiNE__fd97a6d5	False		False	1	False	0	
+https://github.com/toon-format/toon.git	toon-format__toon__1dc79ea5	False		False	0	False	0	
+https://github.com/transitive-bullshit/agentic.git	transitive-bullshit__agentic__55ef93f5	False		False		False	0	
+https://github.com/transitive-bullshit/nextjs-notion-starter-kit.git	transitive-bullshit__nextjs-notion-starter-kit__8b71153b	False		False	0	False	0	
+https://github.com/transloadit/uppy.git	transloadit__uppy__de1dcabc	False		False	0	False	0	
+https://github.com/trpc/trpc.git	trpc__trpc__81a8b6b4	False		False	1	False	0	
+https://github.com/tusen-ai/naive-ui.git	tusen-ai__naive-ui__a4928492	False		False		False	0	
+https://github.com/tweenjs/tween.js.git	tweenjs__tween.js__25e34694	False		False	0	False	0	
+https://github.com/twentyhq/twenty.git	twentyhq__twenty__cac5f332	False		False	1	False	0	
+https://github.com/typeorm/typeorm.git	typeorm__typeorm__ff93e800	False		False		False	0	
+https://github.com/typescript-eslint/typescript-eslint.git	typescript-eslint__typescript-eslint__a124c236	False		False	0	False	0	
+https://github.com/typestack/class-transformer.git	typestack__class-transformer__1b1c55d2	False		False	1	False	0	
+https://github.com/udecode/plate.git	udecode__plate__222f6dc8	False		False	1	False	0	
+https://github.com/umijs/umi.git	umijs__umi__e902bd49	False		False	1	False	0	
+https://github.com/unocss/unocss.git	unocss__unocss__d351f16d	False		False		False	0	
+https://github.com/unovue/shadcn-vue.git	unovue__shadcn-vue__bdb5185d	False		False	-1	False	0	
+https://github.com/upscayl/upscayl.git	upscayl__upscayl__ca2b6545	False		False	0	False	0	
+https://github.com/upstash/context7.git	upstash__context7__b88e00bc	False		False	2	False	0	
+https://github.com/urql-graphql/urql.git	urql-graphql__urql__bb5b34e8	False		False	0	False	0	
+https://github.com/usablica/intro.js.git	usablica__intro.js__ae4c038b	False		False	1	False	0	
+https://github.com/ustbhuangyi/better-scroll.git	ustbhuangyi__better-scroll__0431a73c	False		False	1	False	0	
+https://github.com/utterance/utterances.git	utterance__utterances__b3caf57f	False		False	1	False	0	
+https://github.com/uuidjs/uuid.git	uuidjs__uuid__c36ca50b	False		False	0	False	0	
+https://github.com/vadimdemedes/ink.git	vadimdemedes__ink__e6a10bc0	False		False	0	False	0	
+https://github.com/vercel/ai-chatbot.git	vercel__ai-chatbot__80d1dd66	False		False	0	False	0	
+https://github.com/vercel/ai.git	vercel__ai__727e8b06	False		False	0	False	0	
+https://github.com/vercel/commerce.git	vercel__commerce__53dbac2e	False		False	0	False	0	
+https://github.com/vercel/hyper.git	vercel__hyper__963bc528	False		False	1	False	0	
+https://github.com/vercel/platforms.git	vercel__platforms__4bce5dc8	False		False	0	False	0	
+https://github.com/vercel/satori.git	vercel__satori__ba4a8c6c	False		False	0	False	0	
+https://github.com/vercel/serve.git	vercel__serve__2fdeac16	False		False	0	False	0	
+https://github.com/vercel/swr.git	vercel__swr__ad92aa17	False		False	0	False	0	
+https://github.com/vercel/vercel.git	vercel__vercel__e80947cd	False		False	1	False	0	
+https://github.com/verdaccio/verdaccio.git	verdaccio__verdaccio__b52517ef	False		False		False	0	
+https://github.com/video-dev/hls.js.git	video-dev__hls.js__a3f21abe	False		False	0	False	0	
+https://github.com/visgl/react-map-gl.git	visgl__react-map-gl__6024c857	False		False	1	False	0	
+https://github.com/voidcosmos/npkill.git	voidcosmos__npkill__5f83635f	False		False	0	False	0	
+https://github.com/vrtmrz/obsidian-livesync.git	vrtmrz__obsidian-livesync__bb7ad7bb	False		False	1	False	0	
+https://github.com/vscode-neovim/vscode-neovim.git	vscode-neovim__vscode-neovim__075bdcf7	False		False	0	False	0	
+https://github.com/vuejs/core.git	vuejs__core__ca3b424d	False		False	0	False	0	
+https://github.com/vuejs/devtools-v6.git	vuejs__devtools-v6__736cd2c3	False		False	1	False	0	
+https://github.com/vuejs/petite-vue.git	vuejs__petite-vue__c8db04e0	False		False	1	False	0	
+https://github.com/vuejs/pinia.git	vuejs__pinia__222724f0	False		False	0	False	0	
+https://github.com/vuejs/vue.git	vuejs__vue__2533c81d	False		False	0	False	0	
+https://github.com/wandb/openui.git	wandb__openui__c9e38924	False		False	0	False	0	
+https://github.com/wangeditor-team/wangEditor.git	wangeditor-team__wangEditor__8e57fc03	False		False	1	False	0	
+https://github.com/wasp-lang/wasp.git	wasp-lang__wasp__dd973968	False		False		False	0	
+https://github.com/wclr/yalc.git	wclr__yalc__c271cc1f	False		False	1	False	0	
+https://github.com/wei/pull.git	wei__pull__36a05dae	False		False		False	0	
+https://github.com/wenyan-lang/wenyan.git	wenyan-lang__wenyan__3029d2d0	False		False	0	False	0	
+https://github.com/wevm/wagmi.git	wevm__wagmi__6fba3221	False		False	0	False	0	
+https://github.com/windicss/windicss.git	windicss__windicss__41b443be	False		False	1	False	0	
+https://github.com/windingwind/zotero-better-notes.git	windingwind__zotero-better-notes__3ee85418	False		False	0	False	0	
+https://github.com/windingwind/zotero-pdf-translate.git	windingwind__zotero-pdf-translate__181622b9	False		False	0	False	0	
+https://github.com/winfunc/opcode.git	winfunc__opcode__c0971812	False		False	1	False	0	
+https://github.com/withastro/starlight.git	withastro__starlight__7e040779	False		False	1	False	0	
+https://github.com/withfig/autocomplete.git	withfig__autocomplete__1142c4be	False		False	0	False	0	
+https://github.com/wix/react-native-calendars.git	wix__react-native-calendars__a672e4ed	False		False	0	False	0	
+https://github.com/wong2/chatgpt-google-extension.git	wong2__chatgpt-google-extension__5a6de68f	False		False	0	False	0	
+https://github.com/wulkano/Kap.git	wulkano__Kap__3dfe3e0a	False		False	1	False	0	
+https://github.com/wxt-dev/wxt.git	wxt-dev__wxt__079b7d6e	False		False	0	False	0	
+https://github.com/x-extends/vxe-table.git	x-extends__vxe-table__619c0829	False		False	1	False	0	
+https://github.com/xiangsx/gpt4free-ts.git	xiangsx__gpt4free-ts__f9c291d2	False		False	1	False	0	
+https://github.com/xtermjs/xterm.js.git	xtermjs__xterm.js__c5fa2497	False		False	1	False	0	
+https://github.com/xushengfeng/eSearch.git	xushengfeng__eSearch__3763a049	False		False	0	False	0	
+https://github.com/xyflow/xyflow.git	xyflow__xyflow__1c2f225b	False		False		False	0	
+https://github.com/yezihaohao/react-admin.git	yezihaohao__react-admin__a492e066	False		False	1	False	0	
+https://github.com/yiminghe/async-validator.git	yiminghe__async-validator__e4c23a8d	False		False	0	False	0	
+https://github.com/yinxin630/fiora.git	yinxin630__fiora__43e2c761	False		False	1	False	0	
+https://github.com/yoavbls/pretty-ts-errors.git	yoavbls__pretty-ts-errors__a44ada8d	False		False	0	False	0	
+https://github.com/yocontra/react-responsive.git	yocontra__react-responsive__1f834b37	False		False	0	False	0	
+https://github.com/zaidmukaddam/scira.git	zaidmukaddam__scira__de0c4d8b	False		False	0	False	0	
+https://github.com/ztjhz/BetterChatGPT.git	ztjhz__BetterChatGPT__778540b3	False		False	1	False	0	
+https://github.com/zu1k/bs-core.git	zu1k__bs-core__718d2152	False		False	1	False	0	
+https://github.com/47ng/nuqs.git	47ng__nuqs__cc1376b9	True	no tsconfig in repo root	False		False	0	
+https://github.com/AbdullahAlfaraj/Auto-Photoshop-StableDiffusion-Plugin.git	AbdullahAlfaraj__Auto-Photoshop-StableDiffusion-Plugin__aa1000ae	True	no tsconfig in repo root	False		False	0	
+https://github.com/Automattic/wp-calypso.git	Automattic__wp-calypso__fbbeb265	True	no tsconfig in repo root	False		False	0	
+https://github.com/BuilderIO/builder.git	BuilderIO__builder__1d900a9f	True	no tsconfig in repo root	False		False	0	
+https://github.com/CopilotKit/CopilotKit.git	CopilotKit__CopilotKit__44e57140	True	no tsconfig in repo root	False		False	0	
+https://github.com/Dokploy/dokploy.git	Dokploy__dokploy__b5ab2827	True	no tsconfig in repo root	False		False	0	
+https://github.com/Floorp-Projects/Floorp.git	Floorp-Projects__Floorp__f59d52ca	True	no tsconfig in repo root	False		False	0	
+https://github.com/FlowiseAI/Flowise.git	FlowiseAI__Flowise__03d820d3	True	no tsconfig in repo root	False		False	0	
+https://github.com/GitbookIO/gitbook.git	GitbookIO__gitbook__60013029	True	no tsconfig in repo root	False		False	0	
+https://github.com/GrapesJS/grapesjs.git	GrapesJS__grapesjs__1eb96bc4	True	no tsconfig in repo root	False		False	0	
+https://github.com/HerbertHe/iptv-sources.git	HerbertHe__iptv-sources__615db89c	True	no tsconfig in repo root	False		False	0	
+https://github.com/Infisical/infisical.git	Infisical__infisical__d41cb98c	True	no tsconfig in repo root	False		False	0	
+https://github.com/Kong/insomnia.git	Kong__insomnia__6c7e53b5	True	no tsconfig in repo root	False		False	0	
+https://github.com/MotiaDev/motia.git	MotiaDev__motia__26ba4f0e	True	no tsconfig in repo root	False		False	0	
+https://github.com/NginxProxyManager/nginx-proxy-manager.git	NginxProxyManager__nginx-proxy-manager__48fdef62	True	no tsconfig in repo root	False		False	0	
+https://github.com/NomicFoundation/hardhat.git	NomicFoundation__hardhat__43760850	True	no tsconfig in repo root	False		False	0	
+https://github.com/OutlineFoundation/outline-apps.git	OutlineFoundation__outline-apps__333abde1	True	no tsconfig in repo root	False		False	0	
+https://github.com/PlasmoHQ/plasmo.git	PlasmoHQ__plasmo__50ae1acf	True	no tsconfig in repo root	False		False	0	
+https://github.com/ReactiveX/rxjs.git	ReactiveX__rxjs__ea8742ba	True	no tsconfig in repo root	False		False	0	
+https://github.com/RocketChat/Rocket.Chat.git	RocketChat__Rocket.Chat__2f265c9e	True	no tsconfig in repo root	False		False	0	
+https://github.com/Shopify/react-native-skia.git	Shopify__react-native-skia__edbfc1d6	True	no tsconfig in repo root	False		False	0	
+https://github.com/TibixDev/winboat.git	TibixDev__winboat__d91ddcc7	True	no tsconfig in repo root	False		False	0	
+https://github.com/TypeCellOS/BlockNote.git	TypeCellOS__BlockNote__ddf52a69	True	no tsconfig in repo root	False		False	0	
+https://github.com/ZuodaoTech/everyone-can-use-english.git	ZuodaoTech__everyone-can-use-english__875d84ce	True	no tsconfig in repo root	False		False	0	
+https://github.com/ag-ui-protocol/ag-ui.git	ag-ui-protocol__ag-ui__d9a65073	True	no tsconfig in repo root	False		False	0	
+https://github.com/alan2207/bulletproof-react.git	alan2207__bulletproof-react__718f3d84	True	no tsconfig in repo root	False		False	0	
+https://github.com/angular/angular.git	angular__angular__99c58b0d	True	no tsconfig in repo root	False		False	0	
+https://github.com/appwrite/appwrite.git	appwrite__appwrite__d393800a	True	no tsconfig in repo root	False		False	0	
+https://github.com/assistant-ui/assistant-ui.git	assistant-ui__assistant-ui__1ba008c3	True	no tsconfig in repo root	False		False	0	
+https://github.com/aws/aws-cdk.git	aws__aws-cdk__15bc804b	True	no tsconfig in repo root	False		False	0	
+https://github.com/benawad/dogehouse.git	benawad__dogehouse__33e3922b	True	no tsconfig in repo root	False		False	0	
+https://github.com/buuing/lucky-canvas.git	buuing__lucky-canvas__85d83d62	True	no tsconfig in repo root	False		False	0	
+https://github.com/calcom/cal.com.git	calcom__cal.com__6963dfd6	True	no tsconfig in repo root	False		False	0	
+https://github.com/captbaritone/webamp.git	captbaritone__webamp__4d42bb34	True	no tsconfig in repo root	False		False	0	
+https://github.com/carbon-design-system/carbon.git	carbon-design-system__carbon__542a73f3	True	no tsconfig in repo root	False		False	0	
+https://github.com/carloscuesta/gitmoji.git	carloscuesta__gitmoji__b34c1724	True	no tsconfig in repo root	False		False	0	
+https://github.com/cypress-io/cypress.git	cypress-io__cypress__1360ce31	True	no tsconfig in repo root	False		False	0	
+https://github.com/danny-avila/LibreChat.git	danny-avila__LibreChat__216404bf	True	no tsconfig in repo root	False		False	0	
+https://github.com/darkreader/darkreader.git	darkreader__darkreader__bf266808	True	no tsconfig in repo root	False		False	0	
+https://github.com/davidjerleke/embla-carousel.git	davidjerleke__embla-carousel__491f0369	True	no tsconfig in repo root	False		False	0	
+https://github.com/daybrush/moveable.git	daybrush__moveable__1a6b09c2	True	no tsconfig in repo root	False		False	0	
+https://github.com/dicebear/dicebear.git	dicebear__dicebear__7d220540	True	no tsconfig in repo root	False		False	0	
+https://github.com/diegomura/react-pdf.git	diegomura__react-pdf__17a60c04	True	no tsconfig in repo root	False		False	0	
+https://github.com/directus/directus.git	directus__directus__e3533651	True	no tsconfig in repo root	False		False	0	
+https://github.com/docmost/docmost.git	docmost__docmost__d4150b70	True	no tsconfig in repo root	False		False	0	
+https://github.com/dream-num/univer.git	dream-num__univer__404dff4b	True	no tsconfig in repo root	False		False	0	
+https://github.com/dubinc/dub.git	dubinc__dub__53073cc5	True	no tsconfig in repo root	False		False	0	
+https://github.com/eclipse-theia/theia.git	eclipse-theia__theia__4eb2226b	True	no tsconfig in repo root	False		False	0	
+https://github.com/elastic/eui.git	elastic__eui__f48ace6f	True	no tsconfig in repo root	False		False	0	
+https://github.com/firecrawl/firecrawl.git	firecrawl__firecrawl__2c7b3111	True	no tsconfig in repo root	False		False	0	
+https://github.com/floating-ui/floating-ui.git	floating-ui__floating-ui__2be7d29c	True	no tsconfig in repo root	False		False	0	
+https://github.com/formbricks/formbricks.git	formbricks__formbricks__e1462bfb	True	no tsconfig in repo root	False		False	0	
+https://github.com/founded-labs/react-native-reusables.git	founded-labs__react-native-reusables__823c3f64	True	no tsconfig in repo root	False		False	0	
+https://github.com/fullcalendar/fullcalendar.git	fullcalendar__fullcalendar__81b9f910	True	no tsconfig in repo root	False		False	0	
+https://github.com/getomni-ai/zerox.git	getomni-ai__zerox__56d0f9e9	True	no tsconfig in repo root	False		False	0	
+https://github.com/getumbrel/umbrel.git	getumbrel__umbrel__99da74b8	True	no tsconfig in repo root	False		False	0	
+https://github.com/gitpod-io/gitpod.git	gitpod-io__gitpod__8470e29b	True	no tsconfig in repo root	False		False	0	
+https://github.com/google/brotli.git	google__brotli__45f00f12	True	no tsconfig in repo root	False		False	0	
+https://github.com/google/model-viewer.git	google__model-viewer__81259c01	True	no tsconfig in repo root	False		False	0	
+https://github.com/graphql/graphql-playground.git	graphql__graphql-playground__0bbb2794	True	no tsconfig in repo root	False		False	0	
+https://github.com/growthbook/growthbook.git	growthbook__growthbook__7f14259f	True	no tsconfig in repo root	False		False	0	
+https://github.com/hangwin/mcp-chrome.git	hangwin__mcp-chrome__67d55e9c	True	no tsconfig in repo root	False		False	0	
+https://github.com/hasura/graphql-engine.git	hasura__graphql-engine__c9273a01	True	no tsconfig in repo root	False		False	0	
+https://github.com/hedgedoc/hedgedoc.git	hedgedoc__hedgedoc__7ea95de1	True	no tsconfig in repo root	False		False	0	
+https://github.com/hediet/vscode-debug-visualizer.git	hediet__vscode-debug-visualizer__daa4bd0d	True	no tsconfig in repo root	False		False	0	
+https://github.com/homarr-labs/dashboard-icons.git	homarr-labs__dashboard-icons__92e489e0	True	no tsconfig in repo root	False		False	0	
+https://github.com/hoppscotch/hoppscotch.git	hoppscotch__hoppscotch__4ad77e43	True	no tsconfig in repo root	False		False	0	
+https://github.com/huntabyte/shadcn-svelte.git	huntabyte__shadcn-svelte__7342bdf2	True	no tsconfig in repo root	False		False	0	
+https://github.com/hydro-dev/Hydro.git	hydro-dev__Hydro__ee114c6d	True	no tsconfig in repo root	False		False	0	
+https://github.com/illacloud/illa-builder.git	illacloud__illa-builder__172b295d	True	no tsconfig in repo root	False		False	0	
+https://github.com/imgly/background-removal-js.git	imgly__background-removal-js__f9619396	True	no tsconfig in repo root	False		False	0	
+https://github.com/immich-app/immich.git	immich-app__immich__d7e9d48e	True	no tsconfig in repo root	False		False	0	
+https://github.com/inertiajs/inertia.git	inertiajs__inertia__ea2d465c	True	no tsconfig in repo root	False		False	0	
+https://github.com/ionic-team/capacitor.git	ionic-team__capacitor__f726a161	True	no tsconfig in repo root	False		False	0	
+https://github.com/jakearchibald/idb.git	jakearchibald__idb__e4de52f9	True	no tsconfig in repo root	False		False	0	
+https://github.com/janhq/jan.git	janhq__jan__78640dbd	True	no tsconfig in repo root	False		False	0	
+https://github.com/jkchao/typescript-book-chinese.git	jkchao__typescript-book-chinese__8296f5ec	True	no tsconfig in repo root	False		False	0	
+https://github.com/jquery/esprima.git	jquery__esprima__7cdcb7c4	True	no tsconfig in repo root	False		False	0	
+https://github.com/juliencrn/usehooks-ts.git	juliencrn__usehooks-ts__a3f4a0d4	True	no tsconfig in repo root	False		False	0	
+https://github.com/karakeep-app/karakeep.git	karakeep-app__karakeep__cdc9b9f0	True	no tsconfig in repo root	False		False	0	
+https://github.com/labring/laf.git	labring__laf__aaea09a9	True	no tsconfig in repo root	False		False	0	
+https://github.com/langchain-ai/langchainjs.git	langchain-ai__langchainjs__94d3b200	True	no tsconfig in repo root	False		False	0	
+https://github.com/langfuse/langfuse.git	langfuse__langfuse__9ff119dc	True	no tsconfig in repo root	False		False	0	
+https://github.com/linkwarden/linkwarden.git	linkwarden__linkwarden__a6b5f357	True	no tsconfig in repo root	False		False	0	
+https://github.com/linsa-io/linsa.git	linsa-io__linsa__00f59db5	True	no tsconfig in repo root	False		False	0	
+https://github.com/lit/lit.git	lit__lit__107facac	True	no tsconfig in repo root	False		False	0	
+https://github.com/liyupi/codefather.git	liyupi__codefather__efba23c5	True	no tsconfig in repo root	False		False	0	
+https://github.com/logto-io/logto.git	logto-io__logto__0925690d	True	no tsconfig in repo root	False		False	0	
+https://github.com/makeplane/plane.git	makeplane__plane__c3d85685	True	no tsconfig in repo root	False		False	0	
+https://github.com/mayooear/ai-pdf-chatbot-langchain.git	mayooear__ai-pdf-chatbot-langchain__a3e0f205	True	no tsconfig in repo root	False		False	0	
+https://github.com/medusajs/medusa.git	medusajs__medusa__c3c07aa6	True	no tsconfig in repo root	False		False	0	
+https://github.com/metricsgraphics/metrics-graphics.git	metricsgraphics__metrics-graphics__93debb5f	True	no tsconfig in repo root	False		False	0	
+https://github.com/microsoft/SandDance.git	microsoft__SandDance__bc5f19dd	True	no tsconfig in repo root	False		False	0	
+https://github.com/microsoft/TypeChat.git	microsoft__TypeChat__56b93d3f	True	no tsconfig in repo root	False		False	0	
+https://github.com/microsoft/TypeScript.git	microsoft__TypeScript__19fc1912	True	no tsconfig in repo root	False		False	0	
+https://github.com/microsoft/playwright-mcp.git	microsoft__playwright-mcp__846767e3	True	no tsconfig in repo root	False		False	0	
+https://github.com/microsoft/vscode-extension-samples.git	microsoft__vscode-extension-samples__4f8c83c5	True	no tsconfig in repo root	False		False	0	
+https://github.com/microsoft/vscode.git	microsoft__vscode__1c1a19b7	True	no tsconfig in repo root	False		False	0	
+https://github.com/misskey-dev/misskey.git	misskey-dev__misskey__4f5eec86	True	no tsconfig in repo root	False		False	0	
+https://github.com/modelcontextprotocol/inspector.git	modelcontextprotocol__inspector__03983e0a	True	no tsconfig in repo root	False		False	0	
+https://github.com/modelcontextprotocol/typescript-sdk.git	modelcontextprotocol__typescript-sdk__f06414b5	True	no tsconfig in repo root	False		False	0	
+https://github.com/monkeytypegame/monkeytype.git	monkeytypegame__monkeytype__e36ff3f7	True	no tsconfig in repo root	False		False	0	
+https://github.com/motion-canvas/motion-canvas.git	motion-canvas__motion-canvas__d6b09d59	True	no tsconfig in repo root	False		False	0	
+https://github.com/motiondivision/motion.git	motiondivision__motion__17ed364a	True	no tsconfig in repo root	False		False	0	
+https://github.com/mrousavy/react-native-mmkv.git	mrousavy__react-native-mmkv__7eae015c	True	no tsconfig in repo root	False		False	0	
+https://github.com/nanobrowser/nanobrowser.git	nanobrowser__nanobrowser__dbfa35ab	True	no tsconfig in repo root	False		False	0	
+https://github.com/nextauthjs/next-auth.git	nextauthjs__next-auth__7c2094ae	True	no tsconfig in repo root	False		False	0	
+https://github.com/nhn/tui.calendar.git	nhn__tui.calendar__9de21935	True	no tsconfig in repo root	False		False	0	
+https://github.com/nhost/nhost.git	nhost__nhost__29de8d4d	True	no tsconfig in repo root	False		False	0	
+https://github.com/nocodb/nocodb.git	nocodb__nocodb__f3f3fbf8	True	no tsconfig in repo root	False		False	0	
+https://github.com/nodejs/nodejs.org.git	nodejs__nodejs.org__5de69ecb	True	no tsconfig in repo root	False		False	0	
+https://github.com/onlook-dev/onlook.git	onlook-dev__onlook__00ca2bad	True	no tsconfig in repo root	False		False	0	
+https://github.com/open-circle/valibot.git	open-circle__valibot__aa5bdc76	True	no tsconfig in repo root	False		False	0	
+https://github.com/open-metadata/OpenMetadata.git	open-metadata__OpenMetadata__734f1500	True	no tsconfig in repo root	False		False	0	
+https://github.com/openreplay/openreplay.git	openreplay__openreplay__19045f6c	True	no tsconfig in repo root	False		False	0	
+https://github.com/openstatusHQ/openstatus.git	openstatusHQ__openstatus__4171e818	True	no tsconfig in repo root	False		False	0	
+https://github.com/oramasearch/orama.git	oramasearch__orama__d56e7fa6	True	no tsconfig in repo root	False		False	0	
+https://github.com/palantir/blueprint.git	palantir__blueprint__01a0b85f	True	no tsconfig in repo root	False		False	0	
+https://github.com/pawelmalak/flame.git	pawelmalak__flame__9936d62c	True	no tsconfig in repo root	False		False	0	
+https://github.com/piotrwitek/react-redux-typescript-guide.git	piotrwitek__react-redux-typescript-guide__8752fa23	True	no tsconfig in repo root	False		False	0	
+https://github.com/podman-desktop/podman-desktop.git	podman-desktop__podman-desktop__92c5d7ad	True	no tsconfig in repo root	False		False	0	
+https://github.com/prisma/prisma-examples.git	prisma__prisma-examples__cf50d931	True	no tsconfig in repo root	False		False	0	
+https://github.com/puckeditor/puck.git	puckeditor__puck__bce56574	True	no tsconfig in repo root	False		False	0	
+https://github.com/radix-ui/primitives.git	radix-ui__primitives__a8e24b7a	True	no tsconfig in repo root	False		False	0	
+https://github.com/radix-ui/themes.git	radix-ui__themes__055a65a8	True	no tsconfig in repo root	False		False	0	
+https://github.com/react-icons/react-icons.git	react-icons__react-icons__d97f6b92	True	no tsconfig in repo root	False		False	0	
+https://github.com/react-page/react-page.git	react-page__react-page__ec79262b	True	no tsconfig in repo root	False		False	0	
+https://github.com/reduxjs/redux-toolkit.git	reduxjs__redux-toolkit__85f7b0ad	True	no tsconfig in repo root	False		False	0	
+https://github.com/remix-run/react-router.git	remix-run__react-router__2f314d32	True	no tsconfig in repo root	False		False	0	
+https://github.com/remix-run/remix.git	remix-run__remix__95c08c26	True	no tsconfig in repo root	False		False	0	
+https://github.com/responsively-org/responsively-app.git	responsively-org__responsively-app__7e2007c0	True	no tsconfig in repo root	False		False	0	
+https://github.com/richards199999/Thinking-Claude.git	richards199999__Thinking-Claude__76689426	True	no tsconfig in repo root	False		False	0	
+https://github.com/rolling-scopes/rsschool-app.git	rolling-scopes__rsschool-app__4922abda	True	no tsconfig in repo root	False		False	0	
+https://github.com/runtipi/runtipi.git	runtipi__runtipi__6d5deecd	True	no tsconfig in repo root	False		False	0	
+https://github.com/ryoppippi/ccusage.git	ryoppippi__ccusage__3e9fbc9b	True	no tsconfig in repo root	False		False	0	
+https://github.com/shuding/nextra.git	shuding__nextra__25ac67fe	True	no tsconfig in repo root	False		False	0	
+https://github.com/simstudioai/sim.git	simstudioai__sim__f297ee04	True	no tsconfig in repo root	False		False	0	
+https://github.com/sindresorhus/modern-normalize.git	sindresorhus__modern-normalize__950ab392	True	no tsconfig in repo root	False		False	0	
+https://github.com/socketio/socket.io.git	socketio__socket.io__d768372a	True	no tsconfig in repo root	False		False	0	
+https://github.com/sst/openauth.git	sst__openauth__b112bc78	True	no tsconfig in repo root	False		False	0	
+https://github.com/sst/opentui.git	sst__opentui__0f8ffe72	True	no tsconfig in repo root	False		False	0	
+https://github.com/sst/sst.git	sst__sst__7b6f6a74	True	no tsconfig in repo root	False		False	0	
+https://github.com/stack-auth/stack-auth.git	stack-auth__stack-auth__2f9c4ba9	True	no tsconfig in repo root	False		False	0	
+https://github.com/standardnotes/app.git	standardnotes__app__87a3c58f	True	no tsconfig in repo root	False		False	0	
+https://github.com/steven-tey/novel.git	steven-tey__novel__8a06e464	True	no tsconfig in repo root	False		False	0	
+https://github.com/storybookjs/storybook.git	storybookjs__storybook__ef34eac0	True	no tsconfig in repo root	False		False	0	
+https://github.com/styled-components/styled-components.git	styled-components__styled-components__fc3aa396	True	no tsconfig in repo root	False		False	0	
+https://github.com/supermemoryai/supermemory.git	supermemoryai__supermemory__dc61fcee	True	no tsconfig in repo root	False		False	0	
+https://github.com/tailwindlabs/headlessui.git	tailwindlabs__headlessui__7ac89504	True	no tsconfig in repo root	False		False	0	
+https://github.com/tailwindlabs/tailwindcss.git	tailwindlabs__tailwindcss__3558f6c1	True	no tsconfig in repo root	False		False	0	
+https://github.com/tinacms/tinacms.git	tinacms__tinacms__5fe2ab60	True	no tsconfig in repo root	False		False	0	
+https://github.com/tldraw/tldraw.git	tldraw__tldraw__310480ae	True	no tsconfig in repo root	False		False	0	
+https://github.com/triggerdotdev/trigger.dev.git	triggerdotdev__trigger.dev__a58dba54	True	no tsconfig in repo root	False		False	0	
+https://github.com/twbs/icons.git	twbs__icons__098ac5ce	True	no tsconfig in repo root	False		False	0	
+https://github.com/typehero/typehero.git	typehero__typehero__fc21bae4	True	no tsconfig in repo root	False		False	0	
+https://github.com/vercel/micro.git	vercel__micro__eb310be3	True	no tsconfig in repo root	False		False	0	
+https://github.com/vitejs/vite.git	vitejs__vite__32800af6	True	no tsconfig in repo root	False		False	0	
+https://github.com/voideditor/void.git	voideditor__void__1c731eb0	True	no tsconfig in repo root	False		False	0	
+https://github.com/vuestorefront/vue-storefront.git	vuestorefront__vue-storefront__7f38fc14	True	no tsconfig in repo root	False		False	0	
+https://github.com/wasp-lang/open-saas.git	wasp-lang__open-saas__b11ee4c7	True	no tsconfig in repo root	False		False	0	
+https://github.com/web-infra-dev/midscene.git	web-infra-dev__midscene__403e2b7e	True	no tsconfig in repo root	False		False	0	
+https://github.com/webpro-nl/knip.git	webpro-nl__knip__b6d3111b	True	no tsconfig in repo root	False		False	0	
+https://github.com/webstudio-is/webstudio.git	webstudio-is__webstudio__77e00694	True	no tsconfig in repo root	False		False	0	
+https://github.com/wg-easy/wg-easy.git	wg-easy__wg-easy__4c56f335	True	no tsconfig in repo root	False		False	0	
+https://github.com/wojtekmaj/react-pdf.git	wojtekmaj__react-pdf__51d4ea04	True	no tsconfig in repo root	False		False	0	
+https://github.com/xcatliu/typescript-tutorial.git	xcatliu__typescript-tutorial__729e7115	True	no tsconfig in repo root	False		False	0	
+https://github.com/yaklang/yakit.git	yaklang__yakit__7e3d7219	True	no tsconfig in repo root	False		False	0	
+https://github.com/yangshun/tech-interview-handbook.git	yangshun__tech-interview-handbook__56d51f39	True	no tsconfig in repo root	False		False	0	
+https://github.com/zhongsp/TypeScript.git	zhongsp__TypeScript__1db6681d	True	no tsconfig in repo root	False		False	0	

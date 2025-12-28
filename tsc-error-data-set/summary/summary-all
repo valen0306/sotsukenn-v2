@@ -1,0 +1,145 @@
+tsc-error-data-set: tscエラー分布調査 実験サマリー（ts200 / ts1000）
+========================================================
+
+この実験は「実プロジェクトで `tsc` を回したとき、どのTSエラーコードがどれくらい出るか」を観測し、
+JSライブラリにおける型推論（`.d.ts` 整備）研究のための評価設計・データセット定義の根拠を得ることを目的とする。
+
+背景（TypeWeaverの示唆）
+-----------------------
+- 個々の型予測精度だけでは移行の実用性を測れないため、「typecheck（`tsc`）が通るか」を主要評価指標として扱うのが重要。
+- ただしパッケージ単位の成功判定は厳格（1箇所で失敗）なので、ファイル単位の指標やエラー内訳、トリビアル型率などの補助指標も併用すべき。
+- 依存関係やモジュール境界は評価を大きく歪める（依存型がないとノイズが増える、CJS/ESM変換で失敗が増える等）。
+
+
+実験のやり方（再現手順）
+------------------------
+### 1) リポジトリ選定（GitHub Search）
+対象は GitHub Search API で集めた HTTPS clone URL の集合。
+例（TypeScript、stars>=50、archived/fork除外）:
+
+  language:TypeScript stars:>=50 archived:false fork:false
+
+URL生成スクリプト:
+- scripts/select-github-repos.mjs
+
+### 2) 収集・実行（clone → install → typecheck）
+URLリストを入力として、各repoを shallow clone し、依存を入れて typecheck し、結果をJSONLで保存。
+
+収集スクリプト:
+- scripts/collect-tsc-error-dataset.mjs
+
+各repoに対する実行の基本:
+- `npm run typecheck` があればそれを利用
+- なければ `tsc --noEmit`（local tsc or `npx --no-install tsc`）
+- `--pretty false` でログをパースしやすくする
+
+### 3) 抽出・集計・サマリ
+主要アウトプット:
+- runs/<run-name>/aggregate.tsv: TSコード分布（repos, occurrences）
+- summary/tsc-error-rank: aggregate.tsvから上位ランキング（全体%と、エラー観測集合内%）
+- summary/errer-per-repo: repoごとのTSコード一覧（url, codeCount, codes…）
+
+（補助）CSV出力:
+- scripts/export-code-repos-csv.mjs: code×repo（URL付き）をCSVへ
+- scripts/export-repo-errors-csv.mjs: repo→コード一覧をCSVへ
+- scripts/summarize-tsc-run.mjs: run全体の件数・割合・上位コードを出力
+
+
+観測結果（ts200）
+-----------------
+run: tsc-error-data-set/runs/ts200
+
+母集団:
+- repos_total = 200
+- skipped = 45（22.5%）
+- repos_with_ts_codes (codeCount>0) = 44（22.0%）
+- repos_libraryCallLike = 38（19.0%）
+
+解釈（重要）:
+- 200件を回しても「TSコードが観測される（= typecheckでTSエラーが出る）」repoは約2割。
+- さらに“ライブラリ境界寄り”判定を入れると 38/200（19%）に絞られるが、十分なサイズが確保できる。
+
+上位エラーコード（repo出現数）:
+1  TS2307 (32 repos)  ← モジュール/型宣言解決の問題が最頻
+2  TS2339 (21 repos)
+3  TS7006 (21 repos)
+4  TS2322 (21 repos)
+5  TS2345 (20 repos)
+…（以降は aggregate.tsv 参照）
+
+
+観測結果（ts1000）
+------------------
+run: tsc-error-data-set/runs/ts1000
+
+注意（ENOSPCの影響と不整合）:
+- ts1000実行中にディスク容量不足（ENOSPC）が発生し、一部repoでスキャナ結果（scan.line）が欠落した。
+- `scan-results.jsonl` には "scan-line-missing" が 54 件ある。
+- そのため、以下2通りの「skipped/timedOut」が存在する（分母1000は一致）:
+  - scan-results.jsonl集計: skipped=223, timed_out=3
+  - results.jsonl（scan.lineが存在する分のみ）集計: skipped=169, timed_out=1
+  - 一方、TSコード観測集合（codeCount>0）は両方で一致: 220
+
+ここではランキングと分布の根拠として、aggregate.tsv（=scan-results.jsonlベース）を採用しつつ、
+codeCount>0（S_err=220）など本質的な指標は一致していることを明記する。
+
+母集団（代表値）:
+- repos_total = 1000
+- repos_with_ts_codes (codeCount>0) = 220（22.0%）  ※ts200と同率で安定
+- repos_libraryCallLike = 189（18.9%）
+
+上位エラーコード（repo出現数; summary/tsc-error-rankより）:
+1  TS2307  145 repos（codeCount>0集合の65.9%）
+2  TS2339  103 repos（46.8%）
+3  TS2322   92 repos（41.8%）
+4  TS7006   89 repos（40.5%）
+5  TS2345   87 repos（39.5%）
+6  TS1804   67 repos（30.5%）
+7  TS7031   59 repos（26.8%）
+8  TS2769   56 repos（25.5%）
+9  TS2304   53 repos（24.1%）
+10 TS7053   47 repos（21.4%）
+
+
+この分布から分かること（研究方針への接続）
+--------------------------------------------
+### A. 失敗は「2山構造」
+1) “解決できない”山:
+- TS2307 / TS7016（モジュール/宣言解決）
+→ `.d.ts` 注入の Phase 1（解決）として扱うのが自然。
+
+2) “解決できてもAPIが合わない”山:
+- TS2339 / TS2322 / TS2345 / TS2769 / TS2554 / TS7053 / TS2353 / TS2741 …
+→ `.d.ts` の“質”を測る Phase 3（API整合）の主対象として十分観測される。
+
+### B. スケールアップで比率が安定（信頼性の増加）
+- ts200: codeCount>0 が 22.0%
+- ts1000: codeCount>0 が 22.0%
+→ 「TSエラーが観測される割合」がほぼ同じで、サンプル増加により傾向が安定している。
+
+### C. “ライブラリ由来っぽい”集合が実用サイズ
+- ts1000: libraryCallLike 189（18.9%）
+→ 「依存ライブラリ境界の型問題」を主題にする研究で、主評価母集団として成立するサイズ。
+
+
+次の打ち手（具体）
+-------------------
+1) データセット抽出を明示（二層）
+- S_err: codeCount>0（ts1000では220）
+- S_lib: libraryCallLike=true（ts1000では189）
+
+2) フェーズ設計（提案）
+- Phase 1: 型解決（TS2307/TS7016の解消）
+- Phase 2: モジュール境界（TS2305/TS1192/TS2614等）
+- Phase 3: API整合（TS2339/TS2345/TS2322/TS2769/TS2554/TS7053…）
+- Phase 4: strict/ノイズ系を別枠（TS7006/TS7031/TS1804等）
+
+3) ENOSPC対策（運用）
+- `tsc-error-data-set/work/` は巨大化しやすいので、定期的に削除（成果物は runs/ に残る）。
+- npmキャッシュも肥大化するため、必要に応じて削除/制限を検討。
+
+4) さらに精度を上げる改善（任意）
+- monorepo対応（repoルート以外のtsconfig探索、workspacesのtypecheck）
+- “ライブラリ由来”の判定を強める（エラー行が外部importに依存するかの追加解析など）
+
+

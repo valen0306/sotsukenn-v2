@@ -1,0 +1,7 @@
+{
+  "name": "test9-TS2769-fixture-phase3-ts2769",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {"typecheck": "tsc --noEmit --pretty false"},
+  "devDependencies": {"typescript": "^5.6.3"}
+}

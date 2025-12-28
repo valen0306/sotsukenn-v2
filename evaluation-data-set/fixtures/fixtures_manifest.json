@@ -1,0 +1,32 @@
+{
+  "library": {
+    "name": "fixture-lib-no-types",
+    "path": "evaluation-data-set/fixtures/error-TS7016/fixture-lib-no-types",
+    "intentionallyHasNoDts": true
+  },
+  "downstreams": [
+    {
+      "name": "downstream-default-call",
+      "path": "evaluation-data-set/fixtures/error-TS7016/downstream-default-call",
+      "importStyle": "default",
+      "usage": ["call", "property", "method"],
+      "expectedBaselineErrorCodes": ["TS7016"]
+    },
+    {
+      "name": "downstream-named-new-async",
+      "path": "evaluation-data-set/fixtures/error-TS7016/downstream-named-new-async",
+      "importStyle": "named",
+      "usage": ["new", "await", "method", "property"],
+      "expectedBaselineErrorCodes": ["TS7016"]
+    },
+    {
+      "name": "downstream-require-callback",
+      "path": "evaluation-data-set/fixtures/error-TS7016/downstream-require-callback",
+      "importStyle": "cjs-require",
+      "usage": ["call", "callback"],
+      "expectedBaselineErrorCodes": ["TS7016"]
+    }
+  ]
+}
+
+

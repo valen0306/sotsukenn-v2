@@ -1,0 +1,20 @@
+# Large/generated directories (cloned repos, evaluation sandboxes, artifacts)
+tsc-error-data-set/work/**
+evaluation/**/work/**
+
+# Generated evaluation outputs (can be reproduced)
+evaluation/**/out/**
+
+# Dataset generation run outputs (often large)
+tsc-error-data-set/runs/**
+
+# OS / editor noise
+.DS_Store
+
+# Common dependency / cache directories
+**/node_modules/**
+**/__pycache__/**
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
