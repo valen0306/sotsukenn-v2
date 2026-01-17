@@ -68,6 +68,11 @@ function parseArgs(argv) {
     // Localizer (Plan A / M2): limit how many external modules to stub (Top-M).
     // Default: unlimited (= current behavior).
     localizerTopModules: Infinity,
+    // Phase1: trial exploration strategy (Policy A / Phase1)
+    // - top1: current behavior (single candidate)
+    // - module-any-sweep: try candidates by forcing ONE module to any-stub at a time (localizer-controlled)
+    trialStrategy: "top1", // top1 | module-any-sweep
+    trialMax: 1, // max number of candidates to run per repo (including top1)
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -104,6 +109,8 @@ function parseArgs(argv) {
     else if (a === "--exclude-node-builtins") args.excludeNodeBuiltins = true;
     else if (a === "--external-filter") args.externalFilter = String(argv[++i] ?? "heuristic");
     else if (a === "--localizer-top-modules") args.localizerTopModules = Number(argv[++i] ?? "0");
+    else if (a === "--trial-strategy") args.trialStrategy = String(argv[++i] ?? "top1");
+    else if (a === "--trial-max") args.trialMax = Number(argv[++i] ?? "1");
     else if (a === "--help" || a === "-h") {
       console.log(`
 Usage:
@@ -142,6 +149,8 @@ Options:
   --exclude-node-builtins            Exclude Node.js built-in modules (e.g. 'path', 'crypto') from stub/module list (default: off)
   --external-filter <heuristic|deps> How to decide "external" module specifiers when onlyExternal=true (default: heuristic)
   --localizer-top-modules <N>        (M2) Stub only Top-N external modules (ranked by frequency in Phase3 diagnostic files). Default: unlimited
+  --trial-strategy <top1|module-any-sweep>  (Phase1) Candidate trial strategy (default: top1)
+  --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
 `);
       process.exit(0);
     } else {
@@ -174,6 +183,8 @@ Options:
   if (!Number.isFinite(args.memberAccessMaxMembersPerImport) || args.memberAccessMaxMembersPerImport < 1) args.memberAccessMaxMembersPerImport = 200;
   if (!["heuristic", "deps"].includes(String(args.externalFilter))) args.externalFilter = "heuristic";
   if (!Number.isFinite(args.localizerTopModules) || args.localizerTopModules < 1) args.localizerTopModules = Infinity;
+  if (!["top1", "module-any-sweep"].includes(String(args.trialStrategy))) args.trialStrategy = "top1";
+  if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   return args;
 }
 
@@ -443,6 +454,37 @@ function buildPhase3StubDts(moduleToStub) {
     chunks.push("}\n\n");
   }
   return chunks.join("");
+}
+
+function buildPhase3StubModuleBlock(mod, info) {
+  const named = [...(info.named ?? new Set())].sort();
+  const typeNamed = [...(info.typeNamed ?? new Set())].sort();
+  const hasDefault = Boolean(info.defaultImport);
+  const chunks = [];
+  chunks.push(`declare module '${esc(mod)}' {\n`);
+  if (hasDefault) chunks.push(`  const __default: any;\n  export default __default;\n`);
+  chunks.push(`  export const __any: any;\n`);
+  for (const n of named) chunks.push(`  export const ${n}: any;\n`);
+  for (const t of typeNamed) chunks.push(`  export type ${t} = any;\n`);
+  chunks.push("}\n\n");
+  return chunks.join("");
+}
+
+function escapeRegex(s) {
+  return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function replaceDeclareModuleBlock(dtsText, mod, newBlockText) {
+  const txt = String(dtsText ?? "");
+  const re = new RegExp(`declare\\s+module\\s+['"]${escapeRegex(mod)}['"]\\s*\\{`, "g");
+  const m = re.exec(txt);
+  if (!m) return null;
+  const start = m.index;
+  // Heuristic: ReportLab/our generator tends to end blocks with `}\n\n`. Find the next `\n}\n` after the start.
+  const closeIdx = txt.indexOf("\n}\n", m.index);
+  if (closeIdx < 0) return null;
+  const end = closeIdx + "\n}\n".length;
+  return txt.slice(0, start) + newBlockText + txt.slice(end);
 }
 
 async function runModelAdapter({ repo, moduleToStub, opts }) {
@@ -747,6 +789,12 @@ async function processOne(url, opts, outHandle) {
         afterTopModulesCount: null,
         topModuleFreq: [],
       },
+      trial: {
+        strategy: opts.trialStrategy,
+        max: opts.trialMax,
+        chosenCandidateId: null,
+        trialsRun: 0,
+      },
       model:
         opts.mode === "model"
           ? {
@@ -964,11 +1012,11 @@ async function processOne(url, opts, outHandle) {
   result.phase3.stubModules = [...moduleToStub.keys()].sort().slice(0, 500);
   result.phase3.stubModulesCount = moduleToStub.size;
 
-  let injectedDts = "";
-  // Candidate scaffolding (Policy A / Phase0)
-  const candidateId = "c0_top1";
+  // 1) Build base candidate d.ts (top1)
+  let baseDts = "";
+  const baseCandidateId = "c0_top1";
   if (opts.mode === "stub") {
-    injectedDts = buildPhase3StubDts(moduleToStub);
+    baseDts = buildPhase3StubDts(moduleToStub);
   } else {
     const mr = await runModelAdapter({
       repo: { url: result.url, slug: result.slug },
@@ -997,8 +1045,6 @@ async function processOne(url, opts, outHandle) {
       await outHandle.appendFile(JSON.stringify(result) + "\n");
       return;
     }
-    // Keep a small pointer to the model output for later failure analysis
-    // without bloating results.jsonl with full d.ts text.
     result.phase3.modelOutput = {
       backend: obj.backend ?? null,
       cacheKey: obj.cache_key ?? null,
@@ -1006,56 +1052,113 @@ async function processOne(url, opts, outHandle) {
       fallbackReason: obj.meta?.fallback_reason ?? null,
       missingModulesFilledWithAny: obj.meta?.missing_modules_filled_with_any ?? null,
     };
-    injectedDts = obj.dts;
+    baseDts = obj.dts;
   }
 
-  const injectedDtsSha1 = sha1Hex(injectedDts);
-  const injectedDeclarations = extractDeclarationsFromDts(injectedDts);
-
-  await writePhase3InjectedTypeRoots(repoDir, { packageName: "__phase3_injected__", dtsText: injectedDts });
+  // 2) Prepare injected tsconfig once; for each trial we only rewrite index.d.ts and rerun `tsc`.
   const injectedCfg = await writeInjectedTsconfig(repoDir);
   result.phase3.originalTypesCount = injectedCfg.originalTypesCount;
   result.phase3.injectedTypesCount = injectedCfg.injectedTypesCount;
 
-  const jr = await runCmd({
-    cwd: repoDir,
-    cmd: "tsc",
-    args: ["--noEmit", "--pretty", "false", "-p", path.basename(injectedCfg.tsconfigPath)],
-    timeoutMs: opts.timeoutMs,
-  });
-  const jout = `${jr.stdout}\n${jr.stderr}`;
-  const jcounts = extractTsCodes(jout);
-  const jdiags = parseDiagnostics(jout);
+  async function runTrial({ candidateId, dtsText, moduleOverride }) {
+    await writePhase3InjectedTypeRoots(repoDir, { packageName: "__phase3_injected__", dtsText });
+    const jr = await runCmd({
+      cwd: repoDir,
+      cmd: "tsc",
+      args: ["--noEmit", "--pretty", "false", "-p", path.basename(injectedCfg.tsconfigPath)],
+      timeoutMs: opts.timeoutMs,
+    });
+    const jout = `${jr.stdout}\n${jr.stderr}`;
+    const jcounts = extractTsCodes(jout);
+    const jPhase3 = sumPhase3(jcounts);
+    const injectedSyntaxCodes = getInjectedDtsSyntaxErrorCodes(jcounts);
+    const injectedDtsInvalid = injectedSyntaxCodes.length > 0;
+    const injectionValid = !injectedDtsInvalid && !jr.timedOut;
+    const dtsSha1 = sha1Hex(dtsText);
+    const decls = extractDeclarationsFromDts(dtsText);
+    const trial = {
+      trial_id: `trial_${sha1Hex(`${result.url}::${candidateId}::${dtsSha1}`).slice(0, 12)}`,
+      candidate_id: candidateId,
+      module_override: moduleOverride ?? null,
+      injected_dts_sha1: dtsSha1,
+      declaration_count: decls.length,
+      declarations: decls.slice(0, 5000),
+      injected_exit: jr.code,
+      injected_timed_out: jr.timedOut,
+      injected_dts_invalid: injectedDtsInvalid,
+      injected_dts_syntax_codes: injectedSyntaxCodes,
+      injected_phase3: jPhase3,
+      delta_errors: buildDeltaErrors({ baselineCounts: result.baseline?.tsErrorCounts ?? {}, injectedCounts: jcounts }),
+      delta_phase3: jPhase3 - baselinePhase3,
+      valid_injection: injectionValid,
+    };
+    return { trial, jcounts, jout };
+  }
+
+  // 3) Build trial candidate list (Phase1)
+  const candidates = [{ candidateId: baseCandidateId, dtsText: baseDts, moduleOverride: null }];
+  if (opts.mode === "model" && opts.trialStrategy === "module-any-sweep" && opts.trialMax > 1) {
+    const mods = [...moduleToStub.keys()];
+    const cap = Math.max(0, opts.trialMax - 1);
+    for (const mod of mods.slice(0, cap)) {
+      const info = moduleToStub.get(mod);
+      if (!info) continue;
+      const stubBlock = buildPhase3StubModuleBlock(mod, info);
+      const replaced = replaceDeclareModuleBlock(baseDts, mod, stubBlock);
+      if (!replaced) continue;
+      candidates.push({ candidateId: `c_anymod_${sha1Hex(mod).slice(0, 8)}`, dtsText: replaced, moduleOverride: mod });
+    }
+  }
+
+  // 4) Run trials and choose best (min Phase3 core; tie-break by total errors)
+  let best = null;
+  let bestCounts = null;
+  let bestOut = "";
+  for (const c of candidates) {
+    const { trial, jcounts, jout } = await runTrial(c);
+    result.trials.push(trial);
+    result.phase3.trial.trialsRun++;
+    const totalErr = Object.values(jcounts ?? {}).reduce((a, b) => a + (Number(b) || 0), 0);
+    const key = {
+      valid: trial.valid_injection ? 1 : 0,
+      phase3: trial.injected_phase3,
+      total: totalErr,
+    };
+    if (!best) {
+      best = { trial, key };
+      bestCounts = jcounts;
+      bestOut = jout;
+      continue;
+    }
+    const better =
+      key.valid > best.key.valid ||
+      (key.valid === best.key.valid && (key.phase3 < best.key.phase3 || (key.phase3 === best.key.phase3 && key.total < best.key.total)));
+    if (better) {
+      best = { trial, key };
+      bestCounts = jcounts;
+      bestOut = jout;
+    }
+  }
+
+  // 5) Populate "injected" fields using the chosen candidate (keeps existing summary compatible)
+  const chosenCounts = bestCounts ?? {};
+  const chosenDiags = parseDiagnostics(bestOut);
   result.injected = {
-    exitCode: jr.code,
-    timedOut: jr.timedOut,
-    tsErrorCounts: jcounts,
-    diagnostics: capDiagnostics(jdiags, 2000),
-    outputSample: jout.slice(0, 2000),
+    exitCode: best?.trial?.injected_exit ?? "",
+    timedOut: best?.trial?.injected_timed_out ?? false,
+    tsErrorCounts: chosenCounts,
+    diagnostics: capDiagnostics(chosenDiags, 2000),
+    outputSample: String(bestOut ?? "").slice(0, 2000),
   };
 
-  const afterPhase3 = sumPhase3(jcounts);
-  const injectedSyntaxCodes = getInjectedDtsSyntaxErrorCodes(jcounts);
+  const afterPhase3 = sumPhase3(chosenCounts);
+  const injectedSyntaxCodes = best?.trial?.injected_dts_syntax_codes ?? getInjectedDtsSyntaxErrorCodes(chosenCounts);
   result.phase3.injectedDtsSyntaxCodes = injectedSyntaxCodes;
-  // Conservative: treat as invalid if TS parser errors exist after injection.
-  result.phase3.injectedDtsInvalid = injectedSyntaxCodes.length > 0;
-
-  const injectionValid = !result.phase3.injectedDtsInvalid && !jr.timedOut;
+  result.phase3.injectedDtsInvalid = Boolean(best?.trial?.injected_dts_invalid) || injectedSyntaxCodes.length > 0;
+  const injectionValid = Boolean(best?.trial?.valid_injection);
   result.phase3.reduced = injectionValid ? afterPhase3 < baselinePhase3 : false;
   result.phase3.eliminated = injectionValid ? afterPhase3 === 0 && baselinePhase3 > 0 : false;
-
-  // Trial log (weak supervision): record candidate + declaration IDs + Δerrors.
-  // NOTE: Even if injection is invalid, keeping the record helps later filtering/analysis.
-  result.trials.push({
-    trial_id: `trial_${sha1Hex(`${result.url}::${candidateId}::${injectedDtsSha1}`).slice(0, 12)}`,
-    candidate_id: candidateId,
-    injected_dts_sha1: injectedDtsSha1,
-    declaration_count: injectedDeclarations.length,
-    declarations: injectedDeclarations.slice(0, 5000),
-    delta_errors: buildDeltaErrors({ baselineCounts: result.baseline?.tsErrorCounts ?? {}, injectedCounts: jcounts }),
-    delta_phase3: afterPhase3 - baselinePhase3,
-    valid_injection: injectionValid,
-  });
+  result.phase3.trial.chosenCandidateId = best?.trial?.candidate_id ?? baseCandidateId;
 
   result.durationMs = Date.now() - startedAt;
   if (!opts.keepRepos) await rmrf(repoDir);

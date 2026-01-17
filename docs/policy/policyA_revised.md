@@ -52,6 +52,29 @@ Apple M4 32GBでは学習より `tsc` 回数がボトルネックになりやす
 - エラー位置のASTから `call/property/import` を辿り、関連しそうな宣言 Top-M を返す
 - その Top-M だけ探索する
 
+**このリポジトリでのまず最初の実装（v0）**
+- `evaluation/real/phase3-run.mjs` に **探索モード**を追加する（候補を複数試してΔerrorsを貯める）
+  - `--trial-strategy module-any-sweep`
+  - `--trial-max N`（Top-1 + N-1候補を試す）
+  - モジュール候補は `--localizer-top-modules M` で絞る（Top-M外部モジュール）
+
+例（まずはconsumer 10件で小さく回す）:
+
+```bash
+node evaluation/real/phase3-run.mjs \
+  --mode model \
+  --repos-file evaluation/real/inputs/phase3_ts1000_ranked100.txt \
+  --out-dir evaluation/real/out/phase3-ts1000-10-model-sweep \
+  --max 10 \
+  --concurrency 1 \
+  --timeout-ms 600000 \
+  --external-filter deps \
+  --localizer-top-modules 10 \
+  --trial-strategy module-any-sweep \
+  --trial-max 6 \
+  --verbose
+```
+
 **期待できる結果**
 - 成立率が同程度でも、`tsc`回数（試行回数）が減る
 - 悪化ステップ（エラー増）が減る可能性
