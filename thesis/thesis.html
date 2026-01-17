@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Light'}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Light'; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">卒業論文ドラフト（作業版）</p>
+<p class="p2"><br></p>
+<p class="p1">提出先: （未記入） <span class="Apple-converted-space"> </span></p>
+<p class="p1">学部・学科: （未記入） <span class="Apple-converted-space"> </span></p>
+<p class="p1">氏名: （未記入） <span class="Apple-converted-space"> </span></p>
+<p class="p1">提出日: 2026-01-16 <span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 概要</p>
+<p class="p2"><br></p>
+<p class="p1">TypeScript移行の障壁として、依存ライブラリが型定義（`.d.ts`）を提供しない、または不十分である問題がある。本研究は、下流（利用側）プロジェクトの利用形（usage evidence）から、依存ライブラリ境界で必要となる`.d.ts`を生成し注入することで、下流プロジェクトの`tsc`失敗（特にAPI整合に関わるエラー）を減らす支援手法を提案する。</p>
+<p class="p2"><br></p>
+<p class="p1">評価は局所的な型推定精度ではなく、下流プロジェクトを対象とした`tsc`の結果（成功率・エラー分布）を一次指標として行う。実プロジェクト評価基盤（clone→install→baseline `tsc`→注入→再`tsc`→集計）を構築し、生成`.d.ts`の壊れ（構文エラー）を検知して偽陽性を排除する仕組み、ならびに回帰（TS2339/TS2554等）の失敗要因を分類して軽量な安全策（例: external判定の改善）を導入した。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 1. 背景</p>
+<p class="p2"><br></p>
+<p class="p1">TypeScript導入は広く進む一方、依存ライブラリがJavaScriptのみで型定義を提供しない場合、下流プロジェクトでは`tsc`が失敗し移行が停滞する。型定義生成は有望だが、生成物の局所的な正しさだけでは下流のコンパイルが通るとは限らない。TypeWeaverは「パッケージ単位でtypecheckを通す」評価の重要性を指摘している。</p>
+<p class="p2"><br></p>
+<p class="p1">本研究はこの観点を、依存境界における`.d.ts`注入という介入問題に適用し、下流の`tsc`結果を直接改善することを狙う。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 2. 研究目的</p>
+<p class="p2"><br></p>
+<p class="p1">- JSライブラリの型欠如が原因で失敗する下流プロジェクトに対し、`.d.ts`を注入して`tsc`失敗を減らす。</p>
+<p class="p1">- 効果測定は下流プロジェクトの`tsc`結果（成功率・エラーコード分布）で行う。</p>
+<p class="p1">- 回帰（特にTS2339/TS2554）を生む失敗要因を体系化し、軽量な安全策で実験を安定化する。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 3. 研究課題（RQ）</p>
+<p class="p2"><br></p>
+<p class="p1">- **RQ1（実用効果）**: `.d.ts`注入により下流プロジェクトの`tsc`成功率・エラー分布はどれだけ改善するか。</p>
+<p class="p1">- **RQ2（トリビアル型濫用の懸念）**: 改善は単なる`any`での握りつぶしではないか。</p>
+<p class="p1">- **RQ3（失敗要因）**: 回帰はどのエラー（特にTS2339/TS2554）に集中し、原因はどのパターンに分類できるか。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 4. 手法概要</p>
+<p class="p2"><br></p>
+<p class="p1">### 4.1 Phase分解</p>
+<p class="p2"><br></p>
+<p class="p1">本研究では、下流`tsc`失敗を意味的に分解し、段階ごとに介入する。</p>
+<p class="p2"><br></p>
+<p class="p1">- **Phase1（型解決）**: TS2307/TS7016（型定義が見つからない）</p>
+<p class="p1">- **Phase2（境界整合）**: TS2305/TS2613/TS2614（export/import形の不一致）</p>
+<p class="p1">- **Phase3（API整合）**: TS2339/TS2554/TS2345/TS2322/TS2769/TS2353/TS2741/TS7053（APIレベルの整合性）</p>
+<p class="p2"><br></p>
+<p class="p1">本ドラフトでは、主にPhase3（API整合）の実験基盤と失敗要因分析に焦点を当てる。</p>
+<p class="p2"><br></p>
+<p class="p1">### 4.2 Usage evidence抽出（Phase3）</p>
+<p class="p2"><br></p>
+<p class="p1">Phase3では、Phase3 coreコードが出たファイル群から、外部importを抽出して「注入すべきモジュール」と「必要なexport名」を収集する。加えて、`ns.foo`や`Foo.bar`のような参照を解析して、必要なメンバ名も収集する（回帰抑制のため）。</p>
+<p class="p2"><br></p>
+<p class="p1">### 4.3 `.d.ts`生成と注入</p>
+<p class="p2"><br></p>
+<p class="p1">生成方法は2系統を持つ。</p>
+<p class="p2"><br></p>
+<p class="p1">- **DTS_STUB**: importされた名前を`any`として宣言する下限ベースライン。</p>
+<p class="p1">- **DTS_MODEL**: 小型コード生成モデル（例: Qwen2.5-Coder-1.5B-Instruct）で`declare module`ブロックを生成し、危険な構文はサニタイズする。</p>
+<p class="p2"><br></p>
+<p class="p1">注入は repo 内に `typeRoots` を作り、派生tsconfig（`tsconfig.__phase3__.json`）を介して確実に読み込ませる。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 5. 実装</p>
+<p class="p2"><br></p>
+<p class="p1">### 5.1 Real runner</p>
+<p class="p2"><br></p>
+<p class="p1">- `evaluation/real/phase3-run.mjs`</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- clone → install → baseline `tsc`</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- Phase3診断ファイルからimport抽出</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- `.d.ts`生成（stub/model）</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- `.d.ts`注入後に再`tsc`</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- 結果を `results.jsonl` と `summary.tsv` に保存</p>
+<p class="p2"><br></p>
+<p class="p1">### 5.2 Model adapter</p>
+<p class="p2"><br></p>
+<p class="p1">- `evaluation/model/typebert_infer.py`</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- stdin JSON（modules）→ stdout JSON（dts文字列）</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- `declare module`ブロック抽出（brace balancing）</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- サニタイズ、危険ならstubにフォールバック</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- 結果追跡のため `cache_key` と `meta` を返す</p>
+<p class="p2"><br></p>
+<p class="p1">### 5.3 実験の信頼性（invalid検知）</p>
+<p class="p2"><br></p>
+<p class="p1">LLM生成`.d.ts`は壊れる可能性があり、壊れた場合はTS1005/TS1127/TS1434等で`tsc`が先に落ち、Phase3エラーが「消えた」ように見える偽陽性が起きる。本研究では invalid を検知し、集計で除外する。</p>
+<p class="p2"><br></p>
+<p class="p1">### 5.4 回帰抑制の安全策（external判定）</p>
+<p class="p2"><br></p>
+<p class="p1">大規模repoでは、`core/*`のような内部aliasを外部扱いして注入してしまうとTS2339が爆増する。これを防ぐため、`package.json`の依存に含まれるパッケージのみを外部とみなす **depsフィルタ**（`--external-filter deps`）を導入した。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 6. 実験</p>
+<p class="p2"><br></p>
+<p class="p1">### 6.1 実験設定</p>
+<p class="p2"><br></p>
+<p class="p1">対象: `evaluation/real/inputs/phase3_ts1000_ranked100.txt` の先頭30件 <span class="Apple-converted-space"> </span></p>
+<p class="p1">条件: `--external-filter deps` を有効化し、`--max 30`で評価 <span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1">出力ディレクトリ:</p>
+<p class="p1">- `evaluation/real/out/phase3-ts1000-ranked30-qwen1_5b-v17-depsfilter/`</p>
+<p class="p2"><br></p>
+<p class="p1">### 6.2 指標</p>
+<p class="p2"><br></p>
+<p class="p1">- valid injection数（invalid/timeout除外）</p>
+<p class="p1">- Phase3Reduced / Phase3Eliminated</p>
+<p class="p1">- Phase3 core合計差分</p>
+<p class="p1">- TS2339/TS2554などコード別差分</p>
+<p class="p2"><br></p>
+<p class="p1">### 6.3 結果（ranked30 / depsfilter）</p>
+<p class="p2"><br></p>
+<p class="p1">集計（validのみ）:</p>
+<p class="p2"><br></p>
+<p class="p1">- repos_total: 30</p>
+<p class="p1">- repos_valid_injection: 11</p>
+<p class="p1">- repos_invalid_dts: 1</p>
+<p class="p1">- repos_model_timeout: 6</p>
+<p class="p1">- phase3Reduced_valid: 3</p>
+<p class="p1">- phase3Eliminated_valid: 3</p>
+<p class="p2"><br></p>
+<p class="p1">Phase3 core合計（validのみ）:</p>
+<p class="p2"><br></p>
+<p class="p1">- baseline: 194</p>
+<p class="p1">- injected: 210</p>
+<p class="p1">- delta: +16</p>
+<p class="p2"><br></p>
+<p class="p1">コード別差分（validのみ）:</p>
+<p class="p2"><br></p>
+<p class="p1">- TS2339: 71 → 84（+13）</p>
+<p class="p1">- TS2554: 10 → 17（+7）</p>
+<p class="p1">- TS2345: 33 → 25（-8）</p>
+<p class="p1">- TS2769: 20 → 13（-7）</p>
+<p class="p2"><br></p>
+<p class="p1">改善例（valid内の上位）:</p>
+<p class="p2"><br></p>
+<p class="p1">- type-challenges: 21 → 0（eliminated）</p>
+<p class="p1">- vee-validate: 11 → 0（eliminated）</p>
+<p class="p1">- shoelace: 7 → 0（eliminated）</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 7. 考察</p>
+<p class="p2"><br></p>
+<p class="p1">### 7.1 改善が得られるケース</p>
+<p class="p2"><br></p>
+<p class="p1">一部repoではPhase3 coreが0化し、`.d.ts`注入が下流`tsc`に実用的効果を持ちうることが確認できた。</p>
+<p class="p2"><br></p>
+<p class="p1">### 7.2 失敗要因（TS2339/TS2554回帰）</p>
+<p class="p2"><br></p>
+<p class="p1">本研究の観測では回帰はTS2339/TS2554に集中する傾向があり、原因は少なくとも以下に分類できる。</p>
+<p class="p2"><br></p>
+<p class="p1">- **外部判定ミス**: 内部alias（例: `core/*`）を外部扱いし注入することで、既存の型関係を壊してTS2339が爆増する。 <span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>→ depsフィルタで抑制可能。</p>
+<p class="p1">- **export欠落**: モデルが必要なexport名を出し忘れることでTS2339が増える。 <span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>→ requested exportsの`any`補完で抑制可能。</p>
+<p class="p1">- **静的メンバ参照**: `Foo.bar` のような参照が、型宣言側で表現できずTS2339を生む。 <span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>→ namespace merge（`export namespace Foo { const bar:any }`）で一部吸収可能。</p>
+<p class="p1">- **invalid生成**: `.d.ts`が壊れると偽陽性が起きる。 <span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>→ invalid検知・除外が必須。</p>
+<p class="p2"><br></p>
+<p class="p1">### 7.3 卒論としての位置づけ</p>
+<p class="p2"><br></p>
+<p class="p1">平均的改善の主張よりも、「下流`tsc`で評価する設計」「失敗要因の体系化」「軽量安全策で実験を安定化する」ことを貢献として明確化することで、モデル比較を後回しにしても論文として主張が成立する。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 8. 新規性</p>
+<p class="p2"><br></p>
+<p class="p1">- **評価軸**: 局所精度ではなく、下流プロジェクトの`tsc`結果（成功率・エラー分布）を一次指標として採用。</p>
+<p class="p1">- **Phase分解**: TSエラーコードを段階にマッピングし、介入の意味を整理（解決→境界→API整合）。</p>
+<p class="p1">- **運用可能な評価基盤**: invalid検知・フォールバック・追跡（cache_key/meta）を含む実験基盤を構築。</p>
+<p class="p1">- **失敗要因の知見**: TS2339/TS2554回帰を中心に原因を分類し、depsフィルタ等の軽量安全策で抑制できることを示した。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 9. 妥当性への脅威</p>
+<p class="p2"><br></p>
+<p class="p1">- 外的妥当性: 対象repoの偏り（言語設定、monorepo構造、依存の種類）。</p>
+<p class="p1">- 内的妥当性: `tsconfig`/strictness差によるノイズ、timeoutの扱い。</p>
+<p class="p1">- 構成概念妥当性: `tsc`成功が実行時安全性を保証しない点。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 10. 結論と今後</p>
+<p class="p2"><br></p>
+<p class="p1">本研究は、下流使用例から`.d.ts`を生成・注入し、下流`tsc`で評価するエンドツーエンド基盤を構築した。実プロジェクト群で改善例が得られる一方、TS2339/TS2554回帰が主要な課題である。depsフィルタ等の安全策により回帰を抑制し、より解釈可能な評価を可能にした。今後は、timeout低減と母数拡大、失敗要因に基づく追加の安全策、必要に応じたモデル比較を行う。</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 参考文献（暫定）</p>
+<p class="p2"><br></p>
+<p class="p1">1. TypeWeaver: Learning Type Annotations from Examples (ECOOP 2023). `https://drops.dagstuhl.de/storage/00lipics/lipics-vol263-ecoop2023/LIPIcs.ECOOP.2023.37/LIPIcs.ECOOP.2023.37.pdf`</p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+</body>
+</html>

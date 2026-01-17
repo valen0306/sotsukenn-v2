@@ -1,0 +1,31 @@
+url	A_skip	B_skip	A_invalid	B_invalid	A_TS2339	B_TS2339	delta_TS2339	A_Ph3	B_Ph3	delta_Ph3
+https://github.com/BetterDiscord/BetterDiscord.git			false	false	3	31	28	43	106	63
+https://github.com/DIYgod/RSSHub-Radar.git			false	false	21	21	0	51	51	0
+https://github.com/FaridSafi/react-native-gifted-chat.git			false	false	12	12	0	73	73	0
+https://github.com/MuiseDestiny/zotero-gpt.git			false	false	15	15	0	16	16	0
+https://github.com/TanStack/router.git		no-stub-modules-found	false	false	0	0	0	2	0	-2
+https://github.com/airbnb/react-sketchapp.git			false	false	0	0	0	5	5	0
+https://github.com/alibaba/formily.git			false	false	105	60	-45	303	187	-116
+https://github.com/balena-io/etcher.git			false	false	6	7	1	10	13	3
+https://github.com/bepass-org/oblivion-desktop.git			false	false	1	1	0	3	3	0
+https://github.com/browserbase/stagehand.git		no-stub-modules-found	false	false	5	0	-5	9	0	-9
+https://github.com/cyrildiagne/ar-cutpaste.git	no tsconfig in repo root	no tsconfig in repo root	false	false	0	0	0	0	0	0
+https://github.com/elysiajs/elysia.git			false	false	0	0	0	0	0	0
+https://github.com/felixrieseberg/windows95.git			false	false	1	1	0	3	3	0
+https://github.com/getmaxun/maxun.git			false	false	0	0	0	0	0	0
+https://github.com/logaretm/vee-validate.git			false	false	0	0	0	0	0	0
+https://github.com/lyswhut/lx-music-mobile.git		install-failed	false	false	39	0	-39	58	0	-58
+https://github.com/mattermost-community/focalboard.git	no tsconfig in repo root	no tsconfig in repo root	false	false	0	0	0	0	0	0
+https://github.com/mermaid-js/mermaid.git			true	true	0	0	0	0	0	0
+https://github.com/mobxjs/mobx-state-tree.git		no-stub-modules-found	false	false	0	0	0	0	0	0
+https://github.com/nat/openplayground.git	no tsconfig in repo root	no tsconfig in repo root	false	false	0	0	0	0	0	0
+https://github.com/ourongxing/newsnow.git			false	false	0	0	0	0	0	0
+https://github.com/pear-devs/pear-desktop.git			false	false	0	0	0	0	0	0
+https://github.com/remotely-save/remotely-save.git			false	false	0	0	0	0	0	0
+https://github.com/shoelace-style/shoelace.git			false	false	0	0	0	0	0	0
+https://github.com/stenciljs/core.git			false	false	4	4	0	8	8	0
+https://github.com/total-typescript/beginners-typescript-tutorial.git			false	false	6	6	0	13	13	0
+https://github.com/type-challenges/type-challenges.git			false	false	0	0	0	0	0	0
+https://github.com/typestack/class-validator.git	no-stub-modules-found	no-stub-modules-found	false	false	0	0	0	0	0	0
+https://github.com/uber/baseweb.git			false	false	72	68	-4	81	91	10
+https://github.com/webclipper/web-clipper.git			false	false	6	5	-1	11	10	-1

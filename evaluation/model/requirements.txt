@@ -1,0 +1,13 @@
+## Phase3 DTS_MODEL (TypeBERT adapter) runtime deps
+##
+## NOTE:
+## - torch is platform-specific (CPU/CUDA/MPS). Install torch following the official instructions
+##   for your environment. Then install the packages below.
+##
+## Minimal HF stack (works with local checkpoints):
+transformers>=4.40
+accelerate>=0.30
+sentencepiece>=0.2.0
+safetensors>=0.4.0
+huggingface_hub>=0.23.0
+

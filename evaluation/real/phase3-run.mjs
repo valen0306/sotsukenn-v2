@@ -21,10 +21,15 @@ import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { builtinModules } from "node:module";
 
 const ROOT = path.resolve(process.cwd());
 
 const PHASE3_CODES = new Set(["TS2339", "TS2345", "TS2322", "TS2554", "TS2769", "TS2353", "TS2741", "TS7053"]);
+
+const NODE_BUILTINS = new Set(
+  builtinModules.map((m) => (m.startsWith("node:") ? m.slice("node:".length) : m)),
+);
 
 function parseArgs(argv) {
   const args = {
@@ -42,6 +47,24 @@ function parseArgs(argv) {
     modelScript: "evaluation/model/typebert_infer.py",
     modelCacheDir: "evaluation/real/cache/typebert",
     modelTimeoutMs: 2 * 60 * 1000,
+    modelBackend: "typebert", // passed to adapter
+    modelNameOrPath: "", // passed to adapter (--model). Prefer env TYPEBERT_MODEL if set.
+    modelDevice: "auto",
+    modelMaxNewTokens: 800,
+    modelTemperature: 0.0,
+    modelSeed: 0,
+    modelTorchDtype: "auto", // auto|float16|bfloat16|float32
+    modelLowCpuMemUsage: "1", // "1"|"0"
+    modelTrustRemoteCode: "0", // "1"|"0"
+    maxStubModules: Infinity, // safety cap for model runs
+    resume: false,
+    memberAccessScope: "repo", // diag | repo
+    memberAccessMaxFiles: 800,
+    memberAccessMaxBytesPerFile: 512 * 1024,
+    memberAccessMaxMembersPerImport: 200,
+    modelForceAnyModules: "",
+    excludeNodeBuiltins: false,
+    externalFilter: "heuristic", // heuristic | deps
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -59,6 +82,24 @@ function parseArgs(argv) {
     else if (a === "--model-script") args.modelScript = argv[++i];
     else if (a === "--model-cache-dir") args.modelCacheDir = argv[++i];
     else if (a === "--model-timeout-ms") args.modelTimeoutMs = Number(argv[++i] ?? `${args.modelTimeoutMs}`);
+    else if (a === "--model-backend") args.modelBackend = String(argv[++i] ?? "typebert");
+    else if (a === "--model") args.modelNameOrPath = String(argv[++i] ?? "");
+    else if (a === "--model-device") args.modelDevice = String(argv[++i] ?? "auto");
+    else if (a === "--model-max-new-tokens") args.modelMaxNewTokens = Number(argv[++i] ?? `${args.modelMaxNewTokens}`);
+    else if (a === "--model-temperature") args.modelTemperature = Number(argv[++i] ?? `${args.modelTemperature}`);
+    else if (a === "--model-seed") args.modelSeed = Number(argv[++i] ?? `${args.modelSeed}`);
+    else if (a === "--model-torch-dtype") args.modelTorchDtype = String(argv[++i] ?? "auto");
+    else if (a === "--model-low-cpu-mem-usage") args.modelLowCpuMemUsage = String(argv[++i] ?? "1");
+    else if (a === "--model-trust-remote-code") args.modelTrustRemoteCode = String(argv[++i] ?? "0");
+    else if (a === "--max-stub-modules") args.maxStubModules = Number(argv[++i] ?? "0");
+    else if (a === "--resume") args.resume = true;
+    else if (a === "--member-access-scope") args.memberAccessScope = String(argv[++i] ?? "repo");
+    else if (a === "--member-access-max-files") args.memberAccessMaxFiles = Number(argv[++i] ?? `${args.memberAccessMaxFiles}`);
+    else if (a === "--member-access-max-bytes-per-file") args.memberAccessMaxBytesPerFile = Number(argv[++i] ?? `${args.memberAccessMaxBytesPerFile}`);
+    else if (a === "--member-access-max-members-per-import") args.memberAccessMaxMembersPerImport = Number(argv[++i] ?? `${args.memberAccessMaxMembersPerImport}`);
+    else if (a === "--model-force-any-modules") args.modelForceAnyModules = String(argv[++i] ?? "");
+    else if (a === "--exclude-node-builtins") args.excludeNodeBuiltins = true;
+    else if (a === "--external-filter") args.externalFilter = String(argv[++i] ?? "heuristic");
     else if (a === "--help" || a === "-h") {
       console.log(`
 Usage:
@@ -78,6 +119,24 @@ Options:
   --model-script <PATH>      Model adapter script (default: evaluation/model/typebert_infer.py)
   --model-cache-dir <DIR>    Cache dir for model outputs (default: evaluation/real/cache/typebert)
   --model-timeout-ms <MS>    Per-adapter-call timeout (default: 120000)
+  --model-backend <NAME>     Adapter backend (default: typebert)
+  --model <PATH>             Local checkpoint path or model id (recommended: local path; else set TYPEBERT_MODEL env)
+  --model-device <DEV>       cpu|cuda|mps|auto (default: auto)
+  --model-max-new-tokens <N> Max new tokens for generation (default: 800)
+  --model-temperature <T>    Temperature (0.0 = deterministic, default: 0.0)
+  --model-seed <N>           Random seed (default: 0)
+  --model-torch-dtype <D>    auto|float16|bfloat16|float32 (default: auto)
+  --model-low-cpu-mem-usage <0|1>  transformers low_cpu_mem_usage (default: 1)
+  --model-trust-remote-code <0|1>  transformers trust_remote_code (default: 0)
+  --max-stub-modules <N>     Skip repo if extracted external modules exceed N (default: unlimited)
+  --resume                   Append to existing <out-dir>/results.jsonl and skip already-processed URLs
+  --member-access-scope <diag|repo>  Where to collect ns/default member access (default: repo)
+  --member-access-max-files <N>      Max files to scan when scope=repo (default: 800)
+  --member-access-max-bytes-per-file <N>  Skip big files (default: 524288)
+  --member-access-max-members-per-import <N>  Cap extracted `.foo` members per import (default: 200)
+  --model-force-any-modules <CSV>    Comma-separated modules to force stub(any) even in model mode
+  --exclude-node-builtins            Exclude Node.js built-in modules (e.g. 'path', 'crypto') from stub/module list (default: off)
+  --external-filter <heuristic|deps> How to decide "external" module specifiers when onlyExternal=true (default: heuristic)
 `);
       process.exit(0);
     } else {
@@ -97,6 +156,18 @@ Options:
     process.exit(1);
   }
   if (!Number.isFinite(args.modelTimeoutMs) || args.modelTimeoutMs < 1) args.modelTimeoutMs = 2 * 60 * 1000;
+  if (!Number.isFinite(args.modelMaxNewTokens) || args.modelMaxNewTokens < 1) args.modelMaxNewTokens = 800;
+  if (!Number.isFinite(args.modelTemperature) || args.modelTemperature < 0) args.modelTemperature = 0.0;
+  if (!Number.isFinite(args.modelSeed) || args.modelSeed < 0) args.modelSeed = 0;
+  if (!["auto", "float16", "bfloat16", "float32"].includes(String(args.modelTorchDtype))) args.modelTorchDtype = "auto";
+  if (!["0", "1"].includes(String(args.modelLowCpuMemUsage))) args.modelLowCpuMemUsage = "1";
+  if (!["0", "1"].includes(String(args.modelTrustRemoteCode))) args.modelTrustRemoteCode = "0";
+  if (!Number.isFinite(args.maxStubModules) || args.maxStubModules < 1) args.maxStubModules = Infinity;
+  if (!["diag", "repo"].includes(String(args.memberAccessScope))) args.memberAccessScope = "repo";
+  if (!Number.isFinite(args.memberAccessMaxFiles) || args.memberAccessMaxFiles < 1) args.memberAccessMaxFiles = 800;
+  if (!Number.isFinite(args.memberAccessMaxBytesPerFile) || args.memberAccessMaxBytesPerFile < 1) args.memberAccessMaxBytesPerFile = 512 * 1024;
+  if (!Number.isFinite(args.memberAccessMaxMembersPerImport) || args.memberAccessMaxMembersPerImport < 1) args.memberAccessMaxMembersPerImport = 200;
+  if (!["heuristic", "deps"].includes(String(args.externalFilter))) args.externalFilter = "heuristic";
   return args;
 }
 
@@ -154,14 +225,28 @@ async function readRepoUrls(filePath) {
     .filter((s) => s.length > 0 && !s.startsWith("#"));
 }
 
-function isExternalModuleSpecifier(spec) {
+function isExternalModuleSpecifier(spec, opts) {
   if (typeof spec !== "string") return false;
   const s = spec.trim();
   if (s.length === 0) return false;
   if (s.startsWith(".") || s.startsWith("/")) return false;
   if (s.startsWith("node:")) return false;
   if (s.startsWith("@/") || s.startsWith("~/") || s.startsWith("#")) return false;
+  // Optional: exclude Node.js built-in modules like 'path'/'crypto'.
+  // NOTE: excluding them changes the model prompt (because the module list changes),
+  // so keep it opt-in to avoid accidental behavior changes in experiments.
+  if (opts?.excludeNodeBuiltins && NODE_BUILTINS.has(s)) return false;
   return true;
+}
+
+function isExternalByDeps(spec, opts) {
+  if (!isExternalModuleSpecifier(spec, opts)) return false;
+  const pkg = packageNameFromSpecifier(spec);
+  if (!pkg) return false;
+  if (opts?.excludeNodeBuiltins && NODE_BUILTINS.has(pkg)) return false;
+  const deps = opts?.dependencyNames;
+  if (!deps) return false;
+  return deps.has(pkg);
 }
 
 function extractTsCodes(text) {
@@ -190,6 +275,36 @@ function stripJsonc(s) {
   out = out.replace(/(^|\s)\/\/.*$/gm, "$1");
   out = out.replace(/,\s*([}\]])/g, "$1");
   return out;
+}
+
+function packageNameFromSpecifier(spec) {
+  const s = (spec || "").trim();
+  if (!s) return "";
+  if (s.startsWith("node:")) return "";
+  if (s.startsWith("@")) {
+    const parts = s.split("/");
+    if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+    return s;
+  }
+  return s.split("/")[0] ?? "";
+}
+
+async function readRootDependencyNames(repoDir) {
+  // Best-effort: parse package.json at repo root. If missing or invalid, return null.
+  const p = path.join(repoDir, "package.json");
+  try {
+    const raw = await fs.readFile(p, "utf8");
+    const json = JSON.parse(raw);
+    const keys = [
+      ...Object.keys(json?.dependencies ?? {}),
+      ...Object.keys(json?.devDependencies ?? {}),
+      ...Object.keys(json?.peerDependencies ?? {}),
+      ...Object.keys(json?.optionalDependencies ?? {}),
+    ].filter((x) => typeof x === "string" && x.length > 0);
+    return new Set(keys);
+  } catch {
+    return null;
+  }
 }
 
 async function readRootTsconfigTypes(repoDir) {
@@ -261,6 +376,12 @@ async function runModelAdapter({ repo, moduleToStub, opts }) {
           defaultImport: Boolean(v.defaultImport),
           named: [...(v.named ?? new Set())].sort(),
           typeNamed: [...(v.typeNamed ?? new Set())].sort(),
+          members: Object.fromEntries(
+            [...(v.valueMembers ?? new Map()).entries()].map(([exportName, members]) => [
+              exportName,
+              [...members].sort(),
+            ]),
+          ),
         },
       ]),
     ),
@@ -271,12 +392,46 @@ async function runModelAdapter({ repo, moduleToStub, opts }) {
     await fs.mkdir(path.resolve(opts.modelCacheDir), { recursive: true }).catch(() => {});
   }
 
+  const modelPath = opts.modelNameOrPath || process.env.TYPEBERT_MODEL || "";
+  const torchDtype = opts.modelTorchDtype || process.env.TYPEBERT_TORCH_DTYPE || "auto";
+  const lowCpuMemUsage = opts.modelLowCpuMemUsage || process.env.TYPEBERT_LOW_CPU_MEM_USAGE || "1";
+  const trustRemoteCode = opts.modelTrustRemoteCode || process.env.TYPEBERT_TRUST_REMOTE_CODE || "0";
+  const forceAnyModules = opts.modelForceAnyModules || process.env.TYPEBERT_FORCE_ANY_MODULES || "";
+
   return await new Promise((resolve) => {
-    const child = spawn(opts.modelCmd, [opts.modelScript, "--cache-dir", opts.modelCacheDir ?? ""], {
+    const child = spawn(
+      opts.modelCmd,
+      [
+        opts.modelScript,
+        "--cache-dir",
+        opts.modelCacheDir ?? "",
+        "--backend",
+        opts.modelBackend ?? "typebert",
+        "--model",
+        modelPath,
+        "--device",
+        opts.modelDevice ?? "auto",
+        "--max-new-tokens",
+        String(opts.modelMaxNewTokens ?? 800),
+        "--temperature",
+        String(opts.modelTemperature ?? 0.0),
+        "--seed",
+        String(opts.modelSeed ?? 0),
+        "--torch-dtype",
+        String(torchDtype),
+        "--low-cpu-mem-usage",
+        String(lowCpuMemUsage),
+        "--trust-remote-code",
+        String(trustRemoteCode),
+        "--force-any-modules",
+        String(forceAnyModules),
+      ],
+      {
       cwd: ROOT,
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, CI: "1" },
-    });
+      },
+    );
     let stdout = "";
     let stderr = "";
     child.stdout.setEncoding("utf8");
@@ -353,6 +508,106 @@ function collectImportsFromSource(src) {
   return out;
 }
 
+function collectMemberAccesses(src, localName) {
+  // Best-effort: collect `localName.<ident>` accesses.
+  // This helps when code does `import * as ns from 'm'` then uses `ns.foo` without named imports.
+  if (!src || !localName) return [];
+  const re = new RegExp(`\\b${localName.replace(/[$]/g, "\\$") }\\.([A-Za-z_$][\\w$]*)\\b`, "g");
+  const out = new Set();
+  let m;
+  while ((m = re.exec(src)) !== null) out.add(m[1]);
+  return [...out];
+}
+
+function ensureModuleEntry(moduleToStub, mod) {
+  const cur = moduleToStub.get(mod) ?? {
+    defaultImport: false,
+    namespaceImport: false,
+    named: new Set(),
+    typeNamed: new Set(),
+    // For named imports, capture member access like `Foo.bar` and emit `export namespace Foo { const bar:any }`.
+    valueMembers: new Map(), // exportName -> Set(memberName)
+  };
+  moduleToStub.set(mod, cur);
+  return cur;
+}
+
+async function listSourceFilesForMemberScan(repoDir, maxFiles) {
+  // Best-effort: scan TS/TSX/MTS/CTS files under repo (excluding node_modules and .git).
+  // Keep it conservative to avoid huge IO.
+  const exDirs = new Set(["node_modules", ".git", ".turbo", ".next", "dist", "build", "out"]);
+  const exPrefix = [".evaluation-types"];
+  const exFiles = new Set(["package-lock.json", "pnpm-lock.yaml", "yarn.lock"]);
+  const exExt = new Set([".ts", ".tsx", ".mts", ".cts"]);
+
+  const out = [];
+  async function walk(dir) {
+    if (out.length >= maxFiles) return;
+    let entries = [];
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (out.length >= maxFiles) return;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (exDirs.has(e.name)) continue;
+        if (exPrefix.some((pref) => p.includes(`${path.sep}${pref}${path.sep}`))) continue;
+        await walk(p);
+      } else if (e.isFile()) {
+        if (exFiles.has(e.name)) continue;
+        const ext = path.extname(e.name);
+        if (!exExt.has(ext)) continue;
+        out.push(p);
+      }
+    }
+  }
+  await walk(repoDir);
+  return out;
+}
+
+async function enrichModuleToStubWithMemberAccess({ repoDir, moduleToStub, opts }) {
+  // Scan scope=repo: find more member accesses for ns/default imports to avoid TS2339 regressions
+  // that appear outside initial diagFiles.
+  const files = await listSourceFilesForMemberScan(repoDir, opts.memberAccessMaxFiles);
+  for (const abs of files) {
+    let st;
+    try {
+      st = await fs.stat(abs);
+    } catch {
+      continue;
+    }
+    if (st.size > opts.memberAccessMaxBytesPerFile) continue;
+    const src = await fs.readFile(abs, "utf8").catch(() => "");
+    if (!src) continue;
+    const imports = collectImportsFromSource(src);
+    for (const imp of imports) {
+      const mod = imp.mod;
+      if (!mod) continue;
+      if (!moduleToStub.has(mod)) continue;
+      if (imp.sideEffect) continue;
+      const cur = moduleToStub.get(mod);
+      if (!cur) continue;
+      if (imp.namespaceName) {
+        const mem = collectMemberAccesses(src, imp.namespaceName).slice(0, opts.memberAccessMaxMembersPerImport);
+        for (const m of mem) {
+          cur.named.add(m);
+          cur.typeNamed.add(m);
+        }
+      }
+      if (imp.defaultName) {
+        const mem = collectMemberAccesses(src, imp.defaultName).slice(0, opts.memberAccessMaxMembersPerImport);
+        for (const m of mem) {
+          cur.named.add(m);
+          cur.typeNamed.add(m);
+        }
+      }
+    }
+  }
+}
+
 async function detectInstallCommand(repoDir) {
   const hasPnpm = await fileExists(path.join(repoDir, "pnpm-lock.yaml"));
   const hasYarn = await fileExists(path.join(repoDir, "yarn.lock"));
@@ -371,6 +626,16 @@ function sumPhase3(counts) {
   let n = 0;
   for (const c of PHASE3_CODES) n += counts?.[c] ?? 0;
   return n;
+}
+
+function getInjectedDtsSyntaxErrorCodes(tsErrorCounts) {
+  // If the injected d.ts is syntactically invalid, tsc may fail before reporting Phase3 codes,
+  // making Phase3 "eliminated" look falsely great.
+  const counts = tsErrorCounts ?? {};
+  const bad = ["TS1005", "TS1109", "TS1128", "TS1131", "TS1160", "TS1434"];
+  const out = [];
+  for (const c of bad) if ((counts?.[c] ?? 0) > 0) out.push(c);
+  return out;
 }
 
 async function processOne(url, opts, outHandle) {
@@ -394,12 +659,30 @@ async function processOne(url, opts, outHandle) {
     phase3: {
       onlyExternal: opts.onlyExternal,
       mode: opts.mode,
-      model: opts.mode === "model" ? { cmd: opts.modelCmd, script: opts.modelScript } : null,
+      model:
+        opts.mode === "model"
+          ? {
+              cmd: opts.modelCmd,
+              script: opts.modelScript,
+              backend: opts.modelBackend,
+              model: opts.modelNameOrPath || process.env.TYPEBERT_MODEL || "",
+              device: opts.modelDevice,
+              maxNewTokens: opts.modelMaxNewTokens,
+              temperature: opts.modelTemperature,
+              seed: opts.modelSeed,
+              torchDtype: opts.modelTorchDtype || process.env.TYPEBERT_TORCH_DTYPE || "auto",
+              lowCpuMemUsage: opts.modelLowCpuMemUsage || process.env.TYPEBERT_LOW_CPU_MEM_USAGE || "1",
+              trustRemoteCode: opts.modelTrustRemoteCode || process.env.TYPEBERT_TRUST_REMOTE_CODE || "0",
+            }
+          : null,
+      modelCacheDir: opts.mode === "model" ? (opts.modelCacheDir ?? "") : "",
       diagFiles: [],
       stubModules: [],
       stubModulesCount: 0,
       reduced: false,
       eliminated: false,
+      injectedDtsInvalid: false,
+      injectedDtsSyntaxCodes: [],
       originalTypesCount: 0,
       injectedTypesCount: 0,
     },
@@ -428,6 +711,11 @@ async function processOne(url, opts, outHandle) {
     if (!opts.keepRepos) await rmrf(repoDir);
     await outHandle.appendFile(JSON.stringify(result) + "\n");
     return;
+  }
+
+  // Optional: for externalFilter=deps, load root dependency list once per repo.
+  if (opts.externalFilter === "deps") {
+    opts.dependencyNames = await readRootDependencyNames(repoDir);
   }
 
   // install
@@ -487,26 +775,72 @@ async function processOne(url, opts, outHandle) {
     for (const imp of imports) {
       const mod = imp.mod;
       if (!mod) continue;
-      if (opts.onlyExternal && !isExternalModuleSpecifier(mod)) continue;
+      if (opts.onlyExternal) {
+        const okExternal =
+          opts.externalFilter === "deps" ? isExternalByDeps(mod, opts) : isExternalModuleSpecifier(mod, opts);
+        if (!okExternal) continue;
+      }
       if (imp.sideEffect) continue;
-      const cur = moduleToStub.get(mod) ?? {
-        defaultImport: false,
-        namespaceImport: false,
-        named: new Set(),
-        typeNamed: new Set(),
-      };
+      const cur = ensureModuleEntry(moduleToStub, mod);
       if (imp.defaultName) cur.defaultImport = true;
       if (imp.namespaceName) cur.namespaceImport = true;
       for (const n of imp.named ?? []) {
         if (n.isType) cur.typeNamed.add(n.imported);
         else cur.named.add(n.imported);
       }
-      moduleToStub.set(mod, cur);
+
+      // Heuristic: if code uses namespace/default import and then accesses `.foo`,
+      // add those member names as exports too, to avoid TS2339/TS2694 regressions.
+      // (We add to BOTH value + type namespaces for safety; TS allows both.)
+      const MAX_MEMBERS = opts.memberAccessMaxMembersPerImport ?? 200;
+      if (imp.namespaceName) {
+        const mem = collectMemberAccesses(src, imp.namespaceName).slice(0, MAX_MEMBERS);
+        for (const m of mem) {
+          cur.named.add(m);
+          cur.typeNamed.add(m);
+        }
+      }
+      if (imp.defaultName) {
+        const mem = collectMemberAccesses(src, imp.defaultName).slice(0, MAX_MEMBERS);
+        for (const m of mem) {
+          // default import is typically a value, but adding exported members doesn't hurt,
+          // and can fix cases where default import is actually a namespace-like import under the hood.
+          cur.named.add(m);
+          cur.typeNamed.add(m);
+        }
+      }
+
+      // Named imports: `import { Foo } from 'm'` then `Foo.bar`.
+      // We cannot add `bar` as a module export; instead we record it so the adapter can emit
+      // `export namespace Foo { export const bar: any; }` to satisfy static-like accesses.
+      for (const n of imp.named ?? []) {
+        if (n.isType) continue;
+        const mem = collectMemberAccesses(src, n.local).slice(0, MAX_MEMBERS);
+        if (!mem.length) continue;
+        const key = n.imported;
+        const set = cur.valueMembers.get(key) ?? new Set();
+        for (const m of mem) set.add(m);
+        cur.valueMembers.set(key, set);
+      }
+
     }
+  }
+
+  if (opts.memberAccessScope === "repo") {
+    await enrichModuleToStubWithMemberAccess({ repoDir, moduleToStub, opts });
   }
 
   if (moduleToStub.size === 0) {
     result.skipReason = "no-stub-modules-found";
+    result.durationMs = Date.now() - startedAt;
+    if (!opts.keepRepos) await rmrf(repoDir);
+    await outHandle.appendFile(JSON.stringify(result) + "\n");
+    return;
+  }
+
+  if (Number.isFinite(opts.maxStubModules) && moduleToStub.size > opts.maxStubModules) {
+    result.skipReason = "too-many-stub-modules";
+    result.phase3.stubModulesCount = moduleToStub.size;
     result.durationMs = Date.now() - startedAt;
     if (!opts.keepRepos) await rmrf(repoDir);
     await outHandle.appendFile(JSON.stringify(result) + "\n");
@@ -548,6 +882,15 @@ async function processOne(url, opts, outHandle) {
       await outHandle.appendFile(JSON.stringify(result) + "\n");
       return;
     }
+    // Keep a small pointer to the model output for later failure analysis
+    // without bloating results.jsonl with full d.ts text.
+    result.phase3.modelOutput = {
+      backend: obj.backend ?? null,
+      cacheKey: obj.cache_key ?? null,
+      adapterVersion: obj.meta?.adapter_version ?? null,
+      fallbackReason: obj.meta?.fallback_reason ?? null,
+      missingModulesFilledWithAny: obj.meta?.missing_modules_filled_with_any ?? null,
+    };
     injectedDts = obj.dts;
   }
 
@@ -572,8 +915,14 @@ async function processOne(url, opts, outHandle) {
   };
 
   const afterPhase3 = sumPhase3(jcounts);
-  result.phase3.reduced = afterPhase3 < baselinePhase3;
-  result.phase3.eliminated = afterPhase3 === 0 && baselinePhase3 > 0;
+  const injectedSyntaxCodes = getInjectedDtsSyntaxErrorCodes(jcounts);
+  result.phase3.injectedDtsSyntaxCodes = injectedSyntaxCodes;
+  // Conservative: treat as invalid if TS parser errors exist after injection.
+  result.phase3.injectedDtsInvalid = injectedSyntaxCodes.length > 0;
+
+  const injectionValid = !result.phase3.injectedDtsInvalid && !jr.timedOut;
+  result.phase3.reduced = injectionValid ? afterPhase3 < baselinePhase3 : false;
+  result.phase3.eliminated = injectionValid ? afterPhase3 === 0 && baselinePhase3 > 0 : false;
 
   result.durationMs = Date.now() - startedAt;
   if (!opts.keepRepos) await rmrf(repoDir);
@@ -582,7 +931,7 @@ async function processOne(url, opts, outHandle) {
 
 async function main() {
   const opts = parseArgs(process.argv);
-  const urls = (await readRepoUrls(path.resolve(opts.reposFile))).slice(0, opts.max);
+  const allUrls = (await readRepoUrls(path.resolve(opts.reposFile))).slice(0, opts.max);
 
   const outDir = path.resolve(opts.outDir);
   const workDir = path.resolve(opts.workDir);
@@ -591,7 +940,24 @@ async function main() {
 
   const resultsPath = path.join(outDir, "results.jsonl");
   const summaryPath = path.join(outDir, "summary.tsv");
-  const outHandle = await fs.open(resultsPath, "w");
+
+  // resume: read existing results.jsonl and skip processed URLs
+  const processed = new Set();
+  if (opts.resume && (await fileExists(resultsPath))) {
+    const prev = await fs.readFile(resultsPath, "utf8").catch(() => "");
+    for (const ln of prev.split(/\r?\n/)) {
+      if (!ln.trim()) continue;
+      try {
+        const o = JSON.parse(ln);
+        if (typeof o?.url === "string" && o.url.length > 0) processed.add(o.url);
+      } catch {
+        // ignore bad lines
+      }
+    }
+  }
+
+  const urls = opts.resume ? allUrls.filter((u) => !processed.has(u)) : allUrls;
+  const outHandle = await fs.open(resultsPath, opts.resume ? "a" : "w");
 
   let idx = 0;
   async function worker() {
@@ -643,6 +1009,8 @@ async function main() {
     "phase3StubModules",
     "phase3OriginalTypesCount",
     "phase3InjectedTypesCount",
+    "phase3InjectedDtsInvalid",
+    "phase3InjectedDtsSyntaxCodes",
   ].join("\t");
   const rows = [header];
   for (const line of lines) {
@@ -682,6 +1050,8 @@ async function main() {
         o.phase3?.stubModulesCount ?? 0,
         o.phase3?.originalTypesCount ?? "",
         o.phase3?.injectedTypesCount ?? "",
+        o.phase3?.injectedDtsInvalid ? "true" : "false",
+        (o.phase3?.injectedDtsSyntaxCodes ?? []).join(","),
       ].join("\t"),
     );
   }

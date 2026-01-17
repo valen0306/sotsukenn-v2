@@ -48,6 +48,32 @@ node evaluation/real/make-phase3-list.mjs \
   --out evaluation/real/inputs/phase3_ts1000.txt
 ```
 
+### Phase3（"できるだけPhase3単独"）向けリスト
+
+Phase3の効果を見たい場合、Phase1/2（TS2307/7016/2305/2613/2614）や設定ノイズ（TS17004/6142）が混ざると
+評価が歪みやすいので、それらを除外したリストも用意できます。
+
+```bash
+node evaluation/real/make-phase3-pure-list.mjs \
+  --run-dir tsc-error-data-set/runs/ts1000 \
+  --out evaluation/real/inputs/phase3_ts1000_pure.txt \
+  --max 100
+```
+
+（より多く集めたい場合は `--max` を外す / 増やす）
+
+### Phase3（100件向け: “Phase3っぽさ”でランキングして選ぶ）
+
+ts1000では「Phase1/2を完全除外」だと母数が少ないため、100件に拡大する場合は
+**Phase3 core を含む候補を“Phase1/2ノイズが少ない順”にランキングして上位N件を取る**のが現実的です。
+
+```bash
+node evaluation/real/make-phase3-ranked-list.mjs \
+  --run-dir tsc-error-data-set/runs/ts1000 \
+  --out evaluation/real/inputs/phase3_ts1000_ranked100.txt \
+  --max 100
+```
+
 ## Phase 1（TS2307/TS7016）: 実プロジェクト評価
 
 Phase1は「型“解決”」なので、baselineのログから `TS2307/TS7016` の対象モジュールspecifierを抽出し、
@@ -121,8 +147,13 @@ node evaluation/real/phase3-run.mjs \
 `--mode model` を指定すると、Node側で抽出した「(module specifier → importされた名前)」を
 Pythonのアダプタに渡し、返ってきた `.d.ts` を注入します。
 
-現状のアダプタは `evaluation/model/typebert_infer.py` で、入出力（JSON stdin/stdout）の契約だけ先に固めています。
-実際のTypeBERTモデル重みが準備できたら、このスクリプトの backend 実装を差し替える想定です。
+アダプタは `evaluation/model/typebert_infer.py` です。
+`--model <checkpoint>` を指定すると、ローカルのHuggingFace/Transformers互換checkpointを読み込み、
+1repoにつき1回の推論で `.d.ts`（複数 `declare module '...' { ... }` を含む）を生成します。
+
+注記:
+- 依存（`torch`/`transformers`）が無い、または `--model`（もしくは環境変数 `TYPEBERT_MODEL`）が未設定の場合、
+  **安全にDTS_STUB（any型）へフォールバック**し、パイプラインは止めません（`ok=true`で返します）。
 
 ```bash
 node evaluation/real/phase3-run.mjs \
@@ -130,6 +161,12 @@ node evaluation/real/phase3-run.mjs \
   --model-cmd python3 \
   --model-script evaluation/model/typebert_infer.py \
   --model-cache-dir evaluation/real/cache/typebert \
+  --model-backend typebert \
+  --model /path/to/local/checkpoint \
+  --model-device auto \
+  --model-max-new-tokens 800 \
+  --model-temperature 0.0 \
+  --model-seed 0 \
   --repos-file evaluation/real/inputs/phase3_ts1000.txt \
   --out-dir evaluation/real/out/phase3-ts1000-20-model \
   --concurrency 1 \
@@ -139,8 +176,41 @@ node evaluation/real/phase3-run.mjs \
   --verbose
 ```
 
+環境変数でも指定できます（CLIが優先）:
+- `TYPEBERT_MODEL`: `--model` 相当
+- `TYPEBERT_BACKEND`: `--model-backend` 相当（通常は `typebert`）
+- `TYPEBERT_DEVICE`, `TYPEBERT_MAX_NEW_TOKENS`, `TYPEBERT_TEMPERATURE`, `TYPEBERT_SEED`
+
 成果物:
 - `<out-dir>/results.jsonl`
 - `<out-dir>/summary.tsv`
+
+### 途中再開（resume）
+
+長時間の実行（例: 100件）で中断した場合、`--resume` を付けて再実行すると、
+既存の `<out-dir>/results.jsonl` を読み込み、**処理済みURLをスキップして続きから実行**できます。
+（`results.jsonl` は追記モードで増えていきます）
+
+```bash
+node evaluation/real/phase3-run.mjs \
+  --resume \
+  --mode model \
+  --repos-file <FILE> \
+  --out-dir <out-dir> \
+  --concurrency 1 \
+  --timeout-ms 600000 \
+  --verbose
+```
+
+### Phase3結果の集計（invalid/timeout除外の統計）
+
+Phase3は生成`.d.ts`が壊れると `TS1005/TS1109` 等で `tsc` が先に落ち、偽陽性の改善に見えることがあります。
+このリポジトリでは `phase3-run.mjs` が `phase3InjectedDtsInvalid` を記録し、集計スクリプトでも除外します。
+
+```bash
+node evaluation/real/analyze-phase3-results.mjs \
+  --out-dir <out-dir> \
+  --top 10
+```
 
 

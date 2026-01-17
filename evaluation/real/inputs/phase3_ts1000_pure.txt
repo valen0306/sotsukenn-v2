@@ -1,0 +1,17 @@
+https://github.com/type-challenges/type-challenges.git
+https://github.com/pear-devs/pear-desktop.git
+https://github.com/felixrieseberg/windows95.git
+https://github.com/elysiajs/elysia.git
+https://github.com/ourongxing/newsnow.git
+https://github.com/lyswhut/lx-music-mobile.git
+https://github.com/airbnb/react-sketchapp.git
+https://github.com/cyrildiagne/ar-cutpaste.git
+https://github.com/FaridSafi/react-native-gifted-chat.git
+https://github.com/getmaxun/maxun.git
+https://github.com/TanStack/router.git
+https://github.com/typestack/class-validator.git
+https://github.com/BetterDiscord/BetterDiscord.git
+https://github.com/bepass-org/oblivion-desktop.git
+https://github.com/total-typescript/beginners-typescript-tutorial.git
+https://github.com/mobxjs/mobx-state-tree.git
+https://github.com/DIYgod/RSSHub-Radar.git
