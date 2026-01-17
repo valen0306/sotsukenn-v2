@@ -276,6 +276,12 @@ function parseDiagnostics(text) {
   return out;
 }
 
+function capDiagnostics(diags, max) {
+  const n = Number.isFinite(max) ? max : 0;
+  if (!n || n < 1) return [];
+  return (diags ?? []).slice(0, n);
+}
+
 function stripJsonc(s) {
   let out = s.replace(/\/\*[\s\S]*?\*\//g, "");
   out = out.replace(/(^|\s)\/\/.*$/gm, "$1");
@@ -749,10 +755,12 @@ async function processOne(url, opts, outHandle) {
   const br = await runCmd({ cwd: repoDir, cmd: "tsc", args: ["--noEmit", "--pretty", "false", "-p", "tsconfig.json"], timeoutMs: opts.timeoutMs });
   const bout = `${br.stdout}\n${br.stderr}`;
   const bcounts = extractTsCodes(bout);
+  const bdiags = parseDiagnostics(bout);
   result.baseline = {
     exitCode: br.code,
     timedOut: br.timedOut,
     tsErrorCounts: bcounts,
+    diagnostics: capDiagnostics(bdiags, 2000),
     outputSample: bout.slice(0, 2000),
   };
   if (br.timedOut) {
@@ -942,10 +950,12 @@ async function processOne(url, opts, outHandle) {
   });
   const jout = `${jr.stdout}\n${jr.stderr}`;
   const jcounts = extractTsCodes(jout);
+  const jdiags = parseDiagnostics(jout);
   result.injected = {
     exitCode: jr.code,
     timedOut: jr.timedOut,
     tsErrorCounts: jcounts,
+    diagnostics: capDiagnostics(jdiags, 2000),
     outputSample: jout.slice(0, 2000),
   };
 
