@@ -28,3 +28,6 @@ venv/
 # Thesis build artifacts / scratch
 thesis/_test.pdf
 
+# Local rendering artifacts (PDF previews etc)
+docs/policy/_render/
+

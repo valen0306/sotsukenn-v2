@@ -65,6 +65,9 @@ function parseArgs(argv) {
     modelForceAnyModules: "",
     excludeNodeBuiltins: false,
     externalFilter: "heuristic", // heuristic | deps
+    // Localizer (Plan A / M2): limit how many external modules to stub (Top-M).
+    // Default: unlimited (= current behavior).
+    localizerTopModules: Infinity,
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -100,6 +103,7 @@ function parseArgs(argv) {
     else if (a === "--model-force-any-modules") args.modelForceAnyModules = String(argv[++i] ?? "");
     else if (a === "--exclude-node-builtins") args.excludeNodeBuiltins = true;
     else if (a === "--external-filter") args.externalFilter = String(argv[++i] ?? "heuristic");
+    else if (a === "--localizer-top-modules") args.localizerTopModules = Number(argv[++i] ?? "0");
     else if (a === "--help" || a === "-h") {
       console.log(`
 Usage:
@@ -137,6 +141,7 @@ Options:
   --model-force-any-modules <CSV>    Comma-separated modules to force stub(any) even in model mode
   --exclude-node-builtins            Exclude Node.js built-in modules (e.g. 'path', 'crypto') from stub/module list (default: off)
   --external-filter <heuristic|deps> How to decide "external" module specifiers when onlyExternal=true (default: heuristic)
+  --localizer-top-modules <N>        (M2) Stub only Top-N external modules (ranked by frequency in Phase3 diagnostic files). Default: unlimited
 `);
       process.exit(0);
     } else {
@@ -168,6 +173,7 @@ Options:
   if (!Number.isFinite(args.memberAccessMaxBytesPerFile) || args.memberAccessMaxBytesPerFile < 1) args.memberAccessMaxBytesPerFile = 512 * 1024;
   if (!Number.isFinite(args.memberAccessMaxMembersPerImport) || args.memberAccessMaxMembersPerImport < 1) args.memberAccessMaxMembersPerImport = 200;
   if (!["heuristic", "deps"].includes(String(args.externalFilter))) args.externalFilter = "heuristic";
+  if (!Number.isFinite(args.localizerTopModules) || args.localizerTopModules < 1) args.localizerTopModules = Infinity;
   return args;
 }
 
@@ -659,6 +665,12 @@ async function processOne(url, opts, outHandle) {
     phase3: {
       onlyExternal: opts.onlyExternal,
       mode: opts.mode,
+      localizer: {
+        topModules: Number.isFinite(opts.localizerTopModules) ? opts.localizerTopModules : null,
+        beforeTopModulesCount: null,
+        afterTopModulesCount: null,
+        topModuleFreq: [],
+      },
       model:
         opts.mode === "model"
           ? {
@@ -767,6 +779,7 @@ async function processOne(url, opts, outHandle) {
   result.phase3.diagFiles = diagFiles.slice(0, 200); // cap
 
   const moduleToStub = new Map();
+  const moduleFreq = new Map(); // module -> count (frequency in diag files)
   for (const f of diagFiles) {
     const abs = path.isAbsolute(f) ? f : path.join(repoDir, f);
     if (!(await fileExists(abs))) continue;
@@ -781,6 +794,8 @@ async function processOne(url, opts, outHandle) {
         if (!okExternal) continue;
       }
       if (imp.sideEffect) continue;
+
+      moduleFreq.set(mod, (moduleFreq.get(mod) ?? 0) + 1);
       const cur = ensureModuleEntry(moduleToStub, mod);
       if (imp.defaultName) cur.defaultImport = true;
       if (imp.namespaceName) cur.namespaceImport = true;
@@ -825,6 +840,26 @@ async function processOne(url, opts, outHandle) {
 
     }
   }
+
+  // Localizer (Top-M): keep only the most frequently referenced modules in Phase3 diagnostic files.
+  result.phase3.localizer.beforeTopModulesCount = moduleToStub.size;
+  if (Number.isFinite(opts.localizerTopModules) && moduleToStub.size > opts.localizerTopModules) {
+    const ranked = [...moduleFreq.entries()].sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]));
+    const kept = new Set(ranked.slice(0, opts.localizerTopModules).map(([m]) => m));
+    for (const k of [...moduleToStub.keys()]) {
+      if (!kept.has(k)) moduleToStub.delete(k);
+    }
+    result.phase3.localizer.topModuleFreq = ranked.slice(0, Math.min(50, opts.localizerTopModules)).map(([m, c]) => ({
+      module: m,
+      freq: c,
+    }));
+  } else {
+    result.phase3.localizer.topModuleFreq = [...moduleFreq.entries()]
+      .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
+      .slice(0, 50)
+      .map(([m, c]) => ({ module: m, freq: c }));
+  }
+  result.phase3.localizer.afterTopModulesCount = moduleToStub.size;
 
   if (opts.memberAccessScope === "repo") {
     await enrichModuleToStubWithMemberAccess({ repoDir, moduleToStub, opts });
