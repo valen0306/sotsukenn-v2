@@ -5,6 +5,9 @@ evaluation/**/work/**
 # Generated evaluation outputs (can be reproduced)
 evaluation/**/out/**
 
+# Model/cache artifacts (reproducible)
+evaluation/real/cache/**
+
 # Dataset generation run outputs (often large)
 tsc-error-data-set/runs/**
 
@@ -21,4 +24,7 @@ tsc-error-data-set/runs/**
 # Python virtual environments (never commit)
 .venv/
 venv/
+
+# Thesis build artifacts / scratch
+thesis/_test.pdf
 
