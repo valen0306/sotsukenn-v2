@@ -1247,6 +1247,10 @@ async function main() {
     "phase3InjectedTypesCount",
     "phase3InjectedDtsInvalid",
     "phase3InjectedDtsSyntaxCodes",
+    "trialStrategy",
+    "trialMax",
+    "trialsRun",
+    "chosenCandidateId",
   ].join("\t");
   const rows = [header];
   for (const line of lines) {
@@ -1288,6 +1292,10 @@ async function main() {
         o.phase3?.injectedTypesCount ?? "",
         o.phase3?.injectedDtsInvalid ? "true" : "false",
         (o.phase3?.injectedDtsSyntaxCodes ?? []).join(","),
+        o.phase3?.trial?.strategy ?? "",
+        o.phase3?.trial?.max ?? "",
+        o.phase3?.trial?.trialsRun ?? "",
+        o.phase3?.trial?.chosenCandidateId ?? "",
       ].join("\t"),
     );
   }
