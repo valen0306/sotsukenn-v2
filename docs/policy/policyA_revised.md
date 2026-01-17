@@ -94,6 +94,16 @@ node evaluation/real/phase3-run.mjs \
 - “局所化だけでどれだけ回数が減ったか”のグラフ
 - M4環境で回る実験スケール感が確定
 
+**Phase2（実測の最小結果 / max=5の例）**
+- 比較対象:
+  - B0: `--trial-strategy top1 --trial-max 1`
+  - B1: `--trial-strategy module-any-sweep --trial-max 6 --localizer-top-modules 999999`
+  - A1: `--trial-strategy module-any-sweep --trial-max 6 --localizer-top-modules 3`
+- 観測（比較できた3repoの平均）:
+  - B1: `avg_trialsRun=4.00` / `avg_tsc_calls=5.00`
+  - A1(top3): `avg_trialsRun=3.33` / `avg_tsc_calls=4.33` （探索回数が減った）
+- Phase3 core の総量（valid only）は B1 と A1 で同一（このスケールでは「性能を落とさず回数削減」が示せた）
+
 #### Phase 3：学習データ生成（弱教師）を本格化
 **目的**: Rerankerを学習させるためのデータを自動で貯める。
 - Localizerが出した宣言候補について、Top-k候補を一つずつ差し替えて `tsc`
