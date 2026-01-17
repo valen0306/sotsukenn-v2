@@ -263,6 +263,73 @@ function extractTsCodes(text) {
   return Object.fromEntries([...counts.entries()].sort((a, b) => b[1] - a[1]));
 }
 
+function sha1Hex(s) {
+  return crypto.createHash("sha1").update(String(s ?? ""), "utf8").digest("hex");
+}
+
+function buildDeltaErrors({ baselineCounts, injectedCounts }) {
+  const keys = new Set([...Object.keys(baselineCounts ?? {}), ...Object.keys(injectedCounts ?? {})]);
+  const out = {};
+  for (const k of [...keys].sort()) {
+    const b = baselineCounts?.[k] ?? 0;
+    const j = injectedCounts?.[k] ?? 0;
+    out[k] = j - b;
+  }
+  return out;
+}
+
+function extractDeclarationsFromDts(dtsText) {
+  // Best-effort extraction of "exported declaration units" from `.d.ts`.
+  // This is intentionally shallow (regex-based) but stable enough for logging/tracking.
+  const txt = String(dtsText ?? "");
+  const decls = [];
+
+  // Match `declare module 'x' { ... }` blocks to associate declarations with a module.
+  const modRe = /declare\s+module\s+['"]([^'"]+)['"]\s*\{([\s\S]*?)\n\}/g;
+  let m;
+  while ((m = modRe.exec(txt)) !== null) {
+    const mod = m[1];
+    const body = m[2] ?? "";
+    const lines = body.split(/\r?\n/);
+    for (const ln of lines) {
+      const s = ln.trim();
+      if (!s.startsWith("export ")) continue;
+      // Capture the "kind" and "name" for common exports.
+      const mm =
+        s.match(/^export\s+(const|type|interface|function|class|enum|namespace)\s+([A-Za-z0-9_$]+)/) ??
+        s.match(/^export\s+default\b/);
+      let kind = "";
+      let name = "";
+      if (!mm) continue;
+      if (mm[0].startsWith("export default")) {
+        kind = "default";
+        name = "__default";
+      } else {
+        kind = mm[1];
+        name = mm[2];
+      }
+      const declKey = `${mod}::${kind}::${name}::${s}`;
+      decls.push({
+        declaration_id: `decl_${sha1Hex(declKey).slice(0, 12)}`,
+        module: mod,
+        kind,
+        name,
+      });
+    }
+  }
+
+  // De-dup (stable order)
+  const seen = new Set();
+  const uniq = [];
+  for (const d of decls) {
+    const k = `${d.declaration_id}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    uniq.push(d);
+  }
+  return uniq;
+}
+
 function parseDiagnostics(text) {
   const out = [];
   const lines = (text ?? "").split(/\r?\n/);
@@ -668,6 +735,9 @@ async function processOne(url, opts, outHandle) {
     install: null,
     baseline: null,
     injected: null,
+    // Trial-level tracking (Policy A / Phase0):
+    // even when we only run a single injection today, keep the schema "Top-k ready".
+    trials: [],
     phase3: {
       onlyExternal: opts.onlyExternal,
       mode: opts.mode,
@@ -895,6 +965,8 @@ async function processOne(url, opts, outHandle) {
   result.phase3.stubModulesCount = moduleToStub.size;
 
   let injectedDts = "";
+  // Candidate scaffolding (Policy A / Phase0)
+  const candidateId = "c0_top1";
   if (opts.mode === "stub") {
     injectedDts = buildPhase3StubDts(moduleToStub);
   } else {
@@ -937,6 +1009,9 @@ async function processOne(url, opts, outHandle) {
     injectedDts = obj.dts;
   }
 
+  const injectedDtsSha1 = sha1Hex(injectedDts);
+  const injectedDeclarations = extractDeclarationsFromDts(injectedDts);
+
   await writePhase3InjectedTypeRoots(repoDir, { packageName: "__phase3_injected__", dtsText: injectedDts });
   const injectedCfg = await writeInjectedTsconfig(repoDir);
   result.phase3.originalTypesCount = injectedCfg.originalTypesCount;
@@ -968,6 +1043,19 @@ async function processOne(url, opts, outHandle) {
   const injectionValid = !result.phase3.injectedDtsInvalid && !jr.timedOut;
   result.phase3.reduced = injectionValid ? afterPhase3 < baselinePhase3 : false;
   result.phase3.eliminated = injectionValid ? afterPhase3 === 0 && baselinePhase3 > 0 : false;
+
+  // Trial log (weak supervision): record candidate + declaration IDs + Δerrors.
+  // NOTE: Even if injection is invalid, keeping the record helps later filtering/analysis.
+  result.trials.push({
+    trial_id: `trial_${sha1Hex(`${result.url}::${candidateId}::${injectedDtsSha1}`).slice(0, 12)}`,
+    candidate_id: candidateId,
+    injected_dts_sha1: injectedDtsSha1,
+    declaration_count: injectedDeclarations.length,
+    declarations: injectedDeclarations.slice(0, 5000),
+    delta_errors: buildDeltaErrors({ baselineCounts: result.baseline?.tsErrorCounts ?? {}, injectedCounts: jcounts }),
+    delta_phase3: afterPhase3 - baselinePhase3,
+    valid_injection: injectionValid,
+  });
 
   result.durationMs = Date.now() - startedAt;
   if (!opts.keepRepos) await rmrf(repoDir);
