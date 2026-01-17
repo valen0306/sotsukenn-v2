@@ -18,3 +18,7 @@ tsc-error-data-set/runs/**
 .pytest_cache/
 .mypy_cache/
 
+# Python virtual environments (never commit)
+.venv/
+venv/
+
