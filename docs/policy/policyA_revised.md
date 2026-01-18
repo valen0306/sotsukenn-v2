@@ -113,6 +113,19 @@ node evaluation/real/phase3-run.mjs \
 - 人手で正解型を作らない
 - “`tsc`が改善したか”を教師にする＝卒論として再現性が高い
 
+**このリポジトリでの実行（Phase3 v0: JSONL生成）**
+- 前提: `evaluation/real/phase3-run.mjs` が `results.jsonl` に `trials[].delta_phase3` / `trials[].delta_errors` を出力している
+- 生成: `evaluation/real/export-phase3-pairwise.mjs` で pairwise JSONL を作る（弱教師）
+
+例（max=20のB1/A1結果から生成）:
+
+```bash
+node evaluation/real/export-phase3-pairwise.mjs \
+  --out-dir evaluation/real/out/phase2-B1-sweep-nolocalizer-max20 \
+  --out-dir evaluation/real/out/phase2-A1-localizer3-sweep-max20 \
+  --out-file evaluation/real/out/phase3-pairwise-max20.jsonl
+```
+
 #### Phase 4：Reranker v0（軽量ML）で「収束」を改善
 **目的**: 方針Aの主張（探索を学習で賢くする）を成立させる。
 - まずは軽量モデル（ロジスティック / LightGBM）で十分
