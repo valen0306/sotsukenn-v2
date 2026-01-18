@@ -79,6 +79,8 @@ function parseArgs(argv) {
     trialMax: 1, // max number of candidates to run per repo (including top1)
     sweepAnyK: 1, // Candidate Generator v1: how many modules to override with any-stub per candidate (1 or 2)
     sweepAnyTopK: 0, // Candidate Generator v2: add one candidate that overrides the first K modules at once (0=off)
+    symbolWidenMode: "off", // off | interface-indexer | namespace-members | function-any-overload | missing-exports
+    symbolWidenMax: 0, // max number of symbol-level candidates to add (0=off)
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
   for (let i = 2; i < argv.length; i++) {
@@ -121,6 +123,8 @@ function parseArgs(argv) {
     else if (a === "--trial-max") args.trialMax = Number(argv[++i] ?? "1");
     else if (a === "--sweep-any-k") args.sweepAnyK = Number(argv[++i] ?? "1");
     else if (a === "--sweep-any-topk") args.sweepAnyTopK = Number(argv[++i] ?? "0");
+    else if (a === "--symbol-widen-mode") args.symbolWidenMode = String(argv[++i] ?? "off");
+    else if (a === "--symbol-widen-max") args.symbolWidenMax = Number(argv[++i] ?? "0");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
     else if (a === "--help" || a === "-h") {
       console.log(`
@@ -165,6 +169,8 @@ Options:
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
   --sweep-any-k <1|2>                (M1/Candidate v1) In module-any-sweep, override K modules per candidate (default: 1)
   --sweep-any-topk <N>               (M1/Candidate v2) Add one candidate that overrides the first N stub modules at once (default: 0/off)
+  --symbol-widen-mode <off|interface-indexer|namespace-members|function-any-overload|missing-exports> (M1/Candidate v3) Add symbol-level candidates (default: off)
+  --symbol-widen-max <N>             (M1/Candidate v3) Max symbol-level candidates to add (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
       process.exit(0);
@@ -203,6 +209,8 @@ Options:
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   if (![1, 2].includes(Number(args.sweepAnyK))) args.sweepAnyK = 1;
   if (!Number.isFinite(args.sweepAnyTopK) || args.sweepAnyTopK < 0) args.sweepAnyTopK = 0;
+  if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
+  if (!Number.isFinite(args.symbolWidenMax) || args.symbolWidenMax < 0) args.symbolWidenMax = 0;
   return args;
 }
 
@@ -357,6 +365,124 @@ function extractDeclarationsFromDts(dtsText) {
     uniq.push(d);
   }
   return uniq;
+}
+
+function extractExportedInterfacesByModule(dtsText) {
+  const txt = String(dtsText ?? "");
+  const out = new Map(); // mod -> Set(names)
+  const modRe = /declare\s+module\s+['"]([^'"]+)['"]\s*\{([\s\S]*?)\n\}/g;
+  let m;
+  while ((m = modRe.exec(txt)) !== null) {
+    const mod = m[1];
+    const body = m[2] ?? "";
+    const set = out.get(mod) ?? new Set();
+    const re = /export\s+interface\s+([A-Za-z0-9_$]+)/g;
+    let mm;
+    while ((mm = re.exec(body)) !== null) set.add(mm[1]);
+    out.set(mod, set);
+  }
+  return out;
+}
+
+function buildInterfaceIndexerAugmentation(mod, name) {
+  return [
+    `declare module '${esc(mod)}' {`,
+    `  export interface ${name} {`,
+    `    [key: string]: any;`,
+    `  }`,
+    `}`,
+    ``,
+    ``,
+  ].join("\n");
+}
+
+function extractExportedMergeableValuesByModule(dtsText) {
+  // Names that can legally merge with a namespace declaration (function/class/namespace/enum).
+  const txt = String(dtsText ?? "");
+  const out = new Map(); // mod -> Set(names)
+  const modRe = /declare\s+module\s+['"]([^'"]+)['"]\s*\{([\s\S]*?)\n\}/g;
+  let m;
+  while ((m = modRe.exec(txt)) !== null) {
+    const mod = m[1];
+    const body = m[2] ?? "";
+    const set = out.get(mod) ?? new Set();
+    const re = /export\s+(function|class|namespace|enum)\s+([A-Za-z0-9_$]+)/g;
+    let mm;
+    while ((mm = re.exec(body)) !== null) set.add(mm[2]);
+    out.set(mod, set);
+  }
+  return out;
+}
+
+function buildNamespaceMembersAugmentation(mod, name, members) {
+  const uniq = [...new Set(members ?? [])].filter((x) => typeof x === "string" && /^[A-Za-z_$][\w$]*$/.test(x)).sort();
+  const chunks = [];
+  chunks.push(`declare module '${esc(mod)}' {`);
+  chunks.push(`  export namespace ${name} {`);
+  for (const mem of uniq) chunks.push(`    export const ${mem}: any;`);
+  chunks.push(`  }`);
+  chunks.push(`}`);
+  chunks.push("");
+  chunks.push("");
+  return chunks.join("\n");
+}
+
+function extractExportedFunctionsByModule(dtsText) {
+  const txt = String(dtsText ?? "");
+  const out = new Map(); // mod -> Set(names)
+  const modRe = /declare\s+module\s+['"]([^'"]+)['"]\s*\{([\s\S]*?)\n\}/g;
+  let m;
+  while ((m = modRe.exec(txt)) !== null) {
+    const mod = m[1];
+    const body = m[2] ?? "";
+    const set = out.get(mod) ?? new Set();
+    const re = /export\s+function\s+([A-Za-z0-9_$]+)\s*\(/g;
+    let mm;
+    while ((mm = re.exec(body)) !== null) set.add(mm[1]);
+    out.set(mod, set);
+  }
+  return out;
+}
+
+function buildFunctionAnyOverloadAugmentation(mod, name) {
+  return [
+    `declare module '${esc(mod)}' {`,
+    `  export function ${name}(...args: any[]): any;`,
+    `}`,
+    ``,
+    ``,
+  ].join("\n");
+}
+
+function extractExportedNamesByModule(dtsText) {
+  const txt = String(dtsText ?? "");
+  const out = new Map(); // mod -> Set(names)
+  const modRe = /declare\s+module\s+['"]([^'"]+)['"]\s*\{([\s\S]*?)\n\}/g;
+  let m;
+  while ((m = modRe.exec(txt)) !== null) {
+    const mod = m[1];
+    const body = m[2] ?? "";
+    const set = out.get(mod) ?? new Set();
+    const re = /export\s+(?:const|type|interface|function|class|enum|namespace)\s+([A-Za-z0-9_$]+)/g;
+    let mm;
+    while ((mm = re.exec(body)) !== null) set.add(mm[1]);
+    out.set(mod, set);
+  }
+  return out;
+}
+
+function buildMissingExportsAugmentation(mod, missingValueNames, missingTypeNames) {
+  const val = [...new Set(missingValueNames ?? [])].filter((x) => typeof x === "string" && /^[A-Za-z_$][\w$]*$/.test(x)).sort();
+  const typ = [...new Set(missingTypeNames ?? [])].filter((x) => typeof x === "string" && /^[A-Za-z_$][\w$]*$/.test(x)).sort();
+  if (!val.length && !typ.length) return null;
+  const chunks = [];
+  chunks.push(`declare module '${esc(mod)}' {`);
+  for (const n of val) chunks.push(`  export const ${n}: any;`);
+  for (const t of typ) chunks.push(`  export type ${t} = any;`);
+  chunks.push(`}`);
+  chunks.push("");
+  chunks.push("");
+  return chunks.join("\n");
 }
 
 function sigmoid(z) {
@@ -1248,7 +1374,7 @@ async function processOne(url, opts, outHandle) {
   result.phase3.originalTypesCount = injectedCfg.originalTypesCount;
   result.phase3.injectedTypesCount = injectedCfg.injectedTypesCount;
 
-  async function runTrial({ candidateId, dtsText, moduleOverride }) {
+  async function runTrial({ candidateId, dtsText, moduleOverride, symbolOverride }) {
     await writePhase3InjectedTypeRoots(repoDir, { packageName: "__phase3_injected__", dtsText });
     const jr = await runCmd({
       cwd: repoDir,
@@ -1272,6 +1398,7 @@ async function processOne(url, opts, outHandle) {
       candidate_id: candidateId,
       module_override: (moduleOverrides.length === 1 ? moduleOverrides[0] : null),
       module_overrides: moduleOverrides.length ? moduleOverrides : null,
+      symbol_override: symbolOverride ?? null,
       injected_dts_sha1: dtsSha1,
       declaration_count: decls.length,
       declarations: decls.slice(0, 5000),
@@ -1288,7 +1415,7 @@ async function processOne(url, opts, outHandle) {
   }
 
   // 3) Build trial candidate list (Phase1)
-  let candidates = [{ candidateId: baseCandidateId, dtsText: baseDts, moduleOverride: null }];
+  let candidates = [{ candidateId: baseCandidateId, dtsText: baseDts, moduleOverride: null, symbolOverride: null }];
   const wantsSweep = opts.mode === "model" && (opts.trialStrategy === "module-any-sweep" || opts.trialStrategy === "reranker-v0") && opts.trialMax > 1;
   if (wantsSweep) {
     const mods = [...moduleToStub.keys()];
@@ -1324,7 +1451,108 @@ async function processOne(url, opts, outHandle) {
             candidateId: `c_anytopk_${k}_${sha1Hex(key).slice(0, 8)}`,
             dtsText: replaced,
             moduleOverride: picked,
+            symbolOverride: null,
           });
+          remaining--;
+        }
+      }
+    }
+
+    // Candidate Generator v3: symbol-level widening.
+    if (remaining > 0 && Number(opts.symbolWidenMax) > 0) {
+      const maxAdd = Math.min(Number(opts.symbolWidenMax) || 0, remaining);
+      if (maxAdd > 0 && opts.symbolWidenMode === "interface-indexer") {
+        // v1: interface-indexer augmentation for exported interfaces in top modules.
+        const ifaceByMod = extractExportedInterfacesByModule(baseDts);
+        let added = 0;
+        for (const mod of mods) {
+          if (added >= maxAdd || remaining <= 0) break;
+          const names = [...(ifaceByMod.get(mod) ?? new Set())].sort();
+          for (const name of names) {
+            if (added >= maxAdd || remaining <= 0) break;
+            const aug = buildInterfaceIndexerAugmentation(mod, name);
+            const dtsText = `${baseDts}\n${aug}`;
+            candidates.push({
+              candidateId: `c_idx_${sha1Hex(`${mod}::${name}`).slice(0, 8)}`,
+              dtsText,
+              moduleOverride: null,
+              symbolOverride: { kind: "interface-indexer", module: mod, name },
+            });
+            added++;
+            remaining--;
+          }
+        }
+      } else if (maxAdd > 0 && opts.symbolWidenMode === "namespace-members") {
+        // v2: namespace-members augmentation for `Foo.bar`-style static member accesses.
+        // Uses valueMembers collected from consumer code; only apply when Foo is mergeable (function/class/namespace/enum).
+        const mergeableByMod = extractExportedMergeableValuesByModule(baseDts);
+        let added = 0;
+        for (const mod of mods) {
+          if (added >= maxAdd || remaining <= 0) break;
+          const info = moduleToStub.get(mod);
+          const vm = info?.valueMembers;
+          if (!vm || !(vm instanceof Map)) continue;
+          const mergeable = mergeableByMod.get(mod) ?? new Set();
+          const exportNames = [...vm.keys()].sort();
+          for (const name of exportNames) {
+            if (added >= maxAdd || remaining <= 0) break;
+            if (!mergeable.has(name)) continue;
+            const members = [...(vm.get(name) ?? new Set())].sort().slice(0, 50);
+            if (!members.length) continue;
+            const aug = buildNamespaceMembersAugmentation(mod, name, members);
+            const dtsText = `${baseDts}\n${aug}`;
+            candidates.push({
+              candidateId: `c_ns_${sha1Hex(`${mod}::${name}::${members.join(",")}`).slice(0, 8)}`,
+              dtsText,
+              moduleOverride: null,
+              symbolOverride: { kind: "namespace-members", module: mod, name, members: members.slice(0, 20), membersCount: members.length },
+            });
+            added++;
+            remaining--;
+          }
+        }
+      } else if (maxAdd > 0 && opts.symbolWidenMode === "function-any-overload") {
+        // v3: exported function overload widening to accept any args / return any.
+        const fnByMod = extractExportedFunctionsByModule(baseDts);
+        let added = 0;
+        for (const mod of mods) {
+          if (added >= maxAdd || remaining <= 0) break;
+          const names = [...(fnByMod.get(mod) ?? new Set())].sort();
+          for (const name of names) {
+            if (added >= maxAdd || remaining <= 0) break;
+            const aug = buildFunctionAnyOverloadAugmentation(mod, name);
+            const dtsText = `${baseDts}\n${aug}`;
+            candidates.push({
+              candidateId: `c_fnany_${sha1Hex(`${mod}::${name}`).slice(0, 8)}`,
+              dtsText,
+              moduleOverride: null,
+              symbolOverride: { kind: "function-any-overload", module: mod, name },
+            });
+            added++;
+            remaining--;
+          }
+        }
+      } else if (maxAdd > 0 && opts.symbolWidenMode === "missing-exports") {
+        // v4: add missing exports (based on consumer imports) as any, only when not already exported in baseDts.
+        const exportedByMod = extractExportedNamesByModule(baseDts);
+        let added = 0;
+        for (const mod of mods) {
+          if (added >= maxAdd || remaining <= 0) break;
+          const info = moduleToStub.get(mod);
+          if (!info) continue;
+          const exported = exportedByMod.get(mod) ?? new Set();
+          const missingVals = [...(info.named ?? new Set())].filter((n) => !exported.has(n));
+          const missingTypes = [...(info.typeNamed ?? new Set())].filter((n) => !exported.has(n));
+          const aug = buildMissingExportsAugmentation(mod, missingVals, missingTypes);
+          if (!aug) continue;
+          const dtsText = `${baseDts}\n${aug}`;
+          candidates.push({
+            candidateId: `c_miss_${sha1Hex(`${mod}::${missingVals.sort().join(",")}::${missingTypes.sort().join(",")}`).slice(0, 8)}`,
+            dtsText,
+            moduleOverride: null,
+            symbolOverride: { kind: "missing-exports", module: mod, missingValues: missingVals.slice(0, 20), missingTypes: missingTypes.slice(0, 20) },
+          });
+          added++;
           remaining--;
         }
       }
@@ -1335,7 +1563,7 @@ async function processOne(url, opts, outHandle) {
       if (remaining <= 0) break;
       const replaced = applyAnyOverrides(baseDts, [mod]);
       if (!replaced) continue;
-      candidates.push({ candidateId: `c_anymod_${sha1Hex(mod).slice(0, 8)}`, dtsText: replaced, moduleOverride: mod });
+      candidates.push({ candidateId: `c_anymod_${sha1Hex(mod).slice(0, 8)}`, dtsText: replaced, moduleOverride: mod, symbolOverride: null });
       remaining--;
     }
 
@@ -1352,6 +1580,7 @@ async function processOne(url, opts, outHandle) {
             candidateId: `c_anypair_${sha1Hex(key).slice(0, 8)}`,
             dtsText: replaced,
             moduleOverride: [a, b],
+            symbolOverride: null,
           });
           remaining--;
         }

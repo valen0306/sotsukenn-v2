@@ -244,6 +244,20 @@ node evaluation/real/phase3-run.mjs \
   - “強い一括any化候補”を足しても、Top1を上回る改善（Phase3 coreのさらなる減少）に繋がっていない
   - 次は **any化の範囲を広げる方向ではなく、エラー内容に沿って「特定シンボル/特定exportだけをwidenする」候補**を作る必要がある
 
+**追加実験：symbol-level候補（module augmentation で局所的にwiden）**
+- 目的: “モジュール丸ごとany化”ではなく、エラーに関係する **特定シンボルだけ**をwidenして悪化率を下げる
+- 実装した候補タイプ（スモーク max=10 で確認）:
+  - `namespace-members`: `declare module 'm' { export namespace Foo { export const bar: any } }`（`Foo.bar` 型のTS2339対策）
+  - `interface-indexer`: `export interface X { [key: string]: any }` を module augmentation で付与
+  - `function-any-overload`: `export function f(...args:any[]): any` を overload として追加（TS2345系を狙う）
+  - `missing-exports`: consumerがimportしているが `.d.ts` に見当たらない export を any で追加
+- 観測（スモーク）:
+  - `namespace-members` は一部repoで候補生成できたが、Top1を上回る改善は観測できず（選択されない）
+  - `interface-indexer` / `function-any-overload` / `missing-exports` は、対象となる宣言が model output 側に少なく、候補がほぼ生成されなかった
+- 解釈:
+  - 現状の model output 形式では “安全にmergeできる宣言” が少なく、augmentationベースのsymbol-levelは効きにくい
+  - 次のsymbol-levelは、augmentationではなく **モデル出力の declare module ブロックを「部分置換」する編集**（export単位のwiden）へ進める必要がある
+
 ---
 
 ### 4. 研究質問（改訂版）
