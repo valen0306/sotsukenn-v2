@@ -64,6 +64,8 @@ async function main() {
   let sumTrials = 0;
   let sumTscCalls = 0;
   let nImprovedVsTop1 = 0;
+  let nChosenWorseThanBaseline = 0;
+  let nChosenBetterThanBaseline = 0;
 
   for (const r of rows) {
     const sr = r?.skipReason;
@@ -81,6 +83,8 @@ async function main() {
     sumTrials += trialsRun;
     sumTscCalls += 1 + trialsRun; // baseline + trial tsc runs
     if ((chosenTrial.delta_phase3 ?? 0) < (top1.delta_phase3 ?? 0)) nImprovedVsTop1++;
+    if ((chosenTrial.delta_phase3 ?? 0) > 0) nChosenWorseThanBaseline++;
+    if ((chosenTrial.delta_phase3 ?? 0) < 0) nChosenBetterThanBaseline++;
 
     const bTotal = sumCounts(r?.baseline?.tsErrorCounts ?? {});
     const jTotal = sumCounts(r?.injected?.tsErrorCounts ?? {});
@@ -111,6 +115,8 @@ async function main() {
   console.log(`avg_trialsRun\t${nValid ? (sumTrials / nValid).toFixed(2) : ""}`);
   console.log(`avg_tsc_calls\t${nValid ? (sumTscCalls / nValid).toFixed(2) : ""}`);
   console.log(`win_rate_vs_top1\t${nValid ? (nImprovedVsTop1 / nValid).toFixed(3) : ""}`);
+  console.log(`chosen_worse_than_baseline_rate\t${nValid ? (nChosenWorseThanBaseline / nValid).toFixed(3) : ""}`);
+  console.log(`chosen_better_than_baseline_rate\t${nValid ? (nChosenBetterThanBaseline / nValid).toFixed(3) : ""}`);
 }
 
 main().catch((e) => {
