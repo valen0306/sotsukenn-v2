@@ -161,6 +161,32 @@ node evaluation/real/train-reranker-v0.mjs \
 - エラーコード別（TS2345など）で効果差を分析
 - “効く条件/効かない条件”を整理（module解決系は別枠など）
 
+**このリポジトリでの実行（Phase5 / A3）**
+- A1（Localizerのみ探索）に対して、A3（Localizer + Reranker）で
+  - `avg_tsc_calls` の削減（=探索回数削減）
+  - 悪化率（chosen が baseline より悪い割合）の低下
+  - Phase3 core 改善の維持
+  を比較する。
+
+例（max=20、Top3に絞り、Rerankerで候補順を決めて少ない試行で収束させる）:
+
+```bash
+# A3: Localizer + Reranker（候補順を学習で決める）
+node evaluation/real/phase3-run.mjs \
+  --mode model \
+  --repos-file evaluation/real/inputs/phase3_ts1000_ranked100.txt \
+  --out-dir evaluation/real/out/phase5-A3-localizer3-reranker-v0-max20 \
+  --max 20 \
+  --concurrency 1 \
+  --timeout-ms 600000 \
+  --external-filter deps \
+  --localizer-top-modules 3 \
+  --trial-strategy reranker-v0 \
+  --trial-max 3 \
+  --reranker-model evaluation/real/out/reranker-v0-max20.json \
+  --verbose
+```
+
 ---
 
 ### 4. 研究質問（改訂版）

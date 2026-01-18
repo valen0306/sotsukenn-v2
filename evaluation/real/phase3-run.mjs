@@ -71,8 +71,9 @@ function parseArgs(argv) {
     // Phase1: trial exploration strategy (Policy A / Phase1)
     // - top1: current behavior (single candidate)
     // - module-any-sweep: try candidates by forcing ONE module to any-stub at a time (localizer-controlled)
-    trialStrategy: "top1", // top1 | module-any-sweep
+    trialStrategy: "top1", // top1 | module-any-sweep | reranker-v0
     trialMax: 1, // max number of candidates to run per repo (including top1)
+    rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -111,6 +112,7 @@ function parseArgs(argv) {
     else if (a === "--localizer-top-modules") args.localizerTopModules = Number(argv[++i] ?? "0");
     else if (a === "--trial-strategy") args.trialStrategy = String(argv[++i] ?? "top1");
     else if (a === "--trial-max") args.trialMax = Number(argv[++i] ?? "1");
+    else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
     else if (a === "--help" || a === "-h") {
       console.log(`
 Usage:
@@ -149,8 +151,9 @@ Options:
   --exclude-node-builtins            Exclude Node.js built-in modules (e.g. 'path', 'crypto') from stub/module list (default: off)
   --external-filter <heuristic|deps> How to decide "external" module specifiers when onlyExternal=true (default: heuristic)
   --localizer-top-modules <N>        (M2) Stub only Top-N external modules (ranked by frequency in Phase3 diagnostic files). Default: unlimited
-  --trial-strategy <top1|module-any-sweep>  (Phase1) Candidate trial strategy (default: top1)
+  --trial-strategy <top1|module-any-sweep|reranker-v0>  (Phase1/5) Candidate trial strategy (default: top1)
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
+  --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
       process.exit(0);
     } else {
@@ -183,7 +186,7 @@ Options:
   if (!Number.isFinite(args.memberAccessMaxMembersPerImport) || args.memberAccessMaxMembersPerImport < 1) args.memberAccessMaxMembersPerImport = 200;
   if (!["heuristic", "deps"].includes(String(args.externalFilter))) args.externalFilter = "heuristic";
   if (!Number.isFinite(args.localizerTopModules) || args.localizerTopModules < 1) args.localizerTopModules = Infinity;
-  if (!["top1", "module-any-sweep"].includes(String(args.trialStrategy))) args.trialStrategy = "top1";
+  if (!["top1", "module-any-sweep", "reranker-v0"].includes(String(args.trialStrategy))) args.trialStrategy = "top1";
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   return args;
 }
@@ -339,6 +342,91 @@ function extractDeclarationsFromDts(dtsText) {
     uniq.push(d);
   }
   return uniq;
+}
+
+function sigmoid(z) {
+  if (z >= 0) {
+    const ez = Math.exp(-z);
+    return 1 / (1 + ez);
+  }
+  const ez = Math.exp(z);
+  return ez / (1 + ez);
+}
+
+function getRerankerFeatureKeys() {
+  return [
+    "has_override",
+    "override_mention_count",
+    "override_localizer_freq",
+    "declaration_count",
+    "baseline_phase3_core",
+    "baseline_total_errors",
+  ];
+}
+
+function sumCounts(counts) {
+  let n = 0;
+  for (const v of Object.values(counts ?? {})) n += Number(v) || 0;
+  return n;
+}
+
+function sumPhase3Core(tsCounts) {
+  const PHASE3 = ["TS2339", "TS2345", "TS2322", "TS2554", "TS2769", "TS2353", "TS2741", "TS7053"];
+  let n = 0;
+  for (const c of PHASE3) n += Number(tsCounts?.[c] ?? 0) || 0;
+  return n;
+}
+
+function extractModuleMentionsFromDiagnostics(diags) {
+  const out = new Map();
+  const re = /['"]([^'"]+)['"]/g;
+  for (const d of diags ?? []) {
+    const msg = String(d?.msg ?? "");
+    let m;
+    while ((m = re.exec(msg)) !== null) {
+      const s = (m[1] ?? "").trim();
+      if (!s) continue;
+      out.set(s, (out.get(s) ?? 0) + 1);
+    }
+  }
+  return out;
+}
+
+function localizerFreqFromTopList(topModuleFreq, mod) {
+  for (const x of topModuleFreq ?? []) {
+    if (x?.module === mod) return Number(x?.freq ?? 0) || 0;
+  }
+  return 0;
+}
+
+function buildRerankerCandidateFeatures({ baselineCounts, baselineDiagnostics, topModuleFreq, moduleOverride, declarationCount }) {
+  const mentionMap = extractModuleMentionsFromDiagnostics(baselineDiagnostics);
+  return {
+    has_override: moduleOverride ? 1 : 0,
+    override_mention_count: moduleOverride ? Number(mentionMap.get(moduleOverride) ?? 0) : 0,
+    override_localizer_freq: moduleOverride ? localizerFreqFromTopList(topModuleFreq, moduleOverride) : 0,
+    declaration_count: Number(declarationCount ?? 0) || 0,
+    baseline_phase3_core: sumPhase3Core(baselineCounts),
+    baseline_total_errors: sumCounts(baselineCounts),
+  };
+}
+
+function vecFrom(feat, keys) {
+  return keys.map((k) => Number(feat?.[k] ?? 0) || 0);
+}
+
+function scoreCandidateVsTop1({ model, candidateFeat, top1Feat }) {
+  // model is trained on x = feat(a) - feat(b), predict P(a better than b)
+  const keys = model?.feature_keys ?? getRerankerFeatureKeys();
+  const w = model?.weights;
+  const bias = Number(w?.bias ?? 0) || 0;
+  const wMap = w?.w ?? {};
+  const wc = keys.map((k) => Number(wMap?.[k] ?? 0) || 0);
+  const xa = vecFrom(candidateFeat, keys);
+  const xb = vecFrom(top1Feat, keys);
+  let z = bias;
+  for (let i = 0; i < keys.length; i++) z += wc[i] * (xa[i] - xb[i]);
+  return { z, p: sigmoid(z) };
 }
 
 function parseDiagnostics(text) {
@@ -795,6 +883,7 @@ async function processOne(url, opts, outHandle) {
         chosenCandidateId: null,
         trialsRun: 0,
       },
+      reranker: opts.trialStrategy === "reranker-v0" ? { modelPath: opts.rerankerModel || "", loaded: false, error: null } : null,
       model:
         opts.mode === "model"
           ? {
@@ -1096,8 +1185,9 @@ async function processOne(url, opts, outHandle) {
   }
 
   // 3) Build trial candidate list (Phase1)
-  const candidates = [{ candidateId: baseCandidateId, dtsText: baseDts, moduleOverride: null }];
-  if (opts.mode === "model" && opts.trialStrategy === "module-any-sweep" && opts.trialMax > 1) {
+  let candidates = [{ candidateId: baseCandidateId, dtsText: baseDts, moduleOverride: null }];
+  const wantsSweep = opts.mode === "model" && (opts.trialStrategy === "module-any-sweep" || opts.trialStrategy === "reranker-v0") && opts.trialMax > 1;
+  if (wantsSweep) {
     const mods = [...moduleToStub.keys()];
     const cap = Math.max(0, opts.trialMax - 1);
     for (const mod of mods.slice(0, cap)) {
@@ -1107,6 +1197,68 @@ async function processOne(url, opts, outHandle) {
       const replaced = replaceDeclareModuleBlock(baseDts, mod, stubBlock);
       if (!replaced) continue;
       candidates.push({ candidateId: `c_anymod_${sha1Hex(mod).slice(0, 8)}`, dtsText: replaced, moduleOverride: mod });
+    }
+  }
+
+  // 3.5) Phase5: reranker-v0 ordering (keep c0_top1 first, then rank other candidates)
+  if (opts.trialStrategy === "reranker-v0") {
+    if (!opts.rerankerModel) {
+      result.skipReason = "reranker-model-missing";
+      result.durationMs = Date.now() - startedAt;
+      if (!opts.keepRepos) await rmrf(repoDir);
+      await outHandle.appendFile(JSON.stringify(result) + "\n");
+      return;
+    }
+    try {
+      const raw = await fs.readFile(path.resolve(opts.rerankerModel), "utf8");
+      const model = JSON.parse(raw);
+      result.phase3.reranker.loaded = true;
+      const baselineCounts = result.baseline?.tsErrorCounts ?? {};
+      const baselineDiagnostics = result.baseline?.diagnostics ?? [];
+      const topModuleFreq = result.phase3?.localizer?.topModuleFreq ?? [];
+
+      const top1 = candidates.find((c) => c.candidateId === baseCandidateId) ?? candidates[0];
+      const top1DeclCount = extractDeclarationsFromDts(top1.dtsText).length;
+      const top1Feat = buildRerankerCandidateFeatures({
+        baselineCounts,
+        baselineDiagnostics,
+        topModuleFreq,
+        moduleOverride: null,
+        declarationCount: top1DeclCount,
+      });
+
+      const rest = candidates
+        .filter((c) => c.candidateId !== baseCandidateId)
+        .map((c) => {
+          const declCount = extractDeclarationsFromDts(c.dtsText).length;
+          const feat = buildRerankerCandidateFeatures({
+            baselineCounts,
+            baselineDiagnostics,
+            topModuleFreq,
+            moduleOverride: c.moduleOverride,
+            declarationCount: declCount,
+          });
+          const sc = scoreCandidateVsTop1({ model, candidateFeat: feat, top1Feat });
+          return { ...c, reranker: { z: sc.z, p: sc.p } };
+        })
+        .sort((a, b) => (b.reranker.z - a.reranker.z) || String(a.candidateId).localeCompare(String(b.candidateId)));
+
+      // keep top1 first to preserve compatibility (analyze scripts assume it exists)
+      candidates = [top1, ...rest];
+      // record a small debug trace
+      result.phase3.reranker.topCandidates = rest.slice(0, 10).map((x) => ({
+        candidate_id: x.candidateId,
+        module_override: x.moduleOverride ?? null,
+        z: x.reranker.z,
+        p: x.reranker.p,
+      }));
+    } catch (e) {
+      result.phase3.reranker.error = String(e?.message || e);
+      result.skipReason = "reranker-model-invalid";
+      result.durationMs = Date.now() - startedAt;
+      if (!opts.keepRepos) await rmrf(repoDir);
+      await outHandle.appendFile(JSON.stringify(result) + "\n");
+      return;
     }
   }
 
