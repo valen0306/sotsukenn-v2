@@ -43,6 +43,28 @@ node evaluation/real/analyze-oracle.mjs --out-dir evaluation/real/out/phase5-A1-
 
 ---
 
+### Week1（追加）: エラーコード分布・trial効果の定量
+
+#### baselineエラーコード分布（max=30）
+- スクリプト: `evaluation/real/analyze-error-distribution.mjs`
+- 対象: `phase5-A1-localizer3-pererror-sweep-max30`
+- Phase3 coreの総量（baseline側の合計、参考）:
+  - `TS2339=921`, `TS2345=254`, `TS2322=87`, `TS2769=63`, `TS7053=32`, `TS2554=11`, `TS2741=6`, `TS2353=2`
+- 解釈:
+  - **TS2339が支配的**で、次点がTS2345。Repair Operator v3はまずこの2つを最優先で狙うのが合理的
+
+#### trial効果（Top1に対して改善/同点/悪化が起きたか）
+- スクリプト: `evaluation/real/analyze-trial-effects.mjs`
+- 観測（max=30 / valid top1=17）:
+  - baseline A1(per-error)（any-module試行あり）: `trials_improve_vs_top1=0`, `trials_tie_vs_top1=58`, `trials_worsen_vs_top1=0`
+  - export-to-any（max=30）: `trials_improve_vs_top1=0`, `trials_tie_vs_top1=87`, `trials_worsen_vs_top1=0`
+  - type-to-any（スモーク max=10）: `trials_improve_vs_top1=0`, `trials_tie_vs_top1=38`, `trials_worsen_vs_top1=0`
+- 解釈:
+  - 現状の候補型は **「Top1からPhase3 coreが動かない（同点）」**が大半で、改善が起きる候補が生成できていない
+  - Repair Operator v3では「同点を量産する候補」ではなく、**TS2339/TS2345を実際に減らせる“内部局所修復”**を設計する必要がある
+
+---
+
 ### 4. Candidate Generator v3（Repair Operator）の方向性
 
 `tsc` のエラー型ごとに「刺さる少数候補」を作る（候補数を増やして `tsc` 回数を爆増させない）：
