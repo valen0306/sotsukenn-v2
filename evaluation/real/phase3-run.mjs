@@ -79,7 +79,7 @@ function parseArgs(argv) {
     trialMax: 1, // max number of candidates to run per repo (including top1)
     sweepAnyK: 1, // Candidate Generator v1: how many modules to override with any-stub per candidate (1 or 2)
     sweepAnyTopK: 0, // Candidate Generator v2: add one candidate that overrides the first K modules at once (0=off)
-    symbolWidenMode: "off", // off | interface-indexer | namespace-members | function-any-overload | missing-exports
+    symbolWidenMode: "off", // off | interface-indexer | namespace-members | function-any-overload | missing-exports | export-to-any
     symbolWidenMax: 0, // max number of symbol-level candidates to add (0=off)
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
@@ -169,7 +169,7 @@ Options:
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
   --sweep-any-k <1|2>                (M1/Candidate v1) In module-any-sweep, override K modules per candidate (default: 1)
   --sweep-any-topk <N>               (M1/Candidate v2) Add one candidate that overrides the first N stub modules at once (default: 0/off)
-  --symbol-widen-mode <off|interface-indexer|namespace-members|function-any-overload|missing-exports> (M1/Candidate v3) Add symbol-level candidates (default: off)
+  --symbol-widen-mode <off|interface-indexer|namespace-members|function-any-overload|missing-exports|export-to-any> (M1/Candidate v3) Add symbol-level candidates (default: off)
   --symbol-widen-max <N>             (M1/Candidate v3) Max symbol-level candidates to add (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
@@ -209,7 +209,7 @@ Options:
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   if (![1, 2].includes(Number(args.sweepAnyK))) args.sweepAnyK = 1;
   if (!Number.isFinite(args.sweepAnyTopK) || args.sweepAnyTopK < 0) args.sweepAnyTopK = 0;
-  if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
+  if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports", "export-to-any"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
   if (!Number.isFinite(args.symbolWidenMax) || args.symbolWidenMax < 0) args.symbolWidenMax = 0;
   return args;
 }
@@ -772,6 +772,58 @@ function replaceDeclareModuleBlock(dtsText, mod, newBlockText) {
   if (closeIdx < 0) return null;
   const end = closeIdx + "\n}\n".length;
   return txt.slice(0, start) + newBlockText + txt.slice(end);
+}
+
+function getDeclareModuleBlockRange(dtsText, mod) {
+  const txt = String(dtsText ?? "");
+  const re = new RegExp(`declare\\s+module\\s+['"]${escapeRegex(mod)}['"]\\s*\\{`, "g");
+  const m = re.exec(txt);
+  if (!m) return null;
+  const start = m.index;
+  const closeIdx = txt.indexOf("\n}\n", m.index);
+  if (closeIdx < 0) return null;
+  const end = closeIdx + "\n}\n".length;
+  return { start, end, text: txt.slice(start, end) };
+}
+
+function replaceExportsInDeclareModuleBlock(dtsText, mod, replacements) {
+  // replacements: Map<name, { kind, line }>
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  if (!rng) return null;
+  const block = rng.text;
+  const lines = block.split(/\r?\n/);
+  let changed = false;
+  const out = lines.map((ln) => {
+    for (const [name, rep] of replacements.entries()) {
+      const n = escapeRegex(name);
+      if (rep.kind === "const") {
+        const re = new RegExp(`^\\s*export\\s+const\\s+${n}\\b`);
+        if (re.test(ln)) {
+          changed = true;
+          return `  export const ${name}: any;`;
+        }
+      } else if (rep.kind === "function") {
+        const re = new RegExp(`^\\s*export\\s+function\\s+${n}\\s*\\(`);
+        if (re.test(ln)) {
+          changed = true;
+          return `  export function ${name}(...args: any[]): any;`;
+        }
+      } else if (rep.kind === "class") {
+        const re = new RegExp(`^\\s*export\\s+class\\s+${n}\\b`);
+        if (re.test(ln)) {
+          changed = true;
+          // Value-as-any is the most permissive for member accesses, but may break `new`.
+          // Keep it conservative: do not rewrite classes by default.
+          return ln;
+        }
+      }
+    }
+    return ln;
+  });
+  if (!changed) return null;
+  const newBlock = out.join("\n");
+  const txt = String(dtsText ?? "");
+  return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
 }
 
 async function runModelAdapter({ repo, moduleToStub, opts }) {
@@ -1554,6 +1606,48 @@ async function processOne(url, opts, outHandle) {
           });
           added++;
           remaining--;
+        }
+      } else if (maxAdd > 0 && opts.symbolWidenMode === "export-to-any") {
+        // v5: partial replacement inside existing declare module blocks:
+        // rewrite specific `export const Foo: ...` / `export function Foo(...)` lines to any.
+        // This avoids module augmentation limitations and directly edits the model output block.
+        let added = 0;
+        for (const mod of mods) {
+          if (added >= maxAdd || remaining <= 0) break;
+          const info = moduleToStub.get(mod);
+          if (!info) continue;
+          const vm = info?.valueMembers;
+          const vmKeys = (vm && vm instanceof Map) ? [...vm.keys()] : [];
+          // Prefer symbols with observed member-access first (Foo.bar), then general named imports.
+          const exportNames = [...new Set([
+            ...vmKeys,
+            ...[...(info.named ?? new Set())],
+          ])]
+            .filter((x) => typeof x === "string" && /^[A-Za-z_$][\w$]*$/.test(x))
+            .sort();
+          for (const name of exportNames) {
+            if (added >= maxAdd || remaining <= 0) break;
+            // try const rewrite first, then function rewrite (based on presence in base text)
+            const reps = new Map();
+            reps.set(name, { kind: "const" });
+            let dtsText = replaceExportsInDeclareModuleBlock(baseDts, mod, reps);
+            let kind = "const";
+            if (!dtsText) {
+              const reps2 = new Map();
+              reps2.set(name, { kind: "function" });
+              dtsText = replaceExportsInDeclareModuleBlock(baseDts, mod, reps2);
+              kind = "function";
+            }
+            if (!dtsText) continue;
+            candidates.push({
+              candidateId: `c_widen_${sha1Hex(`${mod}::${name}::${kind}`).slice(0, 8)}`,
+              dtsText,
+              moduleOverride: null,
+              symbolOverride: { kind: "export-to-any", module: mod, name, target: kind },
+            });
+            added++;
+            remaining--;
+          }
         }
       }
     }

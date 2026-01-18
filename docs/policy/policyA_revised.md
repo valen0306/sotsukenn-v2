@@ -258,6 +258,14 @@ node evaluation/real/phase3-run.mjs \
   - 現状の model output 形式では “安全にmergeできる宣言” が少なく、augmentationベースのsymbol-levelは効きにくい
   - 次のsymbol-levelは、augmentationではなく **モデル出力の declare module ブロックを「部分置換」する編集**（export単位のwiden）へ進める必要がある
 
+**追加実験：symbol-level候補（declare module 内 export の部分置換 / export-to-any）**
+- 目的: augmentation依存を避け、モデル出力の `declare module 'm' { ... }` の中だけを直接編集して局所的にwidenする
+- 実装: `--symbol-widen-mode export-to-any`（`export const Foo: ...` / `export function Foo(...)` を any に置換）
+- スモーク（max=10, trial-max=6, symbol-max=5）:
+  - 候補生成は確認できた（`repos_with_exporttoany_candidate=6/10`）
+  - ただし現状では Top1に勝てず（`win_rate_vs_top1=0`、選択もTop1に戻る）
+  - 探索コストは増える（試行回数が増える）ため、このままmax=30に拡大する前に「勝てる条件」を絞り込む必要がある
+
 ---
 
 ### 4. 研究質問（改訂版）
