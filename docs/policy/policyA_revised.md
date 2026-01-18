@@ -187,6 +187,16 @@ node evaluation/real/phase3-run.mjs \
   --verbose
 ```
 
+**Phase5（実測 / max=30）**
+- 母数: `repos_total=30`, `repos_valid_injection=17`（A1/A3共通）
+- Phase3 core（valid only）: A1/A3ともに `delta=-103`（改善量は同等）
+- 探索回数（= tsc回数、valid 17件平均）:
+  - A1（module-any-sweep, trial-max=6）: `avg_tsc_calls=4.41`
+  - A3（reranker-v0, trial-max=3）: `avg_tsc_calls=3.76`（**削減**）
+- 悪化率/改善率（baseline比）:
+  - A1: `chosen_worse_than_baseline_rate=0.471`, `chosen_better_than_baseline_rate=0.294`
+  - A3: 同値（現状の特徴量では「順序付け」で回数削減はできるが、悪化率の低減はまだ出ていない）
+
 ---
 
 ### 4. 研究質問（改訂版）
