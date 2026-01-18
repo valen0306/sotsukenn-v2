@@ -58,7 +58,8 @@ function keyFromRepair(sym) {
   const op = String(sym?.op ?? "");
   const prop = sym?.prop ? String(sym.prop) : "";
   if (code === "TS2339") return `${code}::${mod}::${imported}::${op}::prop=${prop}`;
-  return `${code}::${mod}::${imported}::${op}`;
+  const name = sym?.name ? String(sym.name) : "";
+  return `${code}::${mod}::${name || imported}::${op}`;
 }
 
 async function main() {

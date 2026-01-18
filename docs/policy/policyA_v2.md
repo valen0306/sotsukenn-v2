@@ -182,6 +182,26 @@ node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/pha
 
 ---
 
+### Week4（着手）: TS2345 / TS2322 を動かすRepair（call-site→callee解決）
+
+狙い：これまでの勝ち筋はTS2339中心だったため、次は頻度2位の **TS2345（型不一致）** と **TS2322（代入不一致）** を動かせるrepairを増やす。
+
+#### 実装（phase3-run.mjs）
+- `repair-from-top1` において、Top1注入後の診断（TS2345/TS2322）から
+  - エラー位置近傍の **CallExpression** をtsserver（Program）で取得
+  - calleeを **import由来のモジュール/シンボル**に解決
+  - `widen-callee-to-any`（安全寄り）または `add-any-overload`（関数exportがある場合のみ）を候補として追加
+
+#### Smoke（max=10 / v2 run）
+- out-dir: `evaluation/real/out/smoke-A1-pererror-repairfromtop1-ts2345call-max10-v2`
+- 観測（valid compare=5）:
+  - TS2322由来のrepair候補が生成され、`react.memo` / `react.forwardRef` に対して `widen-callee-to-any` が追加された
+  - chosenがrepairになるケースも確認（ただしこの小標本では Top1超えは未観測）
+
+次：max30で `win_rate_vs_top1` への寄与が出るか（または tie止まりか）を確認し、効いたrepair keyのランキングを更新する。
+
+---
+
 ### 7. M4 32GB 前提の方針
 
 - 重いのは学習ではなく `tsc` 回数  

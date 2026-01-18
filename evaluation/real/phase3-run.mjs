@@ -1075,6 +1075,49 @@ function tryResolveVariableInitializerToImport(ts, checker, sym) {
   return null;
 }
 
+async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, line, col }) {
+  // Resolve the nearest call expression's callee to an imported symbol (module + export name).
+  // Used for TS2345/TS2322 repair: widen callee or add any-overload.
+  try {
+    const abs = path.isAbsolute(file) ? file : path.join(repoDir, file);
+    let sf = program.getSourceFile(abs);
+    if (!sf) {
+      const suffix = path.normalize(file).replaceAll("\\", "/");
+      sf = program.getSourceFiles().find((f) => String(f.fileName ?? "").replaceAll("\\", "/").endsWith(suffix)) ?? null;
+    }
+    if (!sf) return null;
+    const node = findNodeAtLineCol(ts, sf, line, col);
+    const call = closest(node, (n) => n && (ts.isCallExpression?.(n) || n.kind === ts.SyntaxKind.CallExpression));
+    if (!call) return null;
+    const callee = call.expression;
+
+    // f(...)
+    if (ts.isIdentifier(callee)) {
+      const sym = checker.getSymbolAtLocation(callee);
+      const imp = resolveSymbolToImport(ts, checker, sym);
+      if (!imp?.mod) return null;
+      const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? callee.text);
+      return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call" };
+    }
+
+    // ns.f(...)
+    if (ts.isPropertyAccessExpression?.(callee) && ts.isIdentifier(callee.expression)) {
+      const base = callee.expression;
+      const member = callee.name?.text ? String(callee.name.text) : "";
+      if (!member) return null;
+      const baseSym = checker.getSymbolAtLocation(base);
+      const imp = resolveSymbolToImport(ts, checker, baseSym);
+      if (!imp?.mod) return null;
+      if (!(imp.kind === "namespace" || imp.kind === "require")) return null;
+      return { mod: imp.mod, importKind: "namespace-member", imported: member, exportName: member, via: "call" };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function resolveTs2339ViaTs({ ts, program, checker, repoDir, file, line, col }) {
   try {
     const abs = path.isAbsolute(file) ? file : path.join(repoDir, file);
@@ -1499,7 +1542,10 @@ async function processOne(url, opts, outHandle) {
             tsLoaded: false,
             tsProgramBuilt: false,
             tsResolvedCount: 0,
+            tsCallResolvedCount: 0,
             ts2339Seen: 0,
+            ts2345Seen: 0,
+            ts2322Seen: 0,
             ts2339LocalFound: 0,
             ts2339ImportMapped: 0,
             safeguard: {
@@ -2189,6 +2235,7 @@ async function processOne(url, opts, outHandle) {
       result.phase3.repair.tsProgramBuilt = Boolean(tsProg?.program && tsProg?.checker);
     }
     const diags = parseDiagnostics(top1Res.jout).filter((d) => ["TS2339", "TS2345", "TS2322"].includes(String(d.code)));
+    const fnByMod = extractExportedFunctionsByModule(baseDts);
     const repairs = [];
     const seen = new Set();
     for (const d of diags) {
@@ -2196,6 +2243,8 @@ async function processOne(url, opts, outHandle) {
       const msg = d.msg ?? "";
       const prop = String(d.code) === "TS2339" ? extractTs2339Prop(msg) : null;
       if (result.phase3.repair && String(d.code) === "TS2339") result.phase3.repair.ts2339Seen++;
+      if (result.phase3.repair && String(d.code) === "TS2345") result.phase3.repair.ts2345Seen++;
+      if (result.phase3.repair && String(d.code) === "TS2322") result.phase3.repair.ts2322Seen++;
 
       // TS2339: try to recover (localIdentifier.prop) from source line and map to import module.
       if (String(d.code) === "TS2339" && prop && d.file && d.line) {
@@ -2302,6 +2351,53 @@ async function processOne(url, opts, outHandle) {
         });
         if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
         continue;
+      }
+
+      // TS2345/TS2322: prefer TS Program-based call-callee resolution.
+      if ((String(d.code) === "TS2345" || String(d.code) === "TS2322") && d.file && d.line && tsProg?.program && tsProg?.checker) {
+        const rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+        if (rr?.mod && rr.exportName && moduleToStub.has(rr.mod)) {
+          if (result.phase3.repair) result.phase3.repair.tsCallResolvedCount++;
+          const mod = rr.mod;
+          const exportName = rr.exportName;
+          let dtsText = null;
+          let op = "";
+
+          // Only add function overload when the base block already exports it as a function.
+          // Avoid __default because base stubs usually declare it as `const __default`.
+          const isSafeFnOverload = exportName !== "__default" && /^[A-Za-z_$][\w$]*$/.test(exportName) && (fnByMod.get(mod)?.has(exportName) ?? false);
+          if (isSafeFnOverload) {
+            const aug = buildFunctionAnyOverloadAugmentation(mod, exportName);
+            dtsText = `${baseDts}\n${aug}`;
+            op = "add-any-overload";
+          } else {
+            dtsText = widenExportToAnyInModuleBlock(baseDts, mod, exportName);
+            op = "widen-callee-to-any";
+          }
+
+          if (dtsText) {
+            const key = `rep::${String(d.code)}::ts::${mod}::${exportName}::${rr.importKind}::${rr.via}::${op}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              repairs.push({
+                candidateId: `c_rep_${sha1Hex(key).slice(0, 8)}`,
+                dtsText,
+                moduleOverride: null,
+                symbolOverride: {
+                  kind: "repair-from-top1",
+                  code: String(d.code),
+                  module: mod,
+                  imported: String(rr.imported ?? ""),
+                  name: exportName,
+                  op,
+                  via: `ts:${rr.via}`,
+                },
+              });
+              if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
+              continue;
+            }
+          }
+        }
       }
 
       // TS2345/TS2322: fall back to import("m").Type references when present.
