@@ -70,6 +70,10 @@ function sumPhase3Core(tsCounts) {
   return n;
 }
 
+function getCount(tsCounts, code) {
+  return Number(tsCounts?.[code] ?? 0) || 0;
+}
+
 function extractModuleMentionsFromDiagnostics(diags) {
   // Extract `"module"` or 'module' mentions from TS messages like:
   // Module '"lucide-react"' has no exported member ...
@@ -95,12 +99,40 @@ function findLocalizerFreq(r, mod) {
   return 0;
 }
 
+function findLocalizerRank(r, mod) {
+  const arr = r?.phase3?.localizer?.topModuleFreq ?? [];
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i]?.module === mod) return i + 1; // 1-based
+  }
+  return 0;
+}
+
+function extractModuleMentionsByCode(diags) {
+  const out = new Map(); // code -> Map(module->count)
+  const re = /['"]([^'"]+)['"]/g;
+  for (const d of diags ?? []) {
+    const code = String(d?.code ?? "");
+    if (!code) continue;
+    const msg = String(d?.msg ?? "");
+    let m;
+    while ((m = re.exec(msg)) !== null) {
+      const s = (m[1] ?? "").trim();
+      if (!s) continue;
+      const mm = out.get(code) ?? new Map();
+      mm.set(s, (mm.get(s) ?? 0) + 1);
+      out.set(code, mm);
+    }
+  }
+  return out;
+}
+
 function buildCandidateFeatures({ repoRow, trial }) {
   const moduleOverride = trial?.module_override ?? null;
   const hasOverride = moduleOverride ? 1 : 0;
   const baselineCounts = repoRow?.baseline?.tsErrorCounts ?? {};
   const baselineDiags = repoRow?.baseline?.diagnostics ?? [];
   const mentionMap = extractModuleMentionsFromDiagnostics(baselineDiags);
+  const mentionByCode = extractModuleMentionsByCode(baselineDiags);
   const mentionCount = moduleOverride ? (mentionMap.get(moduleOverride) ?? 0) : 0;
 
   return {
@@ -108,10 +140,22 @@ function buildCandidateFeatures({ repoRow, trial }) {
     has_override: hasOverride,
     override_mention_count: mentionCount,
     override_localizer_freq: moduleOverride ? findLocalizerFreq(repoRow, moduleOverride) : 0,
+    override_localizer_rank: moduleOverride ? findLocalizerRank(repoRow, moduleOverride) : 0,
+    override_is_top1_localizer: moduleOverride ? (findLocalizerRank(repoRow, moduleOverride) === 1 ? 1 : 0) : 0,
+    override_mention_ts2307: moduleOverride ? (mentionByCode.get("TS2307")?.get(moduleOverride) ?? 0) : 0,
+    override_mention_ts2614: moduleOverride ? (mentionByCode.get("TS2614")?.get(moduleOverride) ?? 0) : 0,
     declaration_count: Number(trial?.declaration_count ?? 0) || 0,
     // Context features (same across candidates for a repo; useful for later richer models):
     baseline_phase3_core: sumPhase3Core(baselineCounts),
     baseline_total_errors: sumObj(baselineCounts),
+    baseline_ts2307: getCount(baselineCounts, "TS2307"),
+    baseline_ts2614: getCount(baselineCounts, "TS2614"),
+    baseline_ts2339: getCount(baselineCounts, "TS2339"),
+    baseline_ts2345: getCount(baselineCounts, "TS2345"),
+    baseline_ts2322: getCount(baselineCounts, "TS2322"),
+    baseline_ts2554: getCount(baselineCounts, "TS2554"),
+    baseline_ts2769: getCount(baselineCounts, "TS2769"),
+    baseline_ts7053: getCount(baselineCounts, "TS7053"),
   };
 }
 

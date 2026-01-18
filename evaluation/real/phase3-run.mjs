@@ -358,9 +358,21 @@ function getRerankerFeatureKeys() {
     "has_override",
     "override_mention_count",
     "override_localizer_freq",
+    "override_localizer_rank",
+    "override_is_top1_localizer",
+    "override_mention_ts2307",
+    "override_mention_ts2614",
     "declaration_count",
     "baseline_phase3_core",
     "baseline_total_errors",
+    "baseline_ts2307",
+    "baseline_ts2614",
+    "baseline_ts2339",
+    "baseline_ts2345",
+    "baseline_ts2322",
+    "baseline_ts2554",
+    "baseline_ts2769",
+    "baseline_ts7053",
   ];
 }
 
@@ -392,6 +404,25 @@ function extractModuleMentionsFromDiagnostics(diags) {
   return out;
 }
 
+function extractModuleMentionsByCode(diags) {
+  const out = new Map(); // code -> Map(module->count)
+  const re = /['"]([^'"]+)['"]/g;
+  for (const d of diags ?? []) {
+    const code = String(d?.code ?? "");
+    if (!code) continue;
+    const msg = String(d?.msg ?? "");
+    let m;
+    while ((m = re.exec(msg)) !== null) {
+      const s = (m[1] ?? "").trim();
+      if (!s) continue;
+      const mm = out.get(code) ?? new Map();
+      mm.set(s, (mm.get(s) ?? 0) + 1);
+      out.set(code, mm);
+    }
+  }
+  return out;
+}
+
 function localizerFreqFromTopList(topModuleFreq, mod) {
   for (const x of topModuleFreq ?? []) {
     if (x?.module === mod) return Number(x?.freq ?? 0) || 0;
@@ -399,15 +430,36 @@ function localizerFreqFromTopList(topModuleFreq, mod) {
   return 0;
 }
 
+function localizerRankFromTopList(topModuleFreq, mod) {
+  for (let i = 0; i < (topModuleFreq ?? []).length; i++) {
+    if (topModuleFreq[i]?.module === mod) return i + 1;
+  }
+  return 0;
+}
+
 function buildRerankerCandidateFeatures({ baselineCounts, baselineDiagnostics, topModuleFreq, moduleOverride, declarationCount }) {
   const mentionMap = extractModuleMentionsFromDiagnostics(baselineDiagnostics);
+  const mentionByCode = extractModuleMentionsByCode(baselineDiagnostics);
+  const rank = moduleOverride ? localizerRankFromTopList(topModuleFreq, moduleOverride) : 0;
   return {
     has_override: moduleOverride ? 1 : 0,
     override_mention_count: moduleOverride ? Number(mentionMap.get(moduleOverride) ?? 0) : 0,
     override_localizer_freq: moduleOverride ? localizerFreqFromTopList(topModuleFreq, moduleOverride) : 0,
+    override_localizer_rank: rank,
+    override_is_top1_localizer: moduleOverride ? (rank === 1 ? 1 : 0) : 0,
+    override_mention_ts2307: moduleOverride ? Number(mentionByCode.get("TS2307")?.get(moduleOverride) ?? 0) : 0,
+    override_mention_ts2614: moduleOverride ? Number(mentionByCode.get("TS2614")?.get(moduleOverride) ?? 0) : 0,
     declaration_count: Number(declarationCount ?? 0) || 0,
     baseline_phase3_core: sumPhase3Core(baselineCounts),
     baseline_total_errors: sumCounts(baselineCounts),
+    baseline_ts2307: Number(baselineCounts?.TS2307 ?? 0) || 0,
+    baseline_ts2614: Number(baselineCounts?.TS2614 ?? 0) || 0,
+    baseline_ts2339: Number(baselineCounts?.TS2339 ?? 0) || 0,
+    baseline_ts2345: Number(baselineCounts?.TS2345 ?? 0) || 0,
+    baseline_ts2322: Number(baselineCounts?.TS2322 ?? 0) || 0,
+    baseline_ts2554: Number(baselineCounts?.TS2554 ?? 0) || 0,
+    baseline_ts2769: Number(baselineCounts?.TS2769 ?? 0) || 0,
+    baseline_ts7053: Number(baselineCounts?.TS7053 ?? 0) || 0,
   };
 }
 

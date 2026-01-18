@@ -87,16 +87,18 @@ function sigmoid(z) {
   return ez / (1 + ez);
 }
 
-function getFeatureKeys() {
-  // Keep it minimal and robust (numeric only, no one-hot).
-  return [
-    "has_override",
-    "override_mention_count",
-    "override_localizer_freq",
-    "declaration_count",
-    "baseline_phase3_core",
-    "baseline_total_errors",
-  ];
+function collectFeatureKeys(rows, limit = 200) {
+  // Auto-detect numeric feature keys from dataset to stay in sync with exporter/runner.
+  const keys = new Set();
+  for (const r of rows.slice(0, limit)) {
+    for (const side of ["a", "b"]) {
+      const f = r?.features?.[side] ?? {};
+      for (const [k, v] of Object.entries(f)) {
+        if (typeof v === "number" || (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v)))) keys.add(k);
+      }
+    }
+  }
+  return [...keys].sort();
 }
 
 function vecFrom(feat, keys) {
@@ -160,7 +162,7 @@ function evalAcc(rows, w, keys) {
 async function main() {
   const args = parseArgs(process.argv);
   const rows = await readJsonl(path.resolve(args.pairwise));
-  const keys = getFeatureKeys();
+  const keys = collectFeatureKeys(rows);
 
   const usable = rows.filter((r) => r?.features?.a && r?.features?.b && (r?.label === 0 || r?.label === 1));
   const { train, test } = splitByRepo(usable, args.testFrac, args.seed);

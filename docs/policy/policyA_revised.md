@@ -197,6 +197,17 @@ node evaluation/real/phase3-run.mjs \
   - A1: `chosen_worse_than_baseline_rate=0.471`, `chosen_better_than_baseline_rate=0.294`
   - A3: 同値（現状の特徴量では「順序付け」で回数削減はできるが、悪化率の低減はまだ出ていない）
 
+**追加実験：Reranker特徴量の強化（feat2）**
+- 変更: pairwiseの特徴量を拡張（例: `override_localizer_rank`, `override_mention_ts2307/ts2614`, `baseline_ts2339/ts2345/...` などの数値特徴）
+- 学習（max=20由来pairwise 146件）: `train_acc=0.702`, `test_acc=0.643`
+- 統合評価（A3 feat2 / max=30）:
+  - `avg_tsc_calls=3.76`, `chosen_worse_than_baseline_rate=0.471`, `chosen_better_than_baseline_rate=0.294`
+  - **旧A3と完全一致**（Phase3 deltaも同じ）
+- 解釈（現時点の仮説）:
+  - 候補集合（trial-max=3）の中で **Top1が支配的**で、順序を変えても選択が変わりにくい
+  - そもそも「Top1より良い候補」がほぼ無い（`win_rate_vs_top1=0`）ため、特徴量を増やしても悪化率が動かない
+  - 次の改善は、(a) 候補生成の多様化（Top1以外に“良い候補”を作る）か、(b) エラー位置→外部モジュールの結びつきを特徴量化して“悪い候補”を避ける、のどちらかが必要
+
 ---
 
 ### 4. 研究質問（改訂版）
