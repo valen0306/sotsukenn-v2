@@ -282,6 +282,15 @@ node evaluation/real/phase3-run.mjs \
   - exportをanyに置換しても、Phase3 coreの改善に繋がっていない（少なくともTop3モジュール・この候補型では効果が出ない）
   - 次に進むべき方向は、exportの型を崩すのではなく **「宣言内部（引数/戻り/プロパティ型）の局所widen」**や **「より直接的にTS2339/TS2345の形に対応する候補型」**に寄せる必要がある
 
+**追加実験：type-to-any（import type された型だけを any に置換）**
+- 実装: `--symbol-widen-mode type-to-any`
+  - `declare module` 内の `export type X = ...;` または `export interface X { ... }` を **`export type X = any;` に置換**
+  - 対象Xは consumer 側の `import type { X } from 'm'` で観測されたもの（`typeNamed`）
+- スモーク（max=10）:
+  - 候補生成はできた（`repos_with_typetoany_candidate=6/10`）
+  - ただし Top1に勝てず（`win_rate_vs_top1=0`、選択もTop1）
+  - 探索コストが増える傾向があるため、現状のままmax=30へ拡大する前に「勝てる対象型」の絞り込みが必要
+
 ---
 
 ### 4. 研究質問（改訂版）

@@ -79,7 +79,7 @@ function parseArgs(argv) {
     trialMax: 1, // max number of candidates to run per repo (including top1)
     sweepAnyK: 1, // Candidate Generator v1: how many modules to override with any-stub per candidate (1 or 2)
     sweepAnyTopK: 0, // Candidate Generator v2: add one candidate that overrides the first K modules at once (0=off)
-    symbolWidenMode: "off", // off | interface-indexer | namespace-members | function-any-overload | missing-exports | export-to-any
+    symbolWidenMode: "off", // off | interface-indexer | namespace-members | function-any-overload | missing-exports | export-to-any | type-to-any
     symbolWidenMax: 0, // max number of symbol-level candidates to add (0=off)
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
@@ -169,7 +169,7 @@ Options:
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
   --sweep-any-k <1|2>                (M1/Candidate v1) In module-any-sweep, override K modules per candidate (default: 1)
   --sweep-any-topk <N>               (M1/Candidate v2) Add one candidate that overrides the first N stub modules at once (default: 0/off)
-  --symbol-widen-mode <off|interface-indexer|namespace-members|function-any-overload|missing-exports|export-to-any> (M1/Candidate v3) Add symbol-level candidates (default: off)
+  --symbol-widen-mode <off|interface-indexer|namespace-members|function-any-overload|missing-exports|export-to-any|type-to-any> (M1/Candidate v3) Add symbol-level candidates (default: off)
   --symbol-widen-max <N>             (M1/Candidate v3) Max symbol-level candidates to add (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
@@ -209,7 +209,7 @@ Options:
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   if (![1, 2].includes(Number(args.sweepAnyK))) args.sweepAnyK = 1;
   if (!Number.isFinite(args.sweepAnyTopK) || args.sweepAnyTopK < 0) args.sweepAnyTopK = 0;
-  if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports", "export-to-any"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
+  if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports", "export-to-any", "type-to-any"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
   if (!Number.isFinite(args.symbolWidenMax) || args.symbolWidenMax < 0) args.symbolWidenMax = 0;
   return args;
 }
@@ -822,6 +822,29 @@ function replaceExportsInDeclareModuleBlock(dtsText, mod, replacements) {
   });
   if (!changed) return null;
   const newBlock = out.join("\n");
+  const txt = String(dtsText ?? "");
+  return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+}
+
+function replaceTypeDeclToAnyInDeclareModuleBlock(dtsText, mod, name) {
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  if (!rng) return null;
+  const block = rng.text;
+  const n = escapeRegex(name);
+  let newBlock = block;
+  // Replace `export type Name = ...;` (including multiline) with `export type Name = any;`
+  const typeRe = new RegExp(`(^|\\n)\\s*export\\s+type\\s+${n}\\s*=([\\s\\S]*?);`, "m");
+  if (typeRe.test(newBlock)) {
+    newBlock = newBlock.replace(typeRe, `$1  export type ${name} = any;`);
+  } else {
+    // Replace `export interface Name { ... }` block with `export type Name = any;`
+    const ifaceRe = new RegExp(`(^|\\n)\\s*export\\s+interface\\s+${n}\\s*\\{[\\s\\S]*?\\n\\s*\\}`, "m");
+    if (ifaceRe.test(newBlock)) {
+      newBlock = newBlock.replace(ifaceRe, `$1  export type ${name} = any;`);
+    } else {
+      return null;
+    }
+  }
   const txt = String(dtsText ?? "");
   return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
 }
@@ -1644,6 +1667,30 @@ async function processOne(url, opts, outHandle) {
               dtsText,
               moduleOverride: null,
               symbolOverride: { kind: "export-to-any", module: mod, name, target: kind },
+            });
+            added++;
+            remaining--;
+          }
+        }
+      } else if (maxAdd > 0 && opts.symbolWidenMode === "type-to-any") {
+        // v6: replace exported type alias/interface declarations to `any` for imported type names.
+        let added = 0;
+        for (const mod of mods) {
+          if (added >= maxAdd || remaining <= 0) break;
+          const info = moduleToStub.get(mod);
+          if (!info) continue;
+          const names = [...new Set([...(info.typeNamed ?? new Set())])]
+            .filter((x) => typeof x === "string" && /^[A-Za-z_$][\w$]*$/.test(x))
+            .sort();
+          for (const name of names) {
+            if (added >= maxAdd || remaining <= 0) break;
+            const dtsText = replaceTypeDeclToAnyInDeclareModuleBlock(baseDts, mod, name);
+            if (!dtsText) continue;
+            candidates.push({
+              candidateId: `c_tany_${sha1Hex(`${mod}::${name}`).slice(0, 8)}`,
+              dtsText,
+              moduleOverride: null,
+              symbolOverride: { kind: "type-to-any", module: mod, name },
             });
             added++;
             remaining--;
