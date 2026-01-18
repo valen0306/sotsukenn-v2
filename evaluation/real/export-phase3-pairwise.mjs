@@ -10,7 +10,7 @@
  *  - one or more <outDir>/results.jsonl produced by evaluation/real/phase3-run.mjs
  *
  * Output:
- *  - JSONL, one line per pair: (A,B,label)
+ *  - JSONL, one line per pair: (A,B,label,features)
  *
  * Usage:
  *  node evaluation/real/export-phase3-pairwise.mjs \
@@ -61,6 +61,58 @@ function sumObj(obj) {
   let s = 0;
   for (const v of Object.values(obj ?? {})) s += Number(v) || 0;
   return s;
+}
+
+function sumPhase3Core(tsCounts) {
+  const PHASE3 = ["TS2339", "TS2345", "TS2322", "TS2554", "TS2769", "TS2353", "TS2741", "TS7053"];
+  let n = 0;
+  for (const c of PHASE3) n += Number(tsCounts?.[c] ?? 0) || 0;
+  return n;
+}
+
+function extractModuleMentionsFromDiagnostics(diags) {
+  // Extract `"module"` or 'module' mentions from TS messages like:
+  // Module '"lucide-react"' has no exported member ...
+  const out = new Map(); // module -> count
+  const re = /['"]([^'"]+)['"]/g;
+  for (const d of diags ?? []) {
+    const msg = String(d?.msg ?? "");
+    let m;
+    while ((m = re.exec(msg)) !== null) {
+      const s = (m[1] ?? "").trim();
+      if (!s) continue;
+      out.set(s, (out.get(s) ?? 0) + 1);
+    }
+  }
+  return out;
+}
+
+function findLocalizerFreq(r, mod) {
+  const arr = r?.phase3?.localizer?.topModuleFreq ?? [];
+  for (const x of arr) {
+    if (x?.module === mod) return Number(x?.freq ?? 0) || 0;
+  }
+  return 0;
+}
+
+function buildCandidateFeatures({ repoRow, trial }) {
+  const moduleOverride = trial?.module_override ?? null;
+  const hasOverride = moduleOverride ? 1 : 0;
+  const baselineCounts = repoRow?.baseline?.tsErrorCounts ?? {};
+  const baselineDiags = repoRow?.baseline?.diagnostics ?? [];
+  const mentionMap = extractModuleMentionsFromDiagnostics(baselineDiags);
+  const mentionCount = moduleOverride ? (mentionMap.get(moduleOverride) ?? 0) : 0;
+
+  return {
+    // Candidate-side features (available BEFORE running the candidate `tsc`):
+    has_override: hasOverride,
+    override_mention_count: mentionCount,
+    override_localizer_freq: moduleOverride ? findLocalizerFreq(repoRow, moduleOverride) : 0,
+    declaration_count: Number(trial?.declaration_count ?? 0) || 0,
+    // Context features (same across candidates for a repo; useful for later richer models):
+    baseline_phase3_core: sumPhase3Core(baselineCounts),
+    baseline_total_errors: sumObj(baselineCounts),
+  };
 }
 
 function isTrialValid(t) {
@@ -120,29 +172,36 @@ async function main() {
           const A = usable[i];
           const B = usable[j];
           const label = better(A, B) ? 1 : 0; // 1 => A is better than B
+          const aFeat = buildCandidateFeatures({ repoRow: r, trial: A });
+          const bFeat = buildCandidateFeatures({ repoRow: r, trial: B });
           outRows.push({
             url: r.url,
             slug: r.slug,
             outDir: path.basename(outDir),
             trialStrategy: r?.phase3?.trial?.strategy ?? "",
-            baseline_ts: r?.baseline?.tsErrorCounts ?? {},
             a: {
               candidate_id: A.candidate_id,
               module_override: A.module_override ?? null,
-              delta_phase3: A.delta_phase3 ?? null,
-              delta_errors: A.delta_errors ?? {},
               declaration_count: A.declaration_count ?? null,
             },
             b: {
               candidate_id: B.candidate_id,
               module_override: B.module_override ?? null,
-              delta_phase3: B.delta_phase3 ?? null,
-              delta_errors: B.delta_errors ?? {},
               declaration_count: B.declaration_count ?? null,
             },
             label,
+            // Features for learning (no outcome leakage)
+            features: {
+              a: aFeat,
+              b: bFeat,
+            },
+            // Debug-only outcomes (NOT for training input)
             meta: {
               objective: "min(delta_phase3) then min(sum(delta_errors))",
+              debug_outcome: {
+                a_delta_phase3: A.delta_phase3 ?? null,
+                b_delta_phase3: B.delta_phase3 ?? null,
+              },
             },
           });
           pairsForRepo++;

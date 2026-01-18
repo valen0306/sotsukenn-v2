@@ -137,6 +137,25 @@ node evaluation/real/export-phase3-pairwise.mjs \
 - 悪化率（Δ>0）を減らす
 - any率を上げずに到達（目的関数を入れる場合）
 
+**このリポジトリでの実行（Phase4 v0: ロジスティック回帰/SGD）**
+1) Phase3でpairwise JSONLを作る（`evaluation/real/export-phase3-pairwise.mjs`）
+2) それを学習してモデル(JSON)を書き出す（Nodeのみ、外部依存なし）
+
+例:
+
+```bash
+# 1) pairwise生成（特徴量入り）
+node evaluation/real/export-phase3-pairwise.mjs \
+  --out-dir evaluation/real/out/phase2-B1-sweep-nolocalizer-max20 \
+  --out-dir evaluation/real/out/phase2-A1-localizer3-sweep-max20 \
+  --out-file evaluation/real/out/phase3-pairwise-max20.jsonl
+
+# 2) 学習（簡易評価: train/test accuracy を出力）
+node evaluation/real/train-reranker-v0.mjs \
+  --pairwise evaluation/real/out/phase3-pairwise-max20.jsonl \
+  --out-model evaluation/real/out/reranker-v0-max20.json
+```
+
 #### Phase 5：統合評価（A3）と分析（卒論の核）
 - **A3**: Localizer + Reranker（提案）
 - エラーコード別（TS2345など）で効果差を分析
