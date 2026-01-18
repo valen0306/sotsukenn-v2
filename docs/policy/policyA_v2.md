@@ -106,6 +106,44 @@ node evaluation/real/analyze-oracle.mjs --out-dir evaluation/real/out/phase5-A1-
 
 ---
 
+### Week3（追加分析）: 「どのRepairが効いたか」の原因分析（勝ち筋の特定）
+
+目的：`win_rate_vs_top1 > 0` を“出せた”だけでなく、**何が効いてTop1を超えたか**を具体例とランキングで示し、卒論の説得力を上げる。
+
+#### スクリプト
+- `evaluation/real/analyze-repair-causes.mjs`
+
+```bash
+node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/phase5-A1-localizer3-pererror-repairfromtop1-max30 --top 30
+node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/phase5-A1-localizer3-pererror-repairfromtop1-safeguard-max30 --top 30
+```
+
+#### 結果（max=30 / valid top1=17）
+両設定（セーフガード有無）で、**改善（chosenがTop1を超えた）=3件**はいずれも「chosenがRepair-from-top1」だった。
+
+- **効いたRepair key（例）**
+  - `TS2339::react::*::add-export-const::prop=Component`
+  - `TS2339::react::*::add-export-const::prop=memo` または `prop=createContext`
+  - `TS2339::@webpack::getByKeys::widen-callee-to-any::prop=MenuSeparator`
+
+- **頻度（改善3件に対する内訳）**
+  - module: `react` が2件 / `@webpack` が1件
+  - op: `add-export-const` が2件 / `widen-callee-to-any` が1件
+
+- **改善したrepo例（抜粋）**
+  - BetterDiscord: `@webpack.getByKeys(...)` の戻り値に対する TS2339 を **callee winden**で解消 → `phase3: 106 → 93`
+  - oblivion-desktop: `React.Component` の TS2339 を **export補完**で解消 → `phase3: 3 → 2`
+  - baseweb: `React.memo` / `React.createContext` の TS2339 を **export補完**で解消 → `phase3: 83 → 79`（safeguard有）または `83 → 76`（safeguard無）
+
+#### 解釈（卒論で主張できること）
+- 「とにかくany化」ではなく、**tsserver由来のシンボル解決（エラー位置→依存モジュールの特定）**を経由した  
+  **“狙い撃ちの局所修復”**がTop1超えを作っている。
+- 改善が出た3件の勝ち筋は（少数ながら）**2パターンに収束**しており、Repair Operator設計の方向性が具体化できた：
+  - **missing exportの補完（reactの代表API）**
+  - **call-return由来のTS2339をcallee側widenで吸収**
+
+---
+
 ### 6. 次の3週間ロードマップ（短期で成果を出す順）
 
 - **Week 1**: oracle分析 / エラーコード分布 / Δを動かした宣言抽出（設計の根拠固め）
