@@ -21,7 +21,7 @@ import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { builtinModules } from "node:module";
+import { builtinModules, createRequire } from "node:module";
 
 const ROOT = path.resolve(process.cwd());
 
@@ -959,6 +959,206 @@ function collectRequiresFromSource(src) {
   return out;
 }
 
+function loadTypeScriptFromRepo(repoDir) {
+  try {
+    const req = createRequire(path.join(repoDir, "__require__.js"));
+    const tsPath = req.resolve("typescript");
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    return req(tsPath);
+  } catch {
+    return null;
+  }
+}
+
+function buildTsProgram(ts, tsconfigPath) {
+  try {
+    const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
+    if (configFile.error) return null;
+    const config = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(tsconfigPath));
+    const program = ts.createProgram({ rootNames: config.fileNames, options: config.options });
+    const checker = program.getTypeChecker();
+    return { program, checker };
+  } catch {
+    return null;
+  }
+}
+
+function findNodeAtLineCol(ts, sourceFile, oneBasedLine, oneBasedCol) {
+  const line = Math.max(0, (Number(oneBasedLine) || 1) - 1);
+  const col = Math.max(0, (Number(oneBasedCol) || 1) - 1);
+  const pos = ts.getPositionOfLineAndCharacter(sourceFile, line, col);
+  let best = sourceFile;
+  function walk(n) {
+    if (pos < n.getStart(sourceFile, false) || pos > n.getEnd()) return;
+    best = n;
+    n.forEachChild(walk);
+  }
+  walk(sourceFile);
+  return best;
+}
+
+function closest(node, pred) {
+  let cur = node;
+  while (cur) {
+    if (pred(cur)) return cur;
+    cur = cur.parent;
+  }
+  return null;
+}
+
+function resolveSymbolToImport(ts, checker, sym) {
+  if (!sym) return null;
+  const decls = sym.declarations ?? [];
+  for (const d of decls) {
+    // import { X as Y } from 'm'
+    if (ts.isImportSpecifier(d) && ts.isNamedImports(d.parent) && ts.isImportClause(d.parent.parent) && ts.isImportDeclaration(d.parent.parent.parent)) {
+      const mod = String(d.parent.parent.parent.moduleSpecifier.text ?? "");
+      const imported = d.propertyName ? String(d.propertyName.text) : String(d.name.text);
+      const local = String(d.name.text);
+      return { mod, kind: "named", imported, local };
+    }
+    // import * as NS from 'm'
+    if (ts.isNamespaceImport(d) && ts.isImportClause(d.parent) && ts.isImportDeclaration(d.parent.parent)) {
+      const mod = String(d.parent.parent.moduleSpecifier.text ?? "");
+      return { mod, kind: "namespace", imported: "*", local: String(d.name.text) };
+    }
+    // import Default from 'm'
+    if (ts.isImportClause(d) && d.name && ts.isImportDeclaration(d.parent)) {
+      const mod = String(d.parent.moduleSpecifier.text ?? "");
+      return { mod, kind: "default", imported: "default", local: String(d.name.text) };
+    }
+    // const X = require('m')
+    if (ts.isVariableDeclaration(d) && d.initializer && ts.isCallExpression(d.initializer) && ts.isIdentifier(d.initializer.expression) && d.initializer.expression.text === "require") {
+      const arg0 = d.initializer.arguments?.[0];
+      if (arg0 && ts.isStringLiteral(arg0)) return { mod: String(arg0.text), kind: "require", imported: "*", local: String(d.name.getText()) };
+    }
+  }
+  // Follow alias symbols
+  if (checker.getAliasedSymbol && (sym.flags & ts.SymbolFlags.Alias)) {
+    const aliased = checker.getAliasedSymbol(sym);
+    if (aliased && aliased !== sym) return resolveSymbolToImport(ts, checker, aliased);
+  }
+  return null;
+}
+
+function tryResolveVariableInitializerToImport(ts, checker, sym) {
+  // If `sym` is a local variable initialized by calling an imported function/namespace member,
+  // return {mod, imported} for that callee.
+  if (!sym) return null;
+  const decls = sym.declarations ?? [];
+  for (const d of decls) {
+    if (!ts.isVariableDeclaration(d) || !d.initializer) continue;
+    const init = d.initializer;
+    if (!ts.isCallExpression(init)) continue;
+    const callee = init.expression;
+    if (ts.isIdentifier(callee)) {
+      const cs = checker.getSymbolAtLocation(callee);
+      const imp = resolveSymbolToImport(ts, checker, cs);
+      if (imp?.mod) return { mod: imp.mod, imported: imp.imported || callee.text, importKind: imp.kind };
+    }
+    if (ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)) {
+      // ns.foo(...)
+      const nsSym = checker.getSymbolAtLocation(callee.expression);
+      const imp = resolveSymbolToImport(ts, checker, nsSym);
+      if (imp?.mod && (imp.kind === "namespace" || imp.kind === "require")) {
+        return { mod: imp.mod, imported: String(callee.name.text), importKind: "namespace-member" };
+      }
+    }
+  }
+  return null;
+}
+
+async function resolveTs2339ViaTs({ ts, program, checker, repoDir, file, line, col }) {
+  try {
+    const abs = path.isAbsolute(file) ? file : path.join(repoDir, file);
+    let sf = program.getSourceFile(abs);
+    if (!sf) {
+      const suffix = path.normalize(file).replaceAll("\\", "/");
+      sf = program.getSourceFiles().find((f) => String(f.fileName ?? "").replaceAll("\\", "/").endsWith(suffix)) ?? null;
+    }
+    if (!sf) return null;
+    const node = findNodeAtLineCol(ts, sf, line, col);
+    const pa = closest(
+      node,
+      (n) =>
+        n &&
+        (n.kind === ts.SyntaxKind.PropertyAccessExpression ||
+          n.kind === ts.SyntaxKind.PropertyAccessChain ||
+          ts.isPropertyAccessExpression?.(n)),
+    );
+    if (!pa) return null;
+    const obj = pa.expression;
+    const prop = pa.name?.text ? String(pa.name.text) : null;
+    if (!prop) return null;
+    if (!ts.isIdentifier(obj)) return null;
+    const sym = checker.getSymbolAtLocation(obj);
+    // 1) Direct import/require mapping
+    const imp = resolveSymbolToImport(ts, checker, sym);
+    if (imp?.mod) return { mod: imp.mod, importKind: imp.kind, imported: imp.imported, local: obj.text, prop, via: "direct" };
+    // 2) Local var initialized by calling imported function: widen that callee instead.
+    const viaCall = tryResolveVariableInitializerToImport(ts, checker, sym);
+    if (viaCall?.mod) {
+      return { mod: viaCall.mod, importKind: viaCall.importKind, imported: viaCall.imported, local: obj.text, prop, via: "call-return" };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function debugResolveTs2339ViaTs({ ts, program, checker, repoDir, file, line, col }) {
+  const dbg = { file, line, col, abs: "", sourceFileFound: false, propertyAccessFound: false, objText: null, viaDirect: null, viaCall: null };
+  try {
+    dbg.abs = path.isAbsolute(file) ? file : path.join(repoDir, file);
+    let sf = program.getSourceFile(dbg.abs);
+    if (!sf) {
+      const suffix = path.normalize(file).replaceAll("\\", "/");
+      sf = program.getSourceFiles().find((f) => String(f.fileName ?? "").replaceAll("\\", "/").endsWith(suffix)) ?? null;
+    }
+    dbg.sourceFileFound = Boolean(sf);
+    if (!sf) return dbg;
+    const node = findNodeAtLineCol(ts, sf, line, col);
+    const pa = closest(
+      node,
+      (n) =>
+        n &&
+        (n.kind === ts.SyntaxKind.PropertyAccessExpression ||
+          n.kind === ts.SyntaxKind.PropertyAccessChain ||
+          ts.isPropertyAccessExpression?.(n)),
+    );
+    dbg.propertyAccessFound = Boolean(pa);
+    if (!pa) return dbg;
+    const obj = pa.expression;
+    if (!ts.isIdentifier(obj)) return dbg;
+    dbg.objText = obj.text;
+    const sym = checker.getSymbolAtLocation(obj);
+    const imp = resolveSymbolToImport(ts, checker, sym);
+    dbg.viaDirect = imp;
+    const viaCall = tryResolveVariableInitializerToImport(ts, checker, sym);
+    dbg.viaCall = viaCall;
+    return dbg;
+  } catch (e) {
+    return { ...dbg, error: String(e?.message || e) };
+  }
+}
+
+function widenExportToAnyInModuleBlock(dtsText, mod, exportName) {
+  const hasBlock = Boolean(getDeclareModuleBlockRange(dtsText, mod));
+  if (hasBlock) {
+    // Try const first, then function.
+    const reps = new Map();
+    reps.set(exportName, { kind: "const" });
+    let out = replaceExportsInDeclareModuleBlock(dtsText, mod, reps);
+    if (out) return out;
+    const reps2 = new Map();
+    reps2.set(exportName, { kind: "function" });
+    out = replaceExportsInDeclareModuleBlock(dtsText, mod, reps2);
+    if (out) return out;
+  }
+  const blk = buildMinimalDeclareModule(mod, [`export const ${exportName}: any;`]);
+  return blk ? `${dtsText}\n${blk}` : null;
+}
+
 function extractImportTypeRefs(msg) {
   // import("mod").Name
   const out = [];
@@ -1285,7 +1485,17 @@ async function processOne(url, opts, outHandle) {
         trialsRun: 0,
       },
       repair: opts.repairFromTop1
-        ? { enabled: true, max: Number(opts.repairMax ?? 0) || 0, candidatesAdded: 0, ts2339Seen: 0, ts2339LocalFound: 0, ts2339ImportMapped: 0 }
+        ? {
+            enabled: true,
+            max: Number(opts.repairMax ?? 0) || 0,
+            candidatesAdded: 0,
+            tsLoaded: false,
+            tsProgramBuilt: false,
+            tsResolvedCount: 0,
+            ts2339Seen: 0,
+            ts2339LocalFound: 0,
+            ts2339ImportMapped: 0,
+          }
         : null,
       reranker: opts.trialStrategy === "reranker-v0" ? { modelPath: opts.rerankerModel || "", loaded: false, error: null } : null,
       model:
@@ -1956,6 +2166,13 @@ async function processOne(url, opts, outHandle) {
   considerCandidate(top1Res);
 
   if (opts.repairFromTop1 && Number(opts.repairMax) > 0 && opts.trialMax > 1) {
+    // Best-effort tsserver-like resolution (uses repo's own typescript if present)
+    const ts = loadTypeScriptFromRepo(repoDir);
+    const tsProg = ts ? buildTsProgram(ts, injectedCfg.tsconfigPath) : null;
+    if (result.phase3.repair) {
+      result.phase3.repair.tsLoaded = Boolean(ts);
+      result.phase3.repair.tsProgramBuilt = Boolean(tsProg?.program && tsProg?.checker);
+    }
     const diags = parseDiagnostics(top1Res.jout).filter((d) => ["TS2339", "TS2345", "TS2322"].includes(String(d.code)));
     const repairs = [];
     const seen = new Set();
@@ -1967,6 +2184,49 @@ async function processOne(url, opts, outHandle) {
 
       // TS2339: try to recover (localIdentifier.prop) from source line and map to import module.
       if (String(d.code) === "TS2339" && prop && d.file && d.line) {
+        // First: try TS Program-based resolution to module import
+        if (tsProg?.program && tsProg?.checker) {
+          if (result.phase3.repair && !result.phase3.repair.debugTs2339) {
+            result.phase3.repair.debugTs2339 = await debugResolveTs2339ViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+          }
+          const rr = await resolveTs2339ViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+          if (rr?.mod) {
+            if (result.phase3.repair) result.phase3.repair.tsResolvedCount++;
+            const mod = rr.mod;
+            let dtsText = null;
+            let op = "";
+            if (rr.via === "call-return") {
+              // obj is local var; widen the imported callee return/source symbol.
+              dtsText = widenExportToAnyInModuleBlock(baseDts, mod, rr.imported);
+              op = "widen-callee-to-any";
+            } else if (rr.importKind === "namespace" || rr.importKind === "require" || rr.importKind === "namespace-member") {
+              dtsText = addExportConstToDeclareModuleBlock(baseDts, mod, rr.prop) ?? (buildMinimalDeclareModule(mod, [`export const ${rr.prop}: any;`]) ? `${baseDts}\n${buildMinimalDeclareModule(mod, [`export const ${rr.prop}: any;`])}` : null);
+              op = "add-export-const";
+            } else if (rr.importKind === "named" || rr.importKind === "default") {
+              const exportName = rr.importKind === "default" ? "__default" : rr.imported;
+              dtsText = widenExportToAnyInModuleBlock(baseDts, mod, exportName);
+              op = "widen-imported-to-any";
+            }
+            if (dtsText) {
+              const key =
+                rr.via === "call-return"
+                  ? `rep::TS2339::ts::${mod}::callee::${rr.imported}::${rr.via}::${op}`
+                  : `rep::TS2339::ts::${mod}::${rr.importKind}::${rr.imported}::${rr.prop}::${rr.via}::${op}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                repairs.push({
+                  candidateId: `c_rep_${sha1Hex(key).slice(0, 8)}`,
+                  dtsText,
+                  moduleOverride: null,
+                  symbolOverride: { kind: "repair-from-top1", code: "TS2339", module: mod, local: rr.local, imported: rr.imported, prop: rr.prop, op, via: `ts:${rr.via}` },
+                });
+                if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
+                continue;
+              }
+            }
+          }
+        }
+
         const srcLine = await readLineFromRepoFile(repoDir, d.file, d.line);
         const m = srcLine.match(new RegExp(`\\b([A-Za-z_$][\\w$]*)\\s*\\.\\s*${escapeRegex(prop)}\\b`));
         const localObj = m ? m[1] : null;

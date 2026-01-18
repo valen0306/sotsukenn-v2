@@ -96,6 +96,26 @@ node evaluation/real/analyze-oracle.mjs --out-dir evaluation/real/out/phase5-A1-
 - 含意:
   - TS2339に対して「当該オブジェクトがどの依存モジュール/シンボル由来か」を突き止めるには、regexのimport解析では足りず  
     **TypeScript Language Service（tsserver相当）でのシンボル解決**が必要になる可能性が高い（ここが研究としても面白いポイント）
+
+**Week2 実装メモ（更新：Repair Operatorが指標を動かした）**
+- `--repair-from-top1` を TypeScript API（repo内の `typescript`）で強化し、TS2339の `obj.prop` を
+  - 「objが import された値」だけでなく
+  - **「objが import 関数の戻り値（例: `const x = getByKeys(...)`）」**の場合も辿って、元のimportシンボル（`getByKeys`）を特定してwiden
+  できるようにした（= “エラー位置→依存モジュールのどのシンボルを直すか” が解決できるようになった）
+
+**Phase5（max=30 / Repair Operator v3）**
+- out-dir: `evaluation/real/out/phase5-A1-localizer3-pererror-repairfromtop1-max30`
+- valid 17件の集計（`analyze-phase3-trials.mjs`）:
+  - `win_rate_vs_top1 = 0.176`（**0から動いた**）
+  - `chosen_worse_than_baseline_rate = 0.412`（旧0.471から改善）
+  - `chosen_better_than_baseline_rate = 0.353`（旧0.294から改善）
+  - `avg_tsc_calls = 4.47`（旧4.41より僅増）
+- Oracle（`analyze-oracle.mjs`）:
+  - `oracle_win_rate_vs_top1 = 0.176`
+  - `avg_top1_phase3 = 25.000` → `avg_oracle_phase3 = 23.765`
+- 解釈:
+  - **Repair Operator v3 が「Top1より良い候補を作る」ことに成功**し、v2の第2貢献に直結
+  - 次は「候補数/tsc回数を増やさずに同等以上の改善」を狙い、セーフガード（Week3）と組み合わせて安定化を進める
 - **Week 3**: セーフガード導入＋統合評価（A3 + Gen v3）  
   → 目標：`win_rate_vs_top1` を動かす ＆ `worse` を下げる/同等 ＆ `avg_tsc_calls` 維持
 
