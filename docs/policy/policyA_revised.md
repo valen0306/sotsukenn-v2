@@ -232,6 +232,18 @@ node evaluation/real/phase3-run.mjs \
   - “any-stubを増やす”方向（単体→ペア）は、このデータ/指標では改善候補を作れていない
   - 次のCandidate Generator改善は、ペア化ではなく **「TS2339/TS2345等のエラー内容に沿った候補型（symbol-levelのwidening等）」**を作る必要がある
 
+**追加実験：Candidate Generator v2（any-topK = Top-Kモジュールを一括 any-stub）**
+- 目的: 候補数を増やしすぎず、複数モジュールの相互作用（複合原因）に対応できる“強い候補”を1つだけ追加する
+- 実装: `--sweep-any-topk 3`（Top3を一括any化）で `c_anytopk_*` 候補を追加
+- フェア比較（両者とも trial-max=3）:
+  - baseline（any-topKなし）: `phase3Total_valid_delta=-100`, `avg_tsc_calls=3.76`, `worse=0.471`, `better=0.294`, `win_rate_vs_top1=0`
+  - any-topK3あり: **同値**（上記すべて一致）
+- 観測:
+  - 選択が変わったrepoは2件あったが、全体指標は不変
+- 解釈:
+  - “強い一括any化候補”を足しても、Top1を上回る改善（Phase3 coreのさらなる減少）に繋がっていない
+  - 次は **any化の範囲を広げる方向ではなく、エラー内容に沿って「特定シンボル/特定exportだけをwidenする」候補**を作る必要がある
+
 ---
 
 ### 4. 研究質問（改訂版）

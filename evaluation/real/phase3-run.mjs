@@ -78,6 +78,7 @@ function parseArgs(argv) {
     trialStrategy: "top1", // top1 | module-any-sweep | reranker-v0
     trialMax: 1, // max number of candidates to run per repo (including top1)
     sweepAnyK: 1, // Candidate Generator v1: how many modules to override with any-stub per candidate (1 or 2)
+    sweepAnyTopK: 0, // Candidate Generator v2: add one candidate that overrides the first K modules at once (0=off)
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
   for (let i = 2; i < argv.length; i++) {
@@ -119,6 +120,7 @@ function parseArgs(argv) {
     else if (a === "--trial-strategy") args.trialStrategy = String(argv[++i] ?? "top1");
     else if (a === "--trial-max") args.trialMax = Number(argv[++i] ?? "1");
     else if (a === "--sweep-any-k") args.sweepAnyK = Number(argv[++i] ?? "1");
+    else if (a === "--sweep-any-topk") args.sweepAnyTopK = Number(argv[++i] ?? "0");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
     else if (a === "--help" || a === "-h") {
       console.log(`
@@ -162,6 +164,7 @@ Options:
   --trial-strategy <top1|module-any-sweep|reranker-v0>  (Phase1/5) Candidate trial strategy (default: top1)
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
   --sweep-any-k <1|2>                (M1/Candidate v1) In module-any-sweep, override K modules per candidate (default: 1)
+  --sweep-any-topk <N>               (M1/Candidate v2) Add one candidate that overrides the first N stub modules at once (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
       process.exit(0);
@@ -199,6 +202,7 @@ Options:
   if (!["top1", "module-any-sweep", "reranker-v0"].includes(String(args.trialStrategy))) args.trialStrategy = "top1";
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   if (![1, 2].includes(Number(args.sweepAnyK))) args.sweepAnyK = 1;
+  if (!Number.isFinite(args.sweepAnyTopK) || args.sweepAnyTopK < 0) args.sweepAnyTopK = 0;
   return args;
 }
 
@@ -1306,6 +1310,25 @@ async function processOne(url, opts, outHandle) {
     // - Always include single-module overrides first (compat + interpretability)
     // - Optionally include pair overrides when --sweep-any-k=2, until cap is reached
     let remaining = cap;
+
+    // Candidate Generator v2: one "override first K modules at once" candidate.
+    // This keeps candidate count low while allowing multi-module interactions.
+    if (remaining > 0 && Number(opts.sweepAnyTopK) > 1) {
+      const k = Math.min(Number(opts.sweepAnyTopK) || 0, mods.length);
+      if (k > 1) {
+        const picked = mods.slice(0, k);
+        const key = picked.join("::");
+        const replaced = applyAnyOverrides(baseDts, picked);
+        if (replaced) {
+          candidates.push({
+            candidateId: `c_anytopk_${k}_${sha1Hex(key).slice(0, 8)}`,
+            dtsText: replaced,
+            moduleOverride: picked,
+          });
+          remaining--;
+        }
+      }
+    }
 
     // singles
     for (const mod of mods) {
