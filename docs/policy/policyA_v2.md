@@ -83,6 +83,29 @@ node evaluation/real/analyze-oracle.mjs --out-dir evaluation/real/out/phase5-A1-
 
 ---
 
+### Week3（実測）: セーフガードで `tsc` 回数を削減しつつ安定化
+
+#### 実装（phase3-run.mjs）
+- `--early-stop-after-improve`: Top1より良い候補が出たら探索を打ち切り（無駄な `tsc` を減らす）
+- `--early-stop-tie-streak 2`: Top1と同点が2回続いたら探索を打ち切り（tieが支配的な状況で効果）
+
+#### 評価（max=30 / valid=17）
+- 対象（セーフガード無し）: `phase5-A1-localizer3-pererror-repairfromtop1-max30`
+  - `avg_tsc_calls=4.47`, `win_rate_vs_top1=0.176`, `worse=0.412`, `better=0.353`
+- 対象（セーフガード有り）: `phase5-A1-localizer3-pererror-repairfromtop1-safeguard-max30`
+  - `avg_tsc_calls=3.65`（**改善**）
+  - `win_rate_vs_top1=0.176`（維持）
+  - `worse=0.412`, `better=0.353`（維持）
+
+#### セーフガードの発火状況（repos_total=30）
+- `stopped_tie_streak=9`
+- `stopped_improve=3`
+- 解釈:
+  - tieが多い前提では、**tie-streak早期停止が特に効く**
+  - 改善を維持したまま `tsc` 回数を下げられたので、Week3の狙い（安定性維持＋効率化）が成立
+
+---
+
 ### 6. 次の3週間ロードマップ（短期で成果を出す順）
 
 - **Week 1**: oracle分析 / エラーコード分布 / Δを動かした宣言抽出（設計の根拠固め）

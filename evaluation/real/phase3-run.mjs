@@ -83,6 +83,8 @@ function parseArgs(argv) {
     symbolWidenMax: 0, // max number of symbol-level candidates to add (0=off)
     repairFromTop1: false, // Candidate Generator v3 (Repair Operator): generate targeted candidates from top1 injected diagnostics
     repairMax: 0, // max number of repair candidates to add (0=off)
+    earlyStopAfterImprove: false, // Week3 safeguard: stop after first improvement vs top1
+    earlyStopTieStreak: 0, // Week3 safeguard: stop after N consecutive ties vs top1
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
   for (let i = 2; i < argv.length; i++) {
@@ -129,6 +131,8 @@ function parseArgs(argv) {
     else if (a === "--symbol-widen-max") args.symbolWidenMax = Number(argv[++i] ?? "0");
     else if (a === "--repair-from-top1") args.repairFromTop1 = true;
     else if (a === "--repair-max") args.repairMax = Number(argv[++i] ?? "0");
+    else if (a === "--early-stop-after-improve") args.earlyStopAfterImprove = true;
+    else if (a === "--early-stop-tie-streak") args.earlyStopTieStreak = Number(argv[++i] ?? "0");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
     else if (a === "--help" || a === "-h") {
       console.log(`
@@ -177,6 +181,8 @@ Options:
   --symbol-widen-max <N>             (M1/Candidate v3) Max symbol-level candidates to add (default: 0/off)
   --repair-from-top1                (M1/Candidate v3) Generate targeted repair candidates from top1 injected diagnostics
   --repair-max <N>                  (M1/Candidate v3) Max repair candidates to add (default: 0/off)
+  --early-stop-after-improve        (Week3) Stop trials once a candidate improves vs top1 (reduces tsc calls)
+  --early-stop-tie-streak <N>       (Week3) Stop after N consecutive ties vs top1 (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
       process.exit(0);
@@ -218,6 +224,7 @@ Options:
   if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports", "export-to-any", "type-to-any"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
   if (!Number.isFinite(args.symbolWidenMax) || args.symbolWidenMax < 0) args.symbolWidenMax = 0;
   if (!Number.isFinite(args.repairMax) || args.repairMax < 0) args.repairMax = 0;
+  if (!Number.isFinite(args.earlyStopTieStreak) || args.earlyStopTieStreak < 0) args.earlyStopTieStreak = 0;
   return args;
 }
 
@@ -1495,6 +1502,12 @@ async function processOne(url, opts, outHandle) {
             ts2339Seen: 0,
             ts2339LocalFound: 0,
             ts2339ImportMapped: 0,
+            safeguard: {
+              earlyStopAfterImprove: Boolean(opts.earlyStopAfterImprove),
+              earlyStopTieStreak: Number(opts.earlyStopTieStreak ?? 0) || 0,
+              stoppedReason: null,
+              tiesInARow: 0,
+            },
           }
         : null,
       reranker: opts.trialStrategy === "reranker-v0" ? { modelPath: opts.rerankerModel || "", loaded: false, error: null } : null,
@@ -2164,6 +2177,8 @@ async function processOne(url, opts, outHandle) {
   result.trials.push(top1Res.trial);
   result.phase3.trial.trialsRun++;
   considerCandidate(top1Res);
+  const top1Phase3 = Number(top1Res.trial?.injected_phase3 ?? NaN);
+  let tieStreak = 0;
 
   if (opts.repairFromTop1 && Number(opts.repairMax) > 0 && opts.trialMax > 1) {
     // Best-effort tsserver-like resolution (uses repo's own typescript if present)
@@ -2322,6 +2337,28 @@ async function processOne(url, opts, outHandle) {
     result.trials.push(res.trial);
     result.phase3.trial.trialsRun++;
     considerCandidate(res);
+
+    // Week3 safeguards: reduce wasted exploration in a tie-heavy regime
+    if (Number.isFinite(top1Phase3) && res.trial?.valid_injection) {
+      const p3 = Number(res.trial?.injected_phase3 ?? NaN);
+      if (Number.isFinite(p3)) {
+        if (p3 < top1Phase3 && opts.earlyStopAfterImprove) {
+          if (result.phase3.repair?.safeguard) result.phase3.repair.safeguard.stoppedReason = "improve_vs_top1";
+          break;
+        }
+        if (p3 === top1Phase3) {
+          tieStreak++;
+          if (result.phase3.repair?.safeguard) result.phase3.repair.safeguard.tiesInARow = tieStreak;
+          if (Number(opts.earlyStopTieStreak) > 0 && tieStreak >= Number(opts.earlyStopTieStreak)) {
+            if (result.phase3.repair?.safeguard) result.phase3.repair.safeguard.stoppedReason = "tie_streak";
+            break;
+          }
+        } else {
+          tieStreak = 0;
+          if (result.phase3.repair?.safeguard) result.phase3.repair.safeguard.tiesInARow = tieStreak;
+        }
+      }
+    }
   }
 
   // 5) Populate "injected" fields using the chosen candidate (keeps existing summary compatible)
