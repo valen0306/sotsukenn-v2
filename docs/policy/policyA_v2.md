@@ -23,6 +23,24 @@
   - oracleは超える → **rerank/localizeにも改善余地**
   を定量で示す（論文/卒論の説得力が一段上がる）
 
+**実装メモ（このリポジトリ）**
+- スクリプト: `evaluation/real/analyze-oracle.mjs`
+- 実行例:
+
+```bash
+node evaluation/real/analyze-oracle.mjs --out-dir evaluation/real/out/phase5-A1-localizer3-pererror-sweep-max30
+```
+
+**現状のoracle結果（max=30, valid=17）**
+- 対象: `phase5-A1-localizer3-pererror-sweep-max30`（trial-max=6で候補集合は比較的広い）
+- 結果:
+  - `oracle_win_rate_vs_top1 = 0.000`
+  - `oracle_tie_rate_vs_top1 = 1.000`
+  - `avg_top1_phase3 = avg_oracle_phase3 = 25.000`
+- 解釈:
+  - **oracleでもTop1を超えない**ため、現状の候補集合では「改善が起きる世界」を作れていない  
+  → v2の結論どおり、研究の中心を **Repair Operator（Candidate Generator v3）** に置くのが最短
+
 ---
 
 ### 4. Candidate Generator v3（Repair Operator）の方向性
