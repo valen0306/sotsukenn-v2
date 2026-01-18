@@ -68,6 +68,10 @@ function parseArgs(argv) {
     // Localizer (Plan A / M2): limit how many external modules to stub (Top-M).
     // Default: unlimited (= current behavior).
     localizerTopModules: Infinity,
+    // Localizer scoring mode:
+    // - per-file: count each imported module once per diag file (current behavior)
+    // - per-error: weight modules by number of Phase3 diagnostics in files that import them (error-location→module signal)
+    localizerMode: "per-file", // per-file | per-error
     // Phase1: trial exploration strategy (Policy A / Phase1)
     // - top1: current behavior (single candidate)
     // - module-any-sweep: try candidates by forcing ONE module to any-stub at a time (localizer-controlled)
@@ -110,6 +114,7 @@ function parseArgs(argv) {
     else if (a === "--exclude-node-builtins") args.excludeNodeBuiltins = true;
     else if (a === "--external-filter") args.externalFilter = String(argv[++i] ?? "heuristic");
     else if (a === "--localizer-top-modules") args.localizerTopModules = Number(argv[++i] ?? "0");
+    else if (a === "--localizer-mode") args.localizerMode = String(argv[++i] ?? "per-file");
     else if (a === "--trial-strategy") args.trialStrategy = String(argv[++i] ?? "top1");
     else if (a === "--trial-max") args.trialMax = Number(argv[++i] ?? "1");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
@@ -151,6 +156,7 @@ Options:
   --exclude-node-builtins            Exclude Node.js built-in modules (e.g. 'path', 'crypto') from stub/module list (default: off)
   --external-filter <heuristic|deps> How to decide "external" module specifiers when onlyExternal=true (default: heuristic)
   --localizer-top-modules <N>        (M2) Stub only Top-N external modules (ranked by frequency in Phase3 diagnostic files). Default: unlimited
+  --localizer-mode <per-file|per-error> (M2) Module ranking mode for Localizer (default: per-file)
   --trial-strategy <top1|module-any-sweep|reranker-v0>  (Phase1/5) Candidate trial strategy (default: top1)
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
@@ -186,6 +192,7 @@ Options:
   if (!Number.isFinite(args.memberAccessMaxMembersPerImport) || args.memberAccessMaxMembersPerImport < 1) args.memberAccessMaxMembersPerImport = 200;
   if (!["heuristic", "deps"].includes(String(args.externalFilter))) args.externalFilter = "heuristic";
   if (!Number.isFinite(args.localizerTopModules) || args.localizerTopModules < 1) args.localizerTopModules = Infinity;
+  if (!["per-file", "per-error"].includes(String(args.localizerMode))) args.localizerMode = "per-file";
   if (!["top1", "module-any-sweep", "reranker-v0"].includes(String(args.trialStrategy))) args.trialStrategy = "top1";
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
   return args;
@@ -925,6 +932,7 @@ async function processOne(url, opts, outHandle) {
       mode: opts.mode,
       localizer: {
         topModules: Number.isFinite(opts.localizerTopModules) ? opts.localizerTopModules : null,
+        mode: opts.localizerMode ?? "per-file",
         beforeTopModulesCount: null,
         afterTopModulesCount: null,
         topModuleFreq: [],
@@ -1046,12 +1054,15 @@ async function processOne(url, opts, outHandle) {
   result.phase3.diagFiles = diagFiles.slice(0, 200); // cap
 
   const moduleToStub = new Map();
-  const moduleFreq = new Map(); // module -> count (frequency in diag files)
+  const moduleFreq = new Map(); // module -> count (frequency in diag files, used by per-file mode)
+  const moduleScore = new Map(); // module -> score (used by per-error mode)
+  const fileImportCache = new Map(); // absFile -> Array<ImportInfo> (filtered & externalized)
   for (const f of diagFiles) {
     const abs = path.isAbsolute(f) ? f : path.join(repoDir, f);
     if (!(await fileExists(abs))) continue;
     const src = await fs.readFile(abs, "utf8").catch(() => "");
     const imports = collectImportsFromSource(src);
+    const keptImports = [];
     for (const imp of imports) {
       const mod = imp.mod;
       if (!mod) continue;
@@ -1063,6 +1074,7 @@ async function processOne(url, opts, outHandle) {
       if (imp.sideEffect) continue;
 
       moduleFreq.set(mod, (moduleFreq.get(mod) ?? 0) + 1);
+      keptImports.push(imp);
       const cur = ensureModuleEntry(moduleToStub, mod);
       if (imp.defaultName) cur.defaultImport = true;
       if (imp.namespaceName) cur.namespaceImport = true;
@@ -1106,12 +1118,32 @@ async function processOne(url, opts, outHandle) {
       }
 
     }
+    fileImportCache.set(abs, keptImports);
   }
 
-  // Localizer (Top-M): keep only the most frequently referenced modules in Phase3 diagnostic files.
+  // Localizer (Top-M):
+  // - per-file: keep modules ranked by how often they appear in imports across diag files
+  // - per-error: weight modules by number of Phase3 diagnostics in files that import them (error-location→module binding)
+  if (opts.localizerMode === "per-error") {
+    for (const d of diags) {
+      const f = d.file;
+      const abs = path.isAbsolute(f) ? f : path.join(repoDir, f);
+      const imports = fileImportCache.get(abs);
+      if (!imports) continue;
+      const seen = new Set();
+      for (const imp of imports) {
+        const mod = imp?.mod;
+        if (!mod || seen.has(mod)) continue;
+        seen.add(mod);
+        moduleScore.set(mod, (moduleScore.get(mod) ?? 0) + 1);
+      }
+    }
+  }
+
   result.phase3.localizer.beforeTopModulesCount = moduleToStub.size;
   if (Number.isFinite(opts.localizerTopModules) && moduleToStub.size > opts.localizerTopModules) {
-    const ranked = [...moduleFreq.entries()].sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]));
+    const rankedSource = opts.localizerMode === "per-error" ? moduleScore : moduleFreq;
+    const ranked = [...rankedSource.entries()].sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]));
     const kept = new Set(ranked.slice(0, opts.localizerTopModules).map(([m]) => m));
     for (const k of [...moduleToStub.keys()]) {
       if (!kept.has(k)) moduleToStub.delete(k);
@@ -1121,7 +1153,8 @@ async function processOne(url, opts, outHandle) {
       freq: c,
     }));
   } else {
-    result.phase3.localizer.topModuleFreq = [...moduleFreq.entries()]
+    const rankedSource = opts.localizerMode === "per-error" ? moduleScore : moduleFreq;
+    result.phase3.localizer.topModuleFreq = [...rankedSource.entries()]
       .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
       .slice(0, 50)
       .map(([m, c]) => ({ module: m, freq: c }));

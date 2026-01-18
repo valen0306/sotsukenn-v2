@@ -208,6 +208,19 @@ node evaluation/real/phase3-run.mjs \
   - そもそも「Top1より良い候補」がほぼ無い（`win_rate_vs_top1=0`）ため、特徴量を増やしても悪化率が動かない
   - 次の改善は、(a) 候補生成の多様化（Top1以外に“良い候補”を作る）か、(b) エラー位置→外部モジュールの結びつきを特徴量化して“悪い候補”を避ける、のどちらかが必要
 
+**追加実験：Localizer v1（per-error）= エラー位置→モジュール結びつきの重み付け**
+- 変更: `--localizer-mode per-error` を追加し、モジュールのランキングを
+  - `per-file`（従来）: 「Phase3エラーが出たファイル」ごとのimport頻度
+  - `per-error`（新）: 「Phase3エラー1件」ごとに、そのファイルがimportする外部モジュールへ加点
+  に切替可能にした（エラー位置ベースの信号を強める）
+- Phase5（max=30）結果:
+  - A1(per-error): `phase3Total_valid_delta=-100`, `avg_tsc_calls=4.41`, `worse=0.471`, `better=0.294`
+  - A3(per-error, reranker feat2): `phase3Total_valid_delta=-100`, `avg_tsc_calls=3.76`, `worse=0.471`, `better=0.294`
+  - **worse率は改善せず**、Phase3改善量もわずかに悪化（-103 → -100）
+- 解釈:
+  - “ランキングの出し方”を変えても、Top3の候補集合自体が弱い（Top1より良い候補がほぼ無い）ため、悪化率が動きにくい
+  - 次の打ち手は Localizerの重み付けよりも、**候補生成（Candidate set）を強化して win_rate_vs_top1>0 を作る**ことが優先
+
 ---
 
 ### 4. 研究質問（改訂版）
