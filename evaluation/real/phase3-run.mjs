@@ -77,6 +77,7 @@ function parseArgs(argv) {
     // - module-any-sweep: try candidates by forcing ONE module to any-stub at a time (localizer-controlled)
     trialStrategy: "top1", // top1 | module-any-sweep | reranker-v0
     trialMax: 1, // max number of candidates to run per repo (including top1)
+    sweepAnyK: 1, // Candidate Generator v1: how many modules to override with any-stub per candidate (1 or 2)
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
   for (let i = 2; i < argv.length; i++) {
@@ -117,6 +118,7 @@ function parseArgs(argv) {
     else if (a === "--localizer-mode") args.localizerMode = String(argv[++i] ?? "per-file");
     else if (a === "--trial-strategy") args.trialStrategy = String(argv[++i] ?? "top1");
     else if (a === "--trial-max") args.trialMax = Number(argv[++i] ?? "1");
+    else if (a === "--sweep-any-k") args.sweepAnyK = Number(argv[++i] ?? "1");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
     else if (a === "--help" || a === "-h") {
       console.log(`
@@ -159,6 +161,7 @@ Options:
   --localizer-mode <per-file|per-error> (M2) Module ranking mode for Localizer (default: per-file)
   --trial-strategy <top1|module-any-sweep|reranker-v0>  (Phase1/5) Candidate trial strategy (default: top1)
   --trial-max <N>                    (Phase1) Max candidates per repo including top1 (default: 1)
+  --sweep-any-k <1|2>                (M1/Candidate v1) In module-any-sweep, override K modules per candidate (default: 1)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
       process.exit(0);
@@ -195,6 +198,7 @@ Options:
   if (!["per-file", "per-error"].includes(String(args.localizerMode))) args.localizerMode = "per-file";
   if (!["top1", "module-any-sweep", "reranker-v0"].includes(String(args.trialStrategy))) args.trialStrategy = "top1";
   if (!Number.isFinite(args.trialMax) || args.trialMax < 1) args.trialMax = 1;
+  if (![1, 2].includes(Number(args.sweepAnyK))) args.sweepAnyK = 1;
   return args;
 }
 
@@ -447,15 +451,21 @@ function localizerRankFromTopList(topModuleFreq, mod) {
 function buildRerankerCandidateFeatures({ baselineCounts, baselineDiagnostics, topModuleFreq, moduleOverride, declarationCount }) {
   const mentionMap = extractModuleMentionsFromDiagnostics(baselineDiagnostics);
   const mentionByCode = extractModuleMentionsByCode(baselineDiagnostics);
-  const rank = moduleOverride ? localizerRankFromTopList(topModuleFreq, moduleOverride) : 0;
+  const overrides = Array.isArray(moduleOverride)
+    ? moduleOverride.filter((x) => typeof x === "string" && x.trim() !== "")
+    : (moduleOverride ? [String(moduleOverride)] : []);
+  const uniq = [...new Set(overrides)];
+  const rank = uniq.length ? Math.min(...uniq.map((m) => localizerRankFromTopList(topModuleFreq, m)).filter((n) => n > 0), 0) : 0;
+  const mentionSum = uniq.reduce((a, m) => a + Number(mentionMap.get(m) ?? 0), 0);
+  const localizerFreqSum = uniq.reduce((a, m) => a + localizerFreqFromTopList(topModuleFreq, m), 0);
   return {
-    has_override: moduleOverride ? 1 : 0,
-    override_mention_count: moduleOverride ? Number(mentionMap.get(moduleOverride) ?? 0) : 0,
-    override_localizer_freq: moduleOverride ? localizerFreqFromTopList(topModuleFreq, moduleOverride) : 0,
+    has_override: uniq.length ? 1 : 0,
+    override_mention_count: mentionSum,
+    override_localizer_freq: localizerFreqSum,
     override_localizer_rank: rank,
-    override_is_top1_localizer: moduleOverride ? (rank === 1 ? 1 : 0) : 0,
-    override_mention_ts2307: moduleOverride ? Number(mentionByCode.get("TS2307")?.get(moduleOverride) ?? 0) : 0,
-    override_mention_ts2614: moduleOverride ? Number(mentionByCode.get("TS2614")?.get(moduleOverride) ?? 0) : 0,
+    override_is_top1_localizer: uniq.length ? (rank === 1 ? 1 : 0) : 0,
+    override_mention_ts2307: uniq.reduce((a, m) => a + Number(mentionByCode.get("TS2307")?.get(m) ?? 0), 0),
+    override_mention_ts2614: uniq.reduce((a, m) => a + Number(mentionByCode.get("TS2614")?.get(m) ?? 0), 0),
     declaration_count: Number(declarationCount ?? 0) || 0,
     baseline_phase3_core: sumPhase3Core(baselineCounts),
     baseline_total_errors: sumCounts(baselineCounts),
@@ -1250,10 +1260,14 @@ async function processOne(url, opts, outHandle) {
     const injectionValid = !injectedDtsInvalid && !jr.timedOut;
     const dtsSha1 = sha1Hex(dtsText);
     const decls = extractDeclarationsFromDts(dtsText);
+    const moduleOverrides = Array.isArray(moduleOverride)
+      ? moduleOverride.filter((x) => typeof x === "string" && x.trim() !== "")
+      : (moduleOverride ? [String(moduleOverride)] : []);
     const trial = {
       trial_id: `trial_${sha1Hex(`${result.url}::${candidateId}::${dtsSha1}`).slice(0, 12)}`,
       candidate_id: candidateId,
-      module_override: moduleOverride ?? null,
+      module_override: (moduleOverrides.length === 1 ? moduleOverrides[0] : null),
+      module_overrides: moduleOverrides.length ? moduleOverrides : null,
       injected_dts_sha1: dtsSha1,
       declaration_count: decls.length,
       declarations: decls.slice(0, 5000),
@@ -1275,13 +1289,50 @@ async function processOne(url, opts, outHandle) {
   if (wantsSweep) {
     const mods = [...moduleToStub.keys()];
     const cap = Math.max(0, opts.trialMax - 1);
-    for (const mod of mods.slice(0, cap)) {
-      const info = moduleToStub.get(mod);
-      if (!info) continue;
-      const stubBlock = buildPhase3StubModuleBlock(mod, info);
-      const replaced = replaceDeclareModuleBlock(baseDts, mod, stubBlock);
+    function applyAnyOverrides(dtsText, overrideMods) {
+      let cur = dtsText;
+      for (const mod of overrideMods) {
+        const info = moduleToStub.get(mod);
+        if (!info) return null;
+        const stubBlock = buildPhase3StubModuleBlock(mod, info);
+        const next = replaceDeclareModuleBlock(cur, mod, stubBlock);
+        if (!next) return null;
+        cur = next;
+      }
+      return cur;
+    }
+
+    // Candidate Generator v1:
+    // - Always include single-module overrides first (compat + interpretability)
+    // - Optionally include pair overrides when --sweep-any-k=2, until cap is reached
+    let remaining = cap;
+
+    // singles
+    for (const mod of mods) {
+      if (remaining <= 0) break;
+      const replaced = applyAnyOverrides(baseDts, [mod]);
       if (!replaced) continue;
       candidates.push({ candidateId: `c_anymod_${sha1Hex(mod).slice(0, 8)}`, dtsText: replaced, moduleOverride: mod });
+      remaining--;
+    }
+
+    // pairs
+    if (opts.sweepAnyK === 2 && remaining > 0) {
+      for (let i = 0; i < mods.length && remaining > 0; i++) {
+        for (let j = i + 1; j < mods.length && remaining > 0; j++) {
+          const a = mods[i];
+          const b = mods[j];
+          const key = `${a}::${b}`;
+          const replaced = applyAnyOverrides(baseDts, [a, b]);
+          if (!replaced) continue;
+          candidates.push({
+            candidateId: `c_anypair_${sha1Hex(key).slice(0, 8)}`,
+            dtsText: replaced,
+            moduleOverride: [a, b],
+          });
+          remaining--;
+        }
+      }
     }
   }
 

@@ -127,23 +127,27 @@ function extractModuleMentionsByCode(diags) {
 }
 
 function buildCandidateFeatures({ repoRow, trial }) {
-  const moduleOverride = trial?.module_override ?? null;
-  const hasOverride = moduleOverride ? 1 : 0;
+  const rawOverride = trial?.module_overrides ?? trial?.module_override ?? null;
+  const overrides = Array.isArray(rawOverride)
+    ? rawOverride.filter((x) => typeof x === "string" && x.trim() !== "")
+    : (rawOverride ? [String(rawOverride)] : []);
+  const uniq = [...new Set(overrides)];
+  const hasOverride = uniq.length ? 1 : 0;
   const baselineCounts = repoRow?.baseline?.tsErrorCounts ?? {};
   const baselineDiags = repoRow?.baseline?.diagnostics ?? [];
   const mentionMap = extractModuleMentionsFromDiagnostics(baselineDiags);
   const mentionByCode = extractModuleMentionsByCode(baselineDiags);
-  const mentionCount = moduleOverride ? (mentionMap.get(moduleOverride) ?? 0) : 0;
+  const mentionCount = uniq.reduce((a, m) => a + (mentionMap.get(m) ?? 0), 0);
 
   return {
     // Candidate-side features (available BEFORE running the candidate `tsc`):
     has_override: hasOverride,
     override_mention_count: mentionCount,
-    override_localizer_freq: moduleOverride ? findLocalizerFreq(repoRow, moduleOverride) : 0,
-    override_localizer_rank: moduleOverride ? findLocalizerRank(repoRow, moduleOverride) : 0,
-    override_is_top1_localizer: moduleOverride ? (findLocalizerRank(repoRow, moduleOverride) === 1 ? 1 : 0) : 0,
-    override_mention_ts2307: moduleOverride ? (mentionByCode.get("TS2307")?.get(moduleOverride) ?? 0) : 0,
-    override_mention_ts2614: moduleOverride ? (mentionByCode.get("TS2614")?.get(moduleOverride) ?? 0) : 0,
+    override_localizer_freq: uniq.reduce((a, m) => a + findLocalizerFreq(repoRow, m), 0),
+    override_localizer_rank: uniq.length ? Math.min(...uniq.map((m) => findLocalizerRank(repoRow, m)).filter((n) => n > 0), 0) : 0,
+    override_is_top1_localizer: uniq.some((m) => findLocalizerRank(repoRow, m) === 1) ? 1 : 0,
+    override_mention_ts2307: uniq.reduce((a, m) => a + (mentionByCode.get("TS2307")?.get(m) ?? 0), 0),
+    override_mention_ts2614: uniq.reduce((a, m) => a + (mentionByCode.get("TS2614")?.get(m) ?? 0), 0),
     declaration_count: Number(trial?.declaration_count ?? 0) || 0,
     // Context features (same across candidates for a repo; useful for later richer models):
     baseline_phase3_core: sumPhase3Core(baselineCounts),

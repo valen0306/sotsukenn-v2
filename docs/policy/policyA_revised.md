@@ -221,6 +221,17 @@ node evaluation/real/phase3-run.mjs \
   - “ランキングの出し方”を変えても、Top3の候補集合自体が弱い（Top1より良い候補がほぼ無い）ため、悪化率が動きにくい
   - 次の打ち手は Localizerの重み付けよりも、**候補生成（Candidate set）を強化して win_rate_vs_top1>0 を作る**ことが優先
 
+**追加実験：Candidate Generator v1（2モジュール同時 any-stub / sweep-any-k=2）**
+- 変更: `--sweep-any-k 2` を追加し、`module-any-sweep` の候補に「2モジュール同時any-stub（ペア）」を混ぜられるようにした
+  - `trial-max=5` のとき、Top1 + 単体3 + ペア1（計5候補）を試す
+- Phase5（A1 per-error, max=30）:
+  - ペア候補は **30repo中14repoで生成**されたが、**選択された回数は0**（`repos_chosen_anypair=0`）
+  - `win_rate_vs_top1=0` は変わらず（Top1より良い候補が見つからない）
+  - `avg_tsc_calls` は増加（`4.41 → 5.18`）し、探索コストだけが上がった
+- 解釈:
+  - “any-stubを増やす”方向（単体→ペア）は、このデータ/指標では改善候補を作れていない
+  - 次のCandidate Generator改善は、ペア化ではなく **「TS2339/TS2345等のエラー内容に沿った候補型（symbol-levelのwidening等）」**を作る必要がある
+
 ---
 
 ### 4. 研究質問（改訂版）
