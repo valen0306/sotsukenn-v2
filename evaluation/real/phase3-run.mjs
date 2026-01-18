@@ -81,6 +81,8 @@ function parseArgs(argv) {
     sweepAnyTopK: 0, // Candidate Generator v2: add one candidate that overrides the first K modules at once (0=off)
     symbolWidenMode: "off", // off | interface-indexer | namespace-members | function-any-overload | missing-exports | export-to-any | type-to-any
     symbolWidenMax: 0, // max number of symbol-level candidates to add (0=off)
+    repairFromTop1: false, // Candidate Generator v3 (Repair Operator): generate targeted candidates from top1 injected diagnostics
+    repairMax: 0, // max number of repair candidates to add (0=off)
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
   };
   for (let i = 2; i < argv.length; i++) {
@@ -125,6 +127,8 @@ function parseArgs(argv) {
     else if (a === "--sweep-any-topk") args.sweepAnyTopK = Number(argv[++i] ?? "0");
     else if (a === "--symbol-widen-mode") args.symbolWidenMode = String(argv[++i] ?? "off");
     else if (a === "--symbol-widen-max") args.symbolWidenMax = Number(argv[++i] ?? "0");
+    else if (a === "--repair-from-top1") args.repairFromTop1 = true;
+    else if (a === "--repair-max") args.repairMax = Number(argv[++i] ?? "0");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
     else if (a === "--help" || a === "-h") {
       console.log(`
@@ -171,6 +175,8 @@ Options:
   --sweep-any-topk <N>               (M1/Candidate v2) Add one candidate that overrides the first N stub modules at once (default: 0/off)
   --symbol-widen-mode <off|interface-indexer|namespace-members|function-any-overload|missing-exports|export-to-any|type-to-any> (M1/Candidate v3) Add symbol-level candidates (default: off)
   --symbol-widen-max <N>             (M1/Candidate v3) Max symbol-level candidates to add (default: 0/off)
+  --repair-from-top1                (M1/Candidate v3) Generate targeted repair candidates from top1 injected diagnostics
+  --repair-max <N>                  (M1/Candidate v3) Max repair candidates to add (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
 `);
       process.exit(0);
@@ -211,6 +217,7 @@ Options:
   if (!Number.isFinite(args.sweepAnyTopK) || args.sweepAnyTopK < 0) args.sweepAnyTopK = 0;
   if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports", "export-to-any", "type-to-any"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
   if (!Number.isFinite(args.symbolWidenMax) || args.symbolWidenMax < 0) args.symbolWidenMax = 0;
+  if (!Number.isFinite(args.repairMax) || args.repairMax < 0) args.repairMax = 0;
   return args;
 }
 
@@ -849,6 +856,125 @@ function replaceTypeDeclToAnyInDeclareModuleBlock(dtsText, mod, name) {
   return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
 }
 
+function addPropertyToExportedInterfaceInDeclareModuleBlock(dtsText, mod, ifaceName, propName) {
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  if (!rng) return null;
+  const block = rng.text;
+  const iface = escapeRegex(ifaceName);
+  const prop = escapeRegex(propName);
+  const ifaceRe = new RegExp(`(^|\\n)(\\s*export\\s+interface\\s+${iface}\\s*\\{)([\\s\\S]*?)(\\n\\s*\\})`, "m");
+  const m = block.match(ifaceRe);
+  if (!m) return null;
+  const body = m[3] ?? "";
+  // already present?
+  const propRe = new RegExp(`\\b${prop}\\s*[:?]`, "m");
+  if (propRe.test(body)) return null;
+  const injectedLine = `\n    ${propName}?: any;`;
+  const newBlock = block.replace(ifaceRe, `$1$2$3${injectedLine}$4`);
+  const txt = String(dtsText ?? "");
+  return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+}
+
+function addExportConstToDeclareModuleBlock(dtsText, mod, exportName) {
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  if (!rng) return null;
+  const block = rng.text;
+  const n = escapeRegex(exportName);
+  const exists = new RegExp(`\\bexport\\s+const\\s+${n}\\b`).test(block);
+  if (exists) return null;
+  // Insert before closing brace line.
+  const closeRe = /\n\s*\}\n$/m;
+  if (!closeRe.test(block)) return null;
+  const newBlock = block.replace(closeRe, `\n  export const ${exportName}: any;\n}\n`);
+  const txt = String(dtsText ?? "");
+  return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+}
+
+function buildMinimalDeclareModule(mod, bodyLines) {
+  const lines = (bodyLines ?? []).filter((x) => typeof x === "string" && x.trim() !== "");
+  if (!lines.length) return null;
+  return [
+    `declare module '${esc(mod)}' {`,
+    ...lines.map((l) => `  ${l}`),
+    `}`,
+    ``,
+    ``,
+  ].join("\n");
+}
+
+async function readLineFromRepoFile(repoDir, relOrAbsPath, oneBasedLine) {
+  try {
+    const abs = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.join(repoDir, relOrAbsPath);
+    const src = await fs.readFile(abs, "utf8");
+    const lines = src.split(/\r?\n/);
+    const idx = Math.max(0, (Number(oneBasedLine) || 1) - 1);
+    return lines[idx] ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function findImportForLocalName(imports, local) {
+  for (const imp of imports ?? []) {
+    if (!imp?.mod) continue;
+    if (imp.namespaceName === local) return { mod: imp.mod, kind: "namespace", imported: "*" };
+    if (imp.defaultName === local) return { mod: imp.mod, kind: "default", imported: "default" };
+    for (const n of imp.named ?? []) {
+      if (n.local === local) return { mod: imp.mod, kind: "named", imported: n.imported };
+    }
+  }
+  return null;
+}
+
+function collectRequiresFromSource(src) {
+  const out = [];
+  const lines = (src ?? "").split(/\r?\n/);
+  // const X = require('m')
+  const reqDefaultRe = /^\s*const\s+([A-Za-z_$][\w$]*)\s*=\s*require\(\s*['"]([^'"]+)['"]\s*\)\s*;?\s*$/;
+  // const { A, B: C } = require('m')
+  const reqDestructRe = /^\s*const\s+\{\s*([^}]+)\s*\}\s*=\s*require\(\s*['"]([^'"]+)['"]\s*\)\s*;?\s*$/;
+  for (const ln of lines) {
+    const m1 = ln.match(reqDefaultRe);
+    if (m1) {
+      out.push({ mod: m1[2], defaultName: m1[1], named: [] });
+      continue;
+    }
+    const m2 = ln.match(reqDestructRe);
+    if (m2) {
+      const mod = m2[2];
+      const inside = m2[1] ?? "";
+      const named = [];
+      for (const seg of inside.split(",")) {
+        const s = seg.trim();
+        if (!s) continue;
+        const mm = s.match(/^([A-Za-z_$][\w$]*)(?:\s*:\s*([A-Za-z_$][\w$]*))?$/);
+        if (!mm) continue;
+        const imported = mm[1];
+        const local = mm[2] ?? imported;
+        named.push({ imported, local, isType: false });
+      }
+      out.push({ mod, named });
+    }
+  }
+  return out;
+}
+
+function extractImportTypeRefs(msg) {
+  // import("mod").Name
+  const out = [];
+  const re = /import\(\"([^\"]+)\"\)\.([A-Za-z_$][\w$]*)/g;
+  let m;
+  while ((m = re.exec(String(msg ?? ""))) !== null) {
+    out.push({ module: m[1], name: m[2] });
+  }
+  return out;
+}
+
+function extractTs2339Prop(msg) {
+  const m = String(msg ?? "").match(/Property\s+'([^']+)'\s+does\s+not\s+exist\s+on\s+type/i);
+  return m ? m[1] : null;
+}
+
 async function runModelAdapter({ repo, moduleToStub, opts }) {
   const req = {
     repo,
@@ -1158,6 +1284,9 @@ async function processOne(url, opts, outHandle) {
         chosenCandidateId: null,
         trialsRun: 0,
       },
+      repair: opts.repairFromTop1
+        ? { enabled: true, max: Number(opts.repairMax ?? 0) || 0, candidatesAdded: 0, ts2339Seen: 0, ts2339LocalFound: 0, ts2339ImportMapped: 0 }
+        : null,
       reranker: opts.trialStrategy === "reranker-v0" ? { modelPath: opts.rerankerModel || "", loaded: false, error: null } : null,
       model:
         opts.mode === "model"
@@ -1792,13 +1921,12 @@ async function processOne(url, opts, outHandle) {
   }
 
   // 4) Run trials and choose best (min Phase3 core; tie-break by total errors)
+  // Always run top1 first; optionally generate Repair Operator candidates from its injected diagnostics.
   let best = null;
   let bestCounts = null;
   let bestOut = "";
-  for (const c of candidates) {
-    const { trial, jcounts, jout } = await runTrial(c);
-    result.trials.push(trial);
-    result.phase3.trial.trialsRun++;
+
+  function considerCandidate({ trial, jcounts, jout }) {
     const totalErr = Object.values(jcounts ?? {}).reduce((a, b) => a + (Number(b) || 0), 0);
     const key = {
       valid: trial.valid_injection ? 1 : 0,
@@ -1809,7 +1937,7 @@ async function processOne(url, opts, outHandle) {
       best = { trial, key };
       bestCounts = jcounts;
       bestOut = jout;
-      continue;
+      return;
     }
     const better =
       key.valid > best.key.valid ||
@@ -1819,6 +1947,121 @@ async function processOne(url, opts, outHandle) {
       bestCounts = jcounts;
       bestOut = jout;
     }
+  }
+
+  const top1Cand = candidates.find((x) => x.candidateId === baseCandidateId) ?? candidates[0];
+  const top1Res = await runTrial(top1Cand);
+  result.trials.push(top1Res.trial);
+  result.phase3.trial.trialsRun++;
+  considerCandidate(top1Res);
+
+  if (opts.repairFromTop1 && Number(opts.repairMax) > 0 && opts.trialMax > 1) {
+    const diags = parseDiagnostics(top1Res.jout).filter((d) => ["TS2339", "TS2345", "TS2322"].includes(String(d.code)));
+    const repairs = [];
+    const seen = new Set();
+    for (const d of diags) {
+      if (repairs.length >= Number(opts.repairMax)) break;
+      const msg = d.msg ?? "";
+      const prop = String(d.code) === "TS2339" ? extractTs2339Prop(msg) : null;
+      if (result.phase3.repair && String(d.code) === "TS2339") result.phase3.repair.ts2339Seen++;
+
+      // TS2339: try to recover (localIdentifier.prop) from source line and map to import module.
+      if (String(d.code) === "TS2339" && prop && d.file && d.line) {
+        const srcLine = await readLineFromRepoFile(repoDir, d.file, d.line);
+        const m = srcLine.match(new RegExp(`\\b([A-Za-z_$][\\w$]*)\\s*\\.\\s*${escapeRegex(prop)}\\b`));
+        const localObj = m ? m[1] : null;
+        if (!localObj) continue;
+        if (result.phase3.repair) result.phase3.repair.ts2339LocalFound++;
+
+        const abs = path.isAbsolute(d.file) ? d.file : path.join(repoDir, d.file);
+        const src = await fs.readFile(abs, "utf8").catch(() => "");
+        const imports = [...collectImportsFromSource(src), ...collectRequiresFromSource(src)];
+        const im = findImportForLocalName(imports, localObj);
+        if (!im) continue;
+        if (result.phase3.repair) result.phase3.repair.ts2339ImportMapped++;
+        const mod = im.mod;
+        const hasBlock = Boolean(getDeclareModuleBlockRange(baseDts, mod));
+
+        let dtsText = null;
+        let op = "";
+        // If namespace import: ns.Prop => module export Prop
+        if (im.kind === "namespace") {
+          if (hasBlock) {
+            dtsText = addExportConstToDeclareModuleBlock(baseDts, mod, prop);
+            op = "add-export-const";
+          } else {
+            const blk = buildMinimalDeclareModule(mod, [`export const ${prop}: any;`]);
+            dtsText = blk ? `${baseDts}\n${blk}` : null;
+            op = "append-module-export-const";
+          }
+        } else if (im.kind === "named") {
+          // Named import Foo.Prop => make Foo permissive (export-to-any) or try interface prop add.
+          if (hasBlock) {
+            const reps = new Map();
+            reps.set(im.imported, { kind: "const" });
+            dtsText = replaceExportsInDeclareModuleBlock(baseDts, mod, reps);
+            op = "export-to-any";
+          } else {
+            const blk = buildMinimalDeclareModule(mod, [`export const ${im.imported}: any;`]);
+            dtsText = blk ? `${baseDts}\n${blk}` : null;
+            op = "append-module-export-const";
+          }
+          if (!dtsText) {
+            dtsText = addPropertyToExportedInterfaceInDeclareModuleBlock(baseDts, mod, im.imported, prop);
+            op = "iface-add-prop";
+          }
+          if (!dtsText) {
+            dtsText = replaceTypeDeclToAnyInDeclareModuleBlock(baseDts, mod, im.imported);
+            op = "type-to-any";
+          }
+        }
+        if (!dtsText) continue;
+        const key = `rep::TS2339::${mod}::${localObj}::${prop}::${im.kind}::${im.imported}::${op}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        repairs.push({
+          candidateId: `c_rep_${sha1Hex(key).slice(0, 8)}`,
+          dtsText,
+          moduleOverride: null,
+          symbolOverride: { kind: "repair-from-top1", code: "TS2339", module: mod, local: localObj, imported: im.imported, prop, op },
+        });
+        if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
+        continue;
+      }
+
+      // TS2345/TS2322: fall back to import("m").Type references when present.
+      const refs = extractImportTypeRefs(msg);
+      for (const ref of refs) {
+        if (repairs.length >= Number(opts.repairMax)) break;
+        const mod = ref.module;
+        const name = ref.name;
+        if (!mod || !name) continue;
+        if (!moduleToStub.has(mod)) continue;
+        const dtsText = replaceTypeDeclToAnyInDeclareModuleBlock(baseDts, mod, name);
+        if (!dtsText) continue;
+        const key = `rep::${String(d.code)}::${mod}::${name}::type-to-any`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        repairs.push({
+          candidateId: `c_rep_${sha1Hex(key).slice(0, 8)}`,
+          dtsText,
+          moduleOverride: null,
+          symbolOverride: { kind: "repair-from-top1", code: String(d.code), module: mod, name, op: "type-to-any" },
+        });
+        if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
+      }
+    }
+    // Put repairs early so trial budget is spent on targeted candidates.
+    candidates = [top1Cand, ...repairs, ...candidates.filter((c) => c.candidateId !== top1Cand.candidateId)];
+  } else {
+    candidates = [top1Cand, ...candidates.filter((c) => c.candidateId !== top1Cand.candidateId)];
+  }
+
+  for (const c of candidates.slice(1, opts.trialMax)) {
+    const res = await runTrial(c);
+    result.trials.push(res.trial);
+    result.phase3.trial.trialsRun++;
+    considerCandidate(res);
   }
 
   // 5) Populate "injected" fields using the chosen candidate (keeps existing summary compatible)

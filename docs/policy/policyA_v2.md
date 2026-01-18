@@ -87,6 +87,15 @@ node evaluation/real/analyze-oracle.mjs --out-dir evaluation/real/out/phase5-A1-
 
 - **Week 1**: oracle分析 / エラーコード分布 / Δを動かした宣言抽出（設計の根拠固め）
 - **Week 2**: Repair Operator v3実装（TS2345・TS2339・overloadを優先）
+
+**Week2 実装メモ（途中経過）**
+- `--repair-from-top1`（Top1注入後の診断からTS2339/TS2345/TS2322を拾ってrepair候補を生成）を試作
+- スモークの観測では、TS2339の多くが **import/require に直接ひもづかないローカル値（例: グローバル/代入経由）**に対して発生し、
+  - `ts2339Seen` は多いが `ts2339ImportMapped` が 0 になりやすい
+  - その結果、`declare module 'dep' { ... }` を編集するタイプのrepair候補が生成できないケースがある
+- 含意:
+  - TS2339に対して「当該オブジェクトがどの依存モジュール/シンボル由来か」を突き止めるには、regexのimport解析では足りず  
+    **TypeScript Language Service（tsserver相当）でのシンボル解決**が必要になる可能性が高い（ここが研究としても面白いポイント）
 - **Week 3**: セーフガード導入＋統合評価（A3 + Gen v3）  
   → 目標：`win_rate_vs_top1` を動かす ＆ `worse` を下げる/同等 ＆ `avg_tsc_calls` 維持
 
