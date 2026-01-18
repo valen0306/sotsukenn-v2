@@ -266,6 +266,22 @@ node evaluation/real/phase3-run.mjs \
   - ただし現状では Top1に勝てず（`win_rate_vs_top1=0`、選択もTop1に戻る）
   - 探索コストは増える（試行回数が増える）ため、このままmax=30に拡大する前に「勝てる条件」を絞り込む必要がある
 
+**追加実験：export-to-any（max=30）で「勝てる条件」を探索→分析**
+- 実行（探索ログを集める）:
+  - `--trial-max 6` / `--symbol-widen-mode export-to-any` / `--symbol-widen-max 5`
+- 結果（max=30 / valid 17）:
+  - 選択指標は不変（baseline A1(per-error)と同じ）:
+    - `phase3Total_valid_delta=-100`
+    - `win_rate_vs_top1=0.000`, `worse=0.471`, `better=0.294`
+  - **探索コストは増加**:
+    - `avg_tsc_calls=4.41 → 6.12`（Top1が勝つのに余分な試行を回してしまう）
+- 置換キー（`module::export::target`）別の分析（`evaluation/real/analyze-exporttoany.mjs`）:
+  - `repos_with_exporttoany=17`, `exporttoany_trials=64`, `exporttoany_valid_trials=59`
+  - `wins_vs_top1=0`, `losses_vs_top1=0`, **ties_vs_top1=59**（= 置換してもPhase3 coreがTop1から変わらない）
+- 解釈:
+  - exportをanyに置換しても、Phase3 coreの改善に繋がっていない（少なくともTop3モジュール・この候補型では効果が出ない）
+  - 次に進むべき方向は、exportの型を崩すのではなく **「宣言内部（引数/戻り/プロパティ型）の局所widen」**や **「より直接的にTS2339/TS2345の形に対応する候補型」**に寄せる必要がある
+
 ---
 
 ### 4. 研究質問（改訂版）
