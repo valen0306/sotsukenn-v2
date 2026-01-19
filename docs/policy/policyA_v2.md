@@ -200,6 +200,21 @@ node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/pha
 
 次：max30で `win_rate_vs_top1` への寄与が出るか（または tie止まりか）を確認し、効いたrepair keyのランキングを更新する。
 
+#### Max30（比較実験）
+- out-dir（新）: `evaluation/real/out/phase5-A1-localizer3-pererror-sweep-repairfromtop1-ts2345call-safeguard-max30`
+- out-dir（旧）: `evaluation/real/out/phase5-A1-localizer3-pererror-repairfromtop1-safeguard-max30`
+- 集計（`analyze-phase3-trials.mjs` / max=30 / valid=17）:
+  - 新: `avg_tsc_calls=2.53`, `win_rate_vs_top1=0.176`, `worse=0.412`, `better=0.353`
+  - 旧: `avg_tsc_calls=3.65`, `win_rate_vs_top1=0.176`, `worse=0.412`, `better=0.353`
+- Oracle（`analyze-oracle.mjs`）:
+  - 新: `oracle_win_rate_vs_top1=0.176`, `avg_top1_phase3=25.000` → `avg_oracle_phase3=23.941`
+- 原因分析（`analyze-repair-causes.mjs`）:
+  - Top1超え3件は引き続きTS2339由来のrepair（`react` missing export補完 / `@webpack` callee widen）が中心
+
+**解釈（暫定）**
+- TS2345/TS2322のcall-site repairは smoke では候補生成・採用を確認できたが、現状のmax30では **Top1超えの勝ち筋を増やすには未到達**。
+- 一方で、同等の品質指標を維持したまま `avg_tsc_calls` を下げられているため、**探索効率（tsc削減）の観点ではプラス**。
+
 ---
 
 ### 7. M4 32GB 前提の方針
