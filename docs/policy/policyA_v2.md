@@ -215,6 +215,26 @@ node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/pha
 - TS2345/TS2322のcall-site repairは smoke では候補生成・採用を確認できたが、現状のmax30では **Top1超えの勝ち筋を増やすには未到達**。
 - 一方で、同等の品質指標を維持したまま `avg_tsc_calls` を下げられているため、**探索効率（tsc削減）の観点ではプラス**。
 
+#### Week4（追加）: arity-specific overload + call-chain対応（結果：指標は不変）
+目的：TS2345/TS2769/TS2554（呼び出し不一致）に対して、単なるcallee any化より強い候補を作る。
+
+- 実装（phase3-run.mjs）:
+  - call callee解決で `React.Children.toArray(...)` のような **property chain** を扱えるようにした
+  - `export function foo(a0:any, a1:any, ...): any;` の **arity-specific overload** を追加できるようにした（spreadがある場合はvariadicへフォールバック）
+  - call repairの対象を `moduleToStub` に限定せず、`external-filter=deps/heuristic` の外部判定で通すように緩和（repairMaxで上限）
+
+- Smoke（max=10）:
+  - call-repair trials（TS2345/TS2322/TS2769/TS2554）=3（小）
+
+- Max30（比較）:
+  - out-dir: `evaluation/real/out/phase5-A1-localizer3-pererror-sweep-repairfromtop1-call-overload-arity-safeguard-max30`
+  - `avg_tsc_calls=2.59`, `win_rate_vs_top1=0.176`, `worse=0.412`, `better=0.353`
+  - 原因分析でTop1超えは引き続きTS2339中心（勝ち筋は増えず）
+
+含意：
+- 既存データ（Top3 localizer）では、TS2345/2322/2769/2554を「外部モジュール修復」で動かせる局面がまだ少ない可能性が高い。  
+  次の打ち手は「どのエラーが外部起因か」をより厳密に絞ってからrepair設計するか、またはTS2339系の勝ち筋をさらに拡張する。
+
 ---
 
 ### 7. M4 32GB 前提の方針

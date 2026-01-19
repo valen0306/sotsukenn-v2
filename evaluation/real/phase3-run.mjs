@@ -468,6 +468,19 @@ function buildFunctionAnyOverloadAugmentation(mod, name) {
   ].join("\n");
 }
 
+function buildFunctionAnyArityOverloadAugmentation(mod, name, arity) {
+  const n = Number(arity);
+  if (!Number.isFinite(n) || n < 0 || n > 12) return null;
+  const args = Array.from({ length: n }, (_, i) => `a${i}: any`).join(", ");
+  return [
+    `declare module '${esc(mod)}' {`,
+    `  export function ${name}(${args}): any;`,
+    `}`,
+    ``,
+    ``,
+  ].join("\n");
+}
+
 function extractExportedNamesByModule(dtsText) {
   const txt = String(dtsText ?? "");
   const out = new Map(); // mod -> Set(names)
@@ -1089,7 +1102,22 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
     const node = findNodeAtLineCol(ts, sf, line, col);
     const call = closest(node, (n) => n && (ts.isCallExpression?.(n) || n.kind === ts.SyntaxKind.CallExpression));
     if (!call) return null;
-    const callee = call.expression;
+    let callee = call.expression;
+
+    // unwrap (foo as any)(...), foo!(...), (foo)(...)
+    while (
+      callee &&
+      (callee.kind === ts.SyntaxKind.ParenthesizedExpression ||
+        callee.kind === ts.SyntaxKind.AsExpression ||
+        callee.kind === ts.SyntaxKind.TypeAssertionExpression ||
+        callee.kind === ts.SyntaxKind.NonNullExpression)
+    ) {
+      callee = callee.expression ?? callee.expression?.expression ?? callee.expression;
+    }
+
+    const args = Array.from(call.arguments ?? []);
+    const hasSpread = args.some((a) => a && (a.kind === ts.SyntaxKind.SpreadElement || ts.isSpreadElement?.(a)));
+    const arity = hasSpread ? null : args.length;
 
     // f(...)
     if (ts.isIdentifier(callee)) {
@@ -1097,19 +1125,35 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
       const imp = resolveSymbolToImport(ts, checker, sym);
       if (!imp?.mod) return null;
       const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? callee.text);
-      return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call" };
+      return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity };
     }
 
-    // ns.f(...)
-    if (ts.isPropertyAccessExpression?.(callee) && ts.isIdentifier(callee.expression)) {
-      const base = callee.expression;
-      const member = callee.name?.text ? String(callee.name.text) : "";
-      if (!member) return null;
-      const baseSym = checker.getSymbolAtLocation(base);
-      const imp = resolveSymbolToImport(ts, checker, baseSym);
+    // ns.f(...) or deeper chain (e.g., React.Children.toArray(...))
+    if (ts.isPropertyAccessExpression?.(callee)) {
+      const chain = [];
+      let cur = callee;
+      while (ts.isPropertyAccessExpression?.(cur)) {
+        const mem = cur.name?.text ? String(cur.name.text) : "";
+        if (mem) chain.unshift(mem);
+        cur = cur.expression;
+      }
+      if (!ts.isIdentifier(cur)) return null;
+      const root = cur;
+      const rootSym = checker.getSymbolAtLocation(root);
+      const imp = resolveSymbolToImport(ts, checker, rootSym);
       if (!imp?.mod) return null;
-      if (!(imp.kind === "namespace" || imp.kind === "require")) return null;
-      return { mod: imp.mod, importKind: "namespace-member", imported: member, exportName: member, via: "call" };
+
+      // If imported as namespace/require: prefer the first member in chain as the exported "object",
+      // and widen that (e.g., React.Children) to absorb deeper .toArray calls.
+      if (imp.kind === "namespace" || imp.kind === "require") {
+        const first = chain[0] ?? "";
+        if (!first) return null;
+        return { mod: imp.mod, importKind: "namespace-member", imported: first, exportName: first, via: "call", arity, chainDepth: chain.length };
+      }
+
+      // If root is a named/default import (value object), widening the root export usually helps (foo.bar()).
+      const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? root.text);
+      return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity, chainDepth: chain.length };
     }
 
     return null;
@@ -1546,6 +1590,8 @@ async function processOne(url, opts, outHandle) {
             ts2339Seen: 0,
             ts2345Seen: 0,
             ts2322Seen: 0,
+            ts2769Seen: 0,
+            ts2554Seen: 0,
             ts2339LocalFound: 0,
             ts2339ImportMapped: 0,
             safeguard: {
@@ -2234,7 +2280,7 @@ async function processOne(url, opts, outHandle) {
       result.phase3.repair.tsLoaded = Boolean(ts);
       result.phase3.repair.tsProgramBuilt = Boolean(tsProg?.program && tsProg?.checker);
     }
-    const diags = parseDiagnostics(top1Res.jout).filter((d) => ["TS2339", "TS2345", "TS2322"].includes(String(d.code)));
+    const diags = parseDiagnostics(top1Res.jout).filter((d) => ["TS2339", "TS2345", "TS2322", "TS2769", "TS2554"].includes(String(d.code)));
     const fnByMod = extractExportedFunctionsByModule(baseDts);
     const repairs = [];
     const seen = new Set();
@@ -2245,6 +2291,8 @@ async function processOne(url, opts, outHandle) {
       if (result.phase3.repair && String(d.code) === "TS2339") result.phase3.repair.ts2339Seen++;
       if (result.phase3.repair && String(d.code) === "TS2345") result.phase3.repair.ts2345Seen++;
       if (result.phase3.repair && String(d.code) === "TS2322") result.phase3.repair.ts2322Seen++;
+      if (result.phase3.repair && String(d.code) === "TS2769") result.phase3.repair.ts2769Seen++;
+      if (result.phase3.repair && String(d.code) === "TS2554") result.phase3.repair.ts2554Seen++;
 
       // TS2339: try to recover (localIdentifier.prop) from source line and map to import module.
       if (String(d.code) === "TS2339" && prop && d.file && d.line) {
@@ -2353,10 +2401,16 @@ async function processOne(url, opts, outHandle) {
         continue;
       }
 
-      // TS2345/TS2322: prefer TS Program-based call-callee resolution.
-      if ((String(d.code) === "TS2345" || String(d.code) === "TS2322") && d.file && d.line && tsProg?.program && tsProg?.checker) {
+      // TS2345/TS2322/TS2769/TS2554: prefer TS Program-based call-callee resolution.
+      if ((["TS2345", "TS2322", "TS2769", "TS2554"].includes(String(d.code))) && d.file && d.line && tsProg?.program && tsProg?.checker) {
         const rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
-        if (rr?.mod && rr.exportName && moduleToStub.has(rr.mod)) {
+        const externalOk =
+          rr?.mod &&
+          rr.exportName &&
+          (opts.onlyExternal
+            ? (opts.externalFilter === "deps" ? isExternalByDeps(rr.mod, opts) : isExternalModuleSpecifier(rr.mod, opts))
+            : true);
+        if (externalOk) {
           if (result.phase3.repair) result.phase3.repair.tsCallResolvedCount++;
           const mod = rr.mod;
           const exportName = rr.exportName;
@@ -2365,11 +2419,21 @@ async function processOne(url, opts, outHandle) {
 
           // Only add function overload when the base block already exports it as a function.
           // Avoid __default because base stubs usually declare it as `const __default`.
-          const isSafeFnOverload = exportName !== "__default" && /^[A-Za-z_$][\w$]*$/.test(exportName) && (fnByMod.get(mod)?.has(exportName) ?? false);
+          const isValidFnName = exportName !== "__default" && /^[A-Za-z_$][\w$]*$/.test(exportName);
+          const exportedAsFunction = (fnByMod.get(mod)?.has(exportName) ?? false);
+          // If we don't have a base block for this module, we may still add an overload as a best-effort repair
+          // (bounded by repairMax). Prefer direct calls (chainDepth<=1).
+          const bestEffortFnOverload = isValidFnName && !exportedAsFunction && Number(rr.chainDepth ?? 0) <= 1;
+          const isSafeFnOverload = isValidFnName && (exportedAsFunction || bestEffortFnOverload);
           if (isSafeFnOverload) {
-            const aug = buildFunctionAnyOverloadAugmentation(mod, exportName);
-            dtsText = `${baseDts}\n${aug}`;
-            op = "add-any-overload";
+            const aug =
+              Number.isFinite(rr.arity) && rr.arity !== null
+                ? buildFunctionAnyArityOverloadAugmentation(mod, exportName, rr.arity)
+                : buildFunctionAnyOverloadAugmentation(mod, exportName);
+            if (aug) {
+              dtsText = `${baseDts}\n${aug}`;
+              op = Number.isFinite(rr.arity) && rr.arity !== null ? `add-any-overload$arity=${rr.arity}` : "add-any-overload";
+            }
           } else {
             dtsText = widenExportToAnyInModuleBlock(baseDts, mod, exportName);
             op = "widen-callee-to-any";
@@ -2391,6 +2455,8 @@ async function processOne(url, opts, outHandle) {
                   name: exportName,
                   op,
                   via: `ts:${rr.via}`,
+                  arity: rr.arity ?? null,
+                  chainDepth: rr.chainDepth ?? null,
                 },
               });
               if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
