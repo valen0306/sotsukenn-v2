@@ -235,6 +235,22 @@ node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/pha
 - 既存データ（Top3 localizer）では、TS2345/2322/2769/2554を「外部モジュール修復」で動かせる局面がまだ少ない可能性が高い。  
   次の打ち手は「どのエラーが外部起因か」をより厳密に絞ってからrepair設計するか、またはTS2339系の勝ち筋をさらに拡張する。
 
+#### Week4（追加分析）: call-based repair のカバレッジ（attempt→resolve→候補化）
+目的：TS2345/2322/2769/2554が多いのに「repair trialがほぼ出ない」理由を、実装のどこで落ちているかで分解する。
+
+- スクリプト: `evaluation/real/analyze-call-repair-coverage.mjs`
+- smoke（max=10）例: `evaluation/real/out/smoke-A1-pererror-sweep-repairfromtop1-call-coverage-max10`
+  - `avg_tsCallAttempted_per_repo = 9.13`
+  - `avg_tsCallResolved_per_repo = 0.88`
+  - `avg_tsCallExternalOk_per_repo = 0.88`
+  - `avg_tsCallCandidateAdded_per_repo = 0.38`
+  - call repair trials total = 3（例: `react.forwardRef` / `react.memo` の arity overload）
+
+解釈：
+- 律速は主に **resolve（call位置→import由来callee特定）** にあり、attemptに対してresolvedがかなり少ない。
+  - つまり「外部d.tsを直せば効く」TS2345/2322/2769/2554の比率が、現状のデータ/手法だとまだ低い。
+  - 次は “外部起因” を増やす（選別する）方向：call位置の取り方（Nearest Callではなく型エラー位置からの到達）や、import追跡を強化してresolved率を上げる。
+
 ---
 
 ### 7. M4 32GB 前提の方針

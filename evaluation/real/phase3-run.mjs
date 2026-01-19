@@ -1587,6 +1587,9 @@ async function processOne(url, opts, outHandle) {
             tsProgramBuilt: false,
             tsResolvedCount: 0,
             tsCallResolvedCount: 0,
+            tsCallAttempted: 0,
+            tsCallExternalOk: 0,
+            tsCallCandidateAdded: 0,
             ts2339Seen: 0,
             ts2345Seen: 0,
             ts2322Seen: 0,
@@ -2403,6 +2406,7 @@ async function processOne(url, opts, outHandle) {
 
       // TS2345/TS2322/TS2769/TS2554: prefer TS Program-based call-callee resolution.
       if ((["TS2345", "TS2322", "TS2769", "TS2554"].includes(String(d.code))) && d.file && d.line && tsProg?.program && tsProg?.checker) {
+        if (result.phase3.repair) result.phase3.repair.tsCallAttempted++;
         const rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
         const externalOk =
           rr?.mod &&
@@ -2411,6 +2415,7 @@ async function processOne(url, opts, outHandle) {
             ? (opts.externalFilter === "deps" ? isExternalByDeps(rr.mod, opts) : isExternalModuleSpecifier(rr.mod, opts))
             : true);
         if (externalOk) {
+          if (result.phase3.repair) result.phase3.repair.tsCallExternalOk++;
           if (result.phase3.repair) result.phase3.repair.tsCallResolvedCount++;
           const mod = rr.mod;
           const exportName = rr.exportName;
@@ -2460,6 +2465,7 @@ async function processOne(url, opts, outHandle) {
                 },
               });
               if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
+              if (result.phase3.repair) result.phase3.repair.tsCallCandidateAdded++;
               continue;
             }
           }
