@@ -251,6 +251,28 @@ node evaluation/real/analyze-repair-causes.mjs --out-dir evaluation/real/out/pha
   - つまり「外部d.tsを直せば効く」TS2345/2322/2769/2554の比率が、現状のデータ/手法だとまだ低い。
   - 次は “外部起因” を増やす（選別する）方向：call位置の取り方（Nearest Callではなく型エラー位置からの到達）や、import追跡を強化してresolved率を上げる。
 
+#### Week4（追加分析）: call debug（なぜresolvedが伸びないか）
+目的：resolved率が低い理由が「実装不足」なのか「そもそも外部起因が少ない」なのかを切り分ける。
+
+- 追加: `phase3-run.mjs --repair-debug-call <N>`（call-based repair のデバッグサンプルを保存）
+- 解析: `evaluation/real/analyze-call-repair-debug.mjs`
+
+smoke（max=10）例: `evaluation/real/out/smoke-A1-pererror-sweep-repairfromtop1-call-debug-max10`
+- debug reason（上位）:
+  - `resolved=11`
+  - `unmapped_identifier_callee=8`（例: `mo()` のようなローカル関数）
+  - `unmapped_root_identifier=8`（例: `JSON.parse(...)` のような標準/内部呼び出し）
+- resolved_mod（上位）:
+  - `react=7`
+  - それ以外は `../...` など **相対パスの内部モジュール**が多い（= external-filterで弾かれ、candidateになりにくい）
+
+含意：
+- TS2345/2322/2769/2554 の多くが「外部d.ts修復で動くエラー」ではなく、**内部/標準API由来**である可能性が高い。  
+  そのため call-based repair を強化しても `candidateAdded` が伸びにくい（=勝ち筋が増えない）。
+- 次の攻め方は2択：
+  - **TS2339系の勝ち筋を拡張**して指標を伸ばす（現状もっとも改善に直結）
+  - TS2345/2322は「callee修復」ではなく、**エラー位置の型そのものが外部型に由来するか**（type-origin）を判定して、外部型が絡むときだけ修復する（設計を変える）
+
 ---
 
 ### 7. M4 32GB 前提の方針

@@ -83,6 +83,7 @@ function parseArgs(argv) {
     symbolWidenMax: 0, // max number of symbol-level candidates to add (0=off)
     repairFromTop1: false, // Candidate Generator v3 (Repair Operator): generate targeted candidates from top1 injected diagnostics
     repairMax: 0, // max number of repair candidates to add (0=off)
+    repairDebugCall: 0, // debug: store up to N call-repair debug samples per repo (0=off)
     earlyStopAfterImprove: false, // Week3 safeguard: stop after first improvement vs top1
     earlyStopTieStreak: 0, // Week3 safeguard: stop after N consecutive ties vs top1
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
@@ -131,6 +132,7 @@ function parseArgs(argv) {
     else if (a === "--symbol-widen-max") args.symbolWidenMax = Number(argv[++i] ?? "0");
     else if (a === "--repair-from-top1") args.repairFromTop1 = true;
     else if (a === "--repair-max") args.repairMax = Number(argv[++i] ?? "0");
+    else if (a === "--repair-debug-call") args.repairDebugCall = Number(argv[++i] ?? "0");
     else if (a === "--early-stop-after-improve") args.earlyStopAfterImprove = true;
     else if (a === "--early-stop-tie-streak") args.earlyStopTieStreak = Number(argv[++i] ?? "0");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
@@ -181,6 +183,7 @@ Options:
   --symbol-widen-max <N>             (M1/Candidate v3) Max symbol-level candidates to add (default: 0/off)
   --repair-from-top1                (M1/Candidate v3) Generate targeted repair candidates from top1 injected diagnostics
   --repair-max <N>                  (M1/Candidate v3) Max repair candidates to add (default: 0/off)
+  --repair-debug-call <N>           (debug) Store up to N call-repair debug samples per repo (default: 0/off)
   --early-stop-after-improve        (Week3) Stop trials once a candidate improves vs top1 (reduces tsc calls)
   --early-stop-tie-streak <N>       (Week3) Stop after N consecutive ties vs top1 (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
@@ -224,6 +227,7 @@ Options:
   if (!["off", "interface-indexer", "namespace-members", "function-any-overload", "missing-exports", "export-to-any", "type-to-any"].includes(String(args.symbolWidenMode))) args.symbolWidenMode = "off";
   if (!Number.isFinite(args.symbolWidenMax) || args.symbolWidenMax < 0) args.symbolWidenMax = 0;
   if (!Number.isFinite(args.repairMax) || args.repairMax < 0) args.repairMax = 0;
+  if (!Number.isFinite(args.repairDebugCall) || args.repairDebugCall < 0) args.repairDebugCall = 0;
   if (!Number.isFinite(args.earlyStopTieStreak) || args.earlyStopTieStreak < 0) args.earlyStopTieStreak = 0;
   return args;
 }
@@ -1017,6 +1021,148 @@ function findNodeAtLineCol(ts, sourceFile, oneBasedLine, oneBasedCol) {
   return best;
 }
 
+async function debugResolveCallCalleeViaTs({ ts, program, checker, repoDir, file, line, col }) {
+  const dbg = {
+    file,
+    line,
+    col,
+    abs: "",
+    sourceFileFound: false,
+    callFound: false,
+    callText: null,
+    calleeKind: null,
+    calleeText: null,
+    reason: null,
+    rr: null,
+  };
+  try {
+    dbg.abs = path.isAbsolute(file) ? file : path.join(repoDir, file);
+    let sf = program.getSourceFile(dbg.abs);
+    if (!sf) {
+      const suffix = path.normalize(file).replaceAll("\\", "/");
+      sf = program.getSourceFiles().find((f) => String(f.fileName ?? "").replaceAll("\\", "/").endsWith(suffix)) ?? null;
+    }
+    dbg.sourceFileFound = Boolean(sf);
+    if (!sf) {
+      dbg.reason = "no_source_file";
+      return dbg;
+    }
+    const oneBasedLine = Number(line) || 1;
+    const oneBasedCol = Number(col) || 1;
+    const pos = ts.getPositionOfLineAndCharacter(sf, Math.max(0, oneBasedLine - 1), Math.max(0, oneBasedCol - 1));
+    const call = findCallExpressionNearPos(ts, sf, pos);
+    dbg.callFound = Boolean(call);
+    if (!call) {
+      dbg.reason = "no_call_near_pos";
+      return dbg;
+    }
+    dbg.callText = String(call.getText(sf) ?? "").slice(0, 200);
+    let callee = call.expression;
+    while (
+      callee &&
+      (callee.kind === ts.SyntaxKind.ParenthesizedExpression ||
+        callee.kind === ts.SyntaxKind.AsExpression ||
+        callee.kind === ts.SyntaxKind.TypeAssertionExpression ||
+        callee.kind === ts.SyntaxKind.NonNullExpression)
+    ) {
+      callee = callee.expression ?? callee.expression?.expression ?? callee.expression;
+    }
+    dbg.calleeKind = callee?.kind ?? null;
+    dbg.calleeText = callee ? String(callee.getText(sf) ?? "").slice(0, 120) : null;
+
+    const args = Array.from(call.arguments ?? []);
+    const hasSpread = args.some((a) => a && (a.kind === ts.SyntaxKind.SpreadElement || ts.isSpreadElement?.(a)));
+    const arity = hasSpread ? null : args.length;
+
+    // f(...)
+    if (callee && ts.isIdentifier(callee)) {
+      const sym = checker.getSymbolAtLocation(callee);
+      const imp = resolveSymbolToImport(ts, checker, sym);
+      if (imp?.mod) {
+        const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? callee.text);
+        dbg.rr = { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity };
+        return dbg;
+      }
+      const viaAlias = tryResolveValueAliasToImport(ts, checker, sym);
+      if (viaAlias?.mod) {
+        dbg.rr = { mod: viaAlias.mod, importKind: viaAlias.importKind, imported: viaAlias.imported, exportName: viaAlias.imported, via: "call-alias", arity };
+        return dbg;
+      }
+      dbg.reason = "unmapped_identifier_callee";
+      return dbg;
+    }
+
+    // ns.f(...) or deeper chain
+    if (callee && ts.isPropertyAccessExpression?.(callee)) {
+      const chain = [];
+      let cur = callee;
+      while (ts.isPropertyAccessExpression?.(cur)) {
+        const mem = cur.name?.text ? String(cur.name.text) : "";
+        if (mem) chain.unshift(mem);
+        cur = cur.expression;
+      }
+      if (!ts.isIdentifier(cur)) {
+        dbg.reason = "root_not_identifier";
+        return dbg;
+      }
+      const root = cur;
+      const rootSym = checker.getSymbolAtLocation(root);
+      const imp = resolveSymbolToImport(ts, checker, rootSym);
+      if (!imp?.mod) {
+        dbg.reason = "unmapped_root_identifier";
+        return dbg;
+      }
+      if (imp.kind === "namespace" || imp.kind === "require") {
+        const first = chain[0] ?? "";
+        if (!first) {
+          dbg.reason = "empty_chain";
+          return dbg;
+        }
+        dbg.rr = { mod: imp.mod, importKind: "namespace-member", imported: first, exportName: first, via: "call", arity, chainDepth: chain.length };
+        return dbg;
+      }
+      const first = chain[0] ?? "";
+      const exportName = first || (imp.kind === "default" ? "__default" : String(imp.imported ?? root.text));
+      const imported = first || String(imp.imported ?? "");
+      dbg.rr = { mod: imp.mod, importKind: imp.kind, imported, exportName, via: "call", arity, chainDepth: chain.length };
+      return dbg;
+    }
+
+    dbg.reason = "callee_kind_unsupported";
+    return dbg;
+  } catch (e) {
+    dbg.reason = `exception:${String(e?.message || e)}`;
+    return dbg;
+  }
+}
+
+function findCallExpressionNearPos(ts, sourceFile, pos) {
+  // Prefer smallest call expression that contains pos.
+  // If none contains pos, pick the call expression with smallest distance to its range.
+  let best = null;
+  let bestScore = Infinity;
+  function rangeScore(n) {
+    const s = n.getStart(sourceFile, false);
+    const e = n.getEnd();
+    if (pos >= s && pos <= e) return (e - s) * 0.001;
+    const dist = pos < s ? (s - pos) : (pos - e);
+    return 1000 + dist;
+  }
+  function walk(n) {
+    if (!n) return;
+    if (ts.isCallExpression?.(n) || n.kind === ts.SyntaxKind.CallExpression) {
+      const sc = rangeScore(n);
+      if (sc < bestScore) {
+        best = n;
+        bestScore = sc;
+      }
+    }
+    n.forEachChild(walk);
+  }
+  walk(sourceFile);
+  return best;
+}
+
 function closest(node, pred) {
   let cur = node;
   while (cur) {
@@ -1088,6 +1234,36 @@ function tryResolveVariableInitializerToImport(ts, checker, sym) {
   return null;
 }
 
+function tryResolveValueAliasToImport(ts, checker, sym) {
+  // If `sym` is a local identifier aliasing an imported value (directly or via property access),
+  // return {mod, imported, importKind}.
+  if (!sym) return null;
+  const decls = sym.declarations ?? [];
+  for (const d of decls) {
+    if (!ts.isVariableDeclaration(d) || !d.initializer) continue;
+    const init = d.initializer;
+    // const f = foo
+    if (ts.isIdentifier(init)) {
+      const s2 = checker.getSymbolAtLocation(init);
+      const imp = resolveSymbolToImport(ts, checker, s2);
+      if (imp?.mod) return { mod: imp.mod, imported: imp.imported || init.text, importKind: imp.kind };
+    }
+    // const f = ns.foo  OR const f = React.memo
+    if (ts.isPropertyAccessExpression(init)) {
+      const base = init.expression;
+      const member = init.name?.text ? String(init.name.text) : "";
+      if (!member) continue;
+      if (!ts.isIdentifier(base)) continue;
+      const baseSym = checker.getSymbolAtLocation(base);
+      const imp = resolveSymbolToImport(ts, checker, baseSym);
+      if (!imp?.mod) continue;
+      // Treat `.member` as a module export candidate (best-effort).
+      return { mod: imp.mod, imported: member, importKind: `${imp.kind}-member` };
+    }
+  }
+  return null;
+}
+
 async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, line, col }) {
   // Resolve the nearest call expression's callee to an imported symbol (module + export name).
   // Used for TS2345/TS2322 repair: widen callee or add any-overload.
@@ -1099,8 +1275,10 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
       sf = program.getSourceFiles().find((f) => String(f.fileName ?? "").replaceAll("\\", "/").endsWith(suffix)) ?? null;
     }
     if (!sf) return null;
-    const node = findNodeAtLineCol(ts, sf, line, col);
-    const call = closest(node, (n) => n && (ts.isCallExpression?.(n) || n.kind === ts.SyntaxKind.CallExpression));
+    const oneBasedLine = Number(line) || 1;
+    const oneBasedCol = Number(col) || 1;
+    const pos = ts.getPositionOfLineAndCharacter(sf, Math.max(0, oneBasedLine - 1), Math.max(0, oneBasedCol - 1));
+    const call = findCallExpressionNearPos(ts, sf, pos);
     if (!call) return null;
     let callee = call.expression;
 
@@ -1123,9 +1301,16 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
     if (ts.isIdentifier(callee)) {
       const sym = checker.getSymbolAtLocation(callee);
       const imp = resolveSymbolToImport(ts, checker, sym);
-      if (!imp?.mod) return null;
-      const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? callee.text);
-      return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity };
+      if (imp?.mod) {
+        const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? callee.text);
+        return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity };
+      }
+      // const f = importedFoo; f(...)
+      const viaAlias = tryResolveValueAliasToImport(ts, checker, sym);
+      if (viaAlias?.mod) {
+        return { mod: viaAlias.mod, importKind: viaAlias.importKind, imported: viaAlias.imported, exportName: viaAlias.imported, via: "call-alias", arity };
+      }
+      return null;
     }
 
     // ns.f(...) or deeper chain (e.g., React.Children.toArray(...))
@@ -1151,9 +1336,11 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
         return { mod: imp.mod, importKind: "namespace-member", imported: first, exportName: first, via: "call", arity, chainDepth: chain.length };
       }
 
-      // If root is a named/default import (value object), widening the root export usually helps (foo.bar()).
-      const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? root.text);
-      return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity, chainDepth: chain.length };
+      // If root is a named/default import, try to use the first member as the likely module export (e.g. React.memo).
+      const first = chain[0] ?? "";
+      const exportName = first || (imp.kind === "default" ? "__default" : String(imp.imported ?? root.text));
+      const imported = first || String(imp.imported ?? "");
+      return { mod: imp.mod, importKind: imp.kind, imported, exportName, via: "call", arity, chainDepth: chain.length };
     }
 
     return null;
@@ -1590,6 +1777,8 @@ async function processOne(url, opts, outHandle) {
             tsCallAttempted: 0,
             tsCallExternalOk: 0,
             tsCallCandidateAdded: 0,
+            callDebugMax: Number(opts.repairDebugCall ?? 0) || 0,
+            callDebugSamples: [],
             ts2339Seen: 0,
             ts2345Seen: 0,
             ts2322Seen: 0,
@@ -2407,7 +2596,17 @@ async function processOne(url, opts, outHandle) {
       // TS2345/TS2322/TS2769/TS2554: prefer TS Program-based call-callee resolution.
       if ((["TS2345", "TS2322", "TS2769", "TS2554"].includes(String(d.code))) && d.file && d.line && tsProg?.program && tsProg?.checker) {
         if (result.phase3.repair) result.phase3.repair.tsCallAttempted++;
-        const rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+        let rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+        // If debugging enabled, store a few samples of why resolution fails or what it resolves to.
+        if (result.phase3.repair && Number(result.phase3.repair.callDebugMax) > 0 && (result.phase3.repair.callDebugSamples?.length ?? 0) < Number(result.phase3.repair.callDebugMax)) {
+          const dbg = await debugResolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+          // Attach message snippet for context
+          dbg.code = String(d.code);
+          dbg.msg = String(d.msg ?? "").slice(0, 200);
+          result.phase3.repair.callDebugSamples.push(dbg);
+          // Use rr from debug if main resolution returned null but debug produced rr
+          if (!rr && dbg?.rr) rr = dbg.rr;
+        }
         const externalOk =
           rr?.mod &&
           rr.exportName &&
