@@ -84,6 +84,8 @@ function parseArgs(argv) {
     repairFromTop1: false, // Candidate Generator v3 (Repair Operator): generate targeted candidates from top1 injected diagnostics
     repairMax: 0, // max number of repair candidates to add (0=off)
     repairDebugCall: 0, // debug: store up to N call-repair debug samples per repo (0=off)
+    repairSafeguardSample: 0, // Week6: sample N consumers for pre-evaluation (0=off)
+    repairSafeguardWorseThreshold: 0.5, // Week6: reject candidate if worse rate >= this threshold
     earlyStopAfterImprove: false, // Week3 safeguard: stop after first improvement vs top1
     earlyStopTieStreak: 0, // Week3 safeguard: stop after N consecutive ties vs top1
     rerankerModel: "", // path to reranker-v0 JSON (Phase4 output)
@@ -133,6 +135,8 @@ function parseArgs(argv) {
     else if (a === "--repair-from-top1") args.repairFromTop1 = true;
     else if (a === "--repair-max") args.repairMax = Number(argv[++i] ?? "0");
     else if (a === "--repair-debug-call") args.repairDebugCall = Number(argv[++i] ?? "0");
+    else if (a === "--repair-safeguard-sample") args.repairSafeguardSample = Number(argv[++i] ?? "0");
+    else if (a === "--repair-safeguard-worse-threshold") args.repairSafeguardWorseThreshold = Number(argv[++i] ?? "0.5");
     else if (a === "--early-stop-after-improve") args.earlyStopAfterImprove = true;
     else if (a === "--early-stop-tie-streak") args.earlyStopTieStreak = Number(argv[++i] ?? "0");
     else if (a === "--reranker-model") args.rerankerModel = String(argv[++i] ?? "");
@@ -184,6 +188,8 @@ Options:
   --repair-from-top1                (M1/Candidate v3) Generate targeted repair candidates from top1 injected diagnostics
   --repair-max <N>                  (M1/Candidate v3) Max repair candidates to add (default: 0/off)
   --repair-debug-call <N>           (debug) Store up to N call-repair debug samples per repo (default: 0/off)
+  --repair-safeguard-sample <N>     (Week6) Sample N consumers for pre-evaluation (default: 0/off)
+  --repair-safeguard-worse-threshold <R> (Week6) Reject candidate if worse rate >= R (default: 0.5)
   --early-stop-after-improve        (Week3) Stop trials once a candidate improves vs top1 (reduces tsc calls)
   --early-stop-tie-streak <N>       (Week3) Stop after N consecutive ties vs top1 (default: 0/off)
   --reranker-model <PATH>            (Phase4/5) Reranker v0 model JSON (required for reranker-v0)
@@ -899,6 +905,79 @@ function addPropertyToExportedInterfaceInDeclareModuleBlock(dtsText, mod, ifaceN
   return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
 }
 
+// Add property to exported type alias (Week5: TS2339 extension)
+// Example: `export type Foo = { a: string; }` -> `export type Foo = { a: string; } & { Prop?: any; }`
+// Week6: If block doesn't exist, create a new block with type definition
+function addPropertyToExportedTypeInDeclareModuleBlock(dtsText, mod, typeName, propName) {
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  // Week6: If block doesn't exist, create a new block with type definition
+  if (!rng) {
+    const newBlock = buildMinimalDeclareModule(mod, [
+      `export type ${typeName} = { ${propName}?: any; };`
+    ]);
+    return newBlock ? `${dtsText}\n${newBlock}` : null;
+  }
+  const block = rng.text;
+  const type = escapeRegex(typeName);
+  const prop = escapeRegex(propName);
+  // Match `export type Name = ...;` (including multiline)
+  const typeRe = new RegExp(`(^|\\n)(\\s*export\\s+type\\s+${type}\\s*=)([\\s\\S]*?)(;)`, "m");
+  const m = block.match(typeRe);
+  if (!m) return null;
+  const typeBody = m[3] ?? "";
+  // Check if property already exists (rough check)
+  if (new RegExp(`\\b${prop}\\s*[:?]`, "m").test(typeBody)) return null;
+  // Add property via intersection type
+  const injected = ` & { ${propName}?: any; }`;
+  const newBlock = block.replace(typeRe, `$1$2$3${injected}$4`);
+  const txt = String(dtsText ?? "");
+  return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+}
+
+// Add namespace member to exported value (Week5: TS2339 extension)
+// Example: `export const Foo = ...` -> `export namespace Foo { export const Prop: any; }`
+// Week6: If block doesn't exist, create a new block with namespace definition
+function addNamespaceMemberToDeclareModuleBlock(dtsText, mod, exportName, memberName) {
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  // Week6: If block doesn't exist, create a new block with namespace definition
+  if (!rng) {
+    const newBlock = buildMinimalDeclareModule(mod, [
+      `export namespace ${exportName} {`,
+      `  export const ${memberName}: any;`,
+      `}`
+    ]);
+    return newBlock ? `${dtsText}\n${newBlock}` : null;
+  }
+  const block = rng.text;
+  const exp = escapeRegex(exportName);
+  const mem = escapeRegex(memberName);
+  // Check if namespace already exists
+  const nsRe = new RegExp(`(^|\\n)\\s*export\\s+namespace\\s+${exp}\\s*\\{`, "m");
+  if (nsRe.test(block)) {
+    // Namespace exists: add member
+    const nsMatch = block.match(new RegExp(`(^|\\n)(\\s*export\\s+namespace\\s+${exp}\\s*\\{)([\\s\\S]*?)(\\n\\s*\\})`, "m"));
+    if (nsMatch) {
+      const nsBody = nsMatch[3] ?? "";
+      if (new RegExp(`\\bexport\\s+const\\s+${mem}\\b`, "m").test(nsBody)) return null; // already exists
+      const injectedLine = `\n    export const ${memberName}: any;`;
+      const newBlock = block.replace(nsMatch[0], nsMatch[0].replace(/\n\s*\}\s*$/, `${injectedLine}\n  }`));
+      const txt = String(dtsText ?? "");
+      return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+    }
+  }
+  // Namespace doesn't exist: check if export exists as const/function
+  const constRe = new RegExp(`(^|\\n)(\\s*export\\s+const\\s+${exp}\\b[^;]*;)`, "m");
+  const funcRe = new RegExp(`(^|\\n)(\\s*export\\s+function\\s+${exp}\\s*\\([^)]*\\)[^;]*;)`, "m");
+  let targetMatch = block.match(constRe) || block.match(funcRe);
+  if (!targetMatch) return null;
+  // Replace export with namespace containing the original export + new member
+  const originalExport = targetMatch[2].trim();
+  const namespaceBlock = `export namespace ${exportName} {\n    ${originalExport}\n    export const ${memberName}: any;\n  }`;
+  const newBlock = block.replace(targetMatch[0], `\n  ${namespaceBlock}`);
+  const txt = String(dtsText ?? "");
+  return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+}
+
 function addExportConstToDeclareModuleBlock(dtsText, mod, exportName) {
   const rng = getDeclareModuleBlockRange(dtsText, mod);
   if (!rng) return null;
@@ -1264,9 +1343,63 @@ function tryResolveValueAliasToImport(ts, checker, sym) {
   return null;
 }
 
-async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, line, col }) {
+// Week7: Check if a type originates from an external module
+function isTypeFromExternalModule(ts, checker, type, opts) {
+  if (!type) return false;
+  try {
+    // Get symbol from type
+    const symbol = type.getSymbol?.() ?? (type.symbol ?? null);
+    if (!symbol) {
+      // For union/intersection types, check constituent types
+      if (type.isUnion?.() || type.isIntersection?.()) {
+        const types = type.types ?? [];
+        return types.some(t => isTypeFromExternalModule(ts, checker, t, opts));
+      }
+      return false;
+    }
+    
+    // Check declarations
+    const decls = symbol.declarations ?? [];
+    for (const d of decls) {
+      const sourceFile = d.getSourceFile?.();
+      if (!sourceFile) continue;
+      const fileName = String(sourceFile.fileName ?? "");
+      
+      // Check if it's from node_modules or @types
+      if (fileName.includes("node_modules") || fileName.includes("@types")) {
+        // Extract module specifier from import if available
+        if (ts.isImportSpecifier(d) || ts.isImportClause(d) || ts.isNamespaceImport(d)) {
+          const importDecl = d.parent?.parent?.parent;
+          if (importDecl && ts.isImportDeclaration(importDecl)) {
+            const modSpec = String(importDecl.moduleSpecifier?.text ?? "");
+            if (modSpec && isExternalModuleSpecifier(modSpec, opts)) {
+              return true;
+            }
+          }
+        }
+        // If declaration is in node_modules/@types, consider it external
+        return true;
+      }
+    }
+    
+    // Check aliased symbol
+    if (checker.getAliasedSymbol && (symbol.flags & ts.SymbolFlags.Alias)) {
+      const aliased = checker.getAliasedSymbol(symbol);
+      if (aliased && aliased !== symbol) {
+        return isTypeFromExternalModule(ts, checker, aliased.valueDeclaration ? checker.getTypeOfSymbolAtLocation(aliased, aliased.valueDeclaration) : null, opts);
+      }
+    }
+    
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, line, col, opts }) {
   // Resolve the nearest call expression's callee to an imported symbol (module + export name).
   // Used for TS2345/TS2322 repair: widen callee or add any-overload.
+  // Week7: Also check if argument types originate from external modules for stricter filtering.
   try {
     const abs = path.isAbsolute(file) ? file : path.join(repoDir, file);
     let sf = program.getSourceFile(abs);
@@ -1296,6 +1429,20 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
     const args = Array.from(call.arguments ?? []);
     const hasSpread = args.some((a) => a && (a.kind === ts.SyntaxKind.SpreadElement || ts.isSpreadElement?.(a)));
     const arity = hasSpread ? null : args.length;
+    
+    // Week7: Check if any argument type originates from external module (for stricter filtering)
+    let hasExternalArgType = false;
+    let argTypes = [];
+    if (opts?.strictExternalCheck) {
+      for (const arg of args) {
+        if (!arg) continue;
+        const argType = checker.getTypeAtLocation(arg);
+        argTypes.push(argType);
+        if (isTypeFromExternalModule(ts, checker, argType, opts)) {
+          hasExternalArgType = true;
+        }
+      }
+    }
 
     // f(...)
     if (ts.isIdentifier(callee)) {
@@ -1303,12 +1450,12 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
       const imp = resolveSymbolToImport(ts, checker, sym);
       if (imp?.mod) {
         const exportName = imp.kind === "default" ? "__default" : String(imp.imported ?? callee.text);
-        return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity };
+        return { mod: imp.mod, importKind: imp.kind, imported: String(imp.imported ?? ""), exportName, via: "call", arity, hasExternalArgType, argTypes };
       }
       // const f = importedFoo; f(...)
       const viaAlias = tryResolveValueAliasToImport(ts, checker, sym);
       if (viaAlias?.mod) {
-        return { mod: viaAlias.mod, importKind: viaAlias.importKind, imported: viaAlias.imported, exportName: viaAlias.imported, via: "call-alias", arity };
+        return { mod: viaAlias.mod, importKind: viaAlias.importKind, imported: viaAlias.imported, exportName: viaAlias.imported, via: "call-alias", arity, hasExternalArgType, argTypes };
       }
       return null;
     }
@@ -1333,14 +1480,14 @@ async function resolveCallCalleeViaTs({ ts, program, checker, repoDir, file, lin
       if (imp.kind === "namespace" || imp.kind === "require") {
         const first = chain[0] ?? "";
         if (!first) return null;
-        return { mod: imp.mod, importKind: "namespace-member", imported: first, exportName: first, via: "call", arity, chainDepth: chain.length };
+        return { mod: imp.mod, importKind: "namespace-member", imported: first, exportName: first, via: "call", arity, chainDepth: chain.length, hasExternalArgType, argTypes };
       }
 
       // If root is a named/default import, try to use the first member as the likely module export (e.g. React.memo).
       const first = chain[0] ?? "";
       const exportName = first || (imp.kind === "default" ? "__default" : String(imp.imported ?? root.text));
       const imported = first || String(imp.imported ?? "");
-      return { mod: imp.mod, importKind: imp.kind, imported, exportName, via: "call", arity, chainDepth: chain.length };
+      return { mod: imp.mod, importKind: imp.kind, imported, exportName, via: "call", arity, chainDepth: chain.length, hasExternalArgType, argTypes };
     }
 
     return null;
@@ -1438,6 +1585,111 @@ function widenExportToAnyInModuleBlock(dtsText, mod, exportName) {
   }
   const blk = buildMinimalDeclareModule(mod, [`export const ${exportName}: any;`]);
   return blk ? `${dtsText}\n${blk}` : null;
+}
+
+// Widen specific property in function return type (Week5: TS2339 extension for call-return)
+// Example: `export function getByKeys(...): { MenuSeparator: SomeType }` 
+//       -> `export function getByKeys(...): { MenuSeparator: any }`
+// Also handles: `export const getByKeys: (...args: any[]) => { MenuSeparator: SomeType }`
+// Week6: If block doesn't exist, create a new block with the function definition
+function widenReturnTypePropertyInDeclareModuleBlock(dtsText, mod, exportName, propName) {
+  const rng = getDeclareModuleBlockRange(dtsText, mod);
+  // Week6: If block doesn't exist, create a new block with function definition
+  if (!rng) {
+    const newBlock = buildMinimalDeclareModule(mod, [
+      `export function ${exportName}(...args: any[]): { ${propName}: any };`
+    ]);
+    return newBlock ? `${dtsText}\n${newBlock}` : null;
+  }
+  const block = rng.text;
+  const exp = escapeRegex(exportName);
+  const prop = escapeRegex(propName);
+  
+  // Try 1: export function with return type annotation
+  // Match: `export function name(...): { prop: Type }` or `export function name(...): Type`
+  const funcRe = new RegExp(
+    `(^|\\n)(\\s*export\\s+function\\s+${exp}\\s*\\([^)]*\\)\\s*:\\s*)([^;]+)`,
+    "m"
+  );
+  let m = block.match(funcRe);
+  if (m) {
+    const returnType = m[3]?.trim() ?? "";
+    // Check if return type is an object type with the property
+    if (returnType.startsWith("{") && returnType.includes("}")) {
+      // Extract object body (handle nested braces)
+      let braceCount = 0;
+      let objStart = returnType.indexOf("{");
+      let objEnd = -1;
+      for (let i = objStart; i < returnType.length; i++) {
+        if (returnType[i] === "{") braceCount++;
+        if (returnType[i] === "}") {
+          braceCount--;
+          if (braceCount === 0) {
+            objEnd = i;
+            break;
+          }
+        }
+      }
+      if (objEnd > objStart) {
+        const objBody = returnType.slice(objStart + 1, objEnd);
+        if (new RegExp(`\\b${prop}\\s*[:?]`, "m").test(objBody)) {
+          // Replace property type with any
+          const propRe = new RegExp(`(\\b${prop}\\s*[:?]\\s*)([^,}]+)`, "m");
+          const newObjBody = objBody.replace(propRe, `$1any`);
+          const newReturnType = returnType.slice(0, objStart + 1) + newObjBody + returnType.slice(objEnd);
+          const newBlock = block.replace(funcRe, `$1$2${newReturnType}`);
+          const txt = String(dtsText ?? "");
+          return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+        }
+      }
+    }
+  }
+  
+  // Try 2: export const with arrow function type
+  // Match: `export const name: (...args: any[]) => { prop: Type }`
+  const constRe = new RegExp(
+    `(^|\\n)(\\s*export\\s+const\\s+${exp}\\s*:\\s*)([^;]+)`,
+    "m"
+  );
+  m = block.match(constRe);
+  if (m) {
+    const typeExpr = m[3]?.trim() ?? "";
+    // Check if it's an arrow function with object return type
+    const arrowIdx = typeExpr.indexOf("=>");
+    if (arrowIdx > 0) {
+      const afterArrow = typeExpr.slice(arrowIdx + 2).trim();
+      if (afterArrow.startsWith("{") && afterArrow.includes("}")) {
+        // Extract object body (handle nested braces)
+        let braceCount = 0;
+        let objStart = afterArrow.indexOf("{");
+        let objEnd = -1;
+        for (let i = objStart; i < afterArrow.length; i++) {
+          if (afterArrow[i] === "{") braceCount++;
+          if (afterArrow[i] === "}") {
+            braceCount--;
+            if (braceCount === 0) {
+              objEnd = i;
+              break;
+            }
+          }
+        }
+        if (objEnd > objStart) {
+          const objBody = afterArrow.slice(objStart + 1, objEnd);
+          if (new RegExp(`\\b${prop}\\s*[:?]`, "m").test(objBody)) {
+            // Replace property type with any
+            const propRe = new RegExp(`(\\b${prop}\\s*[:?]\\s*)([^,}]+)`, "m");
+            const newObjBody = objBody.replace(propRe, `$1any`);
+            const newTypeExpr = typeExpr.slice(0, arrowIdx + 2 + objStart + 1) + newObjBody + typeExpr.slice(arrowIdx + 2 + objEnd);
+            const newBlock = block.replace(constRe, `$1$2${newTypeExpr}`);
+            const txt = String(dtsText ?? "");
+            return txt.slice(0, rng.start) + newBlock + txt.slice(rng.end);
+          }
+        }
+      }
+    }
+  }
+  
+  return null;
 }
 
 function extractImportTypeRefs(msg) {
@@ -1791,6 +2043,9 @@ async function processOne(url, opts, outHandle) {
               earlyStopTieStreak: Number(opts.earlyStopTieStreak ?? 0) || 0,
               stoppedReason: null,
               tiesInARow: 0,
+              sampleSize: Number(opts.repairSafeguardSample ?? 0) || 0,
+              worseThreshold: Number(opts.repairSafeguardWorseThreshold ?? 0.5) || 0.5,
+              rejectedBySample: 0,
             },
           }
         : null,
@@ -2123,6 +2378,48 @@ async function processOne(url, opts, outHandle) {
       valid_injection: injectionValid,
     };
     return { trial, jcounts, jout };
+  }
+
+  // Week6: Evaluate repair candidate with sample (pre-evaluation to reject worse candidates)
+  // Since we have one repo = one consumer, we evaluate the candidate once and compare with baseline/top1
+  // Returns: { shouldReject, reason, worseRate, trialResult } where trialResult can be reused
+  // Week6改善: Only reject if significantly worse than baseline (not just slightly worse)
+  async function evaluateRepairCandidateWithSample(candidate, baselinePhase3, top1Phase3, sampleSize, worseThreshold) {
+    if (Number(sampleSize) <= 0 || !Number.isFinite(worseThreshold)) {
+      return { shouldReject: false, reason: null, worseRate: 0, trialResult: null };
+    }
+    
+    // Evaluate the candidate once (since we have one repo)
+    const res = await runTrial(candidate);
+    const candidatePhase3 = Number(res.trial?.injected_phase3 ?? NaN);
+    
+    // Week6改善: Only reject if candidate is worse than baseline AND not better than top1
+    // This preserves candidates that improve vs top1, even if they're slightly worse than baseline
+    if (Number.isFinite(candidatePhase3) && Number.isFinite(baselinePhase3) && Number.isFinite(top1Phase3)) {
+      const worseThanBaseline = candidatePhase3 > baselinePhase3;
+      const betterThanTop1 = candidatePhase3 < top1Phase3;
+      
+      // Reject only if: worse than baseline AND not better than top1
+      // This means we keep candidates that improve vs top1, even if they're worse than baseline
+      if (worseThanBaseline && !betterThanTop1) {
+        const worseRate = 1.0;
+        if (worseRate >= worseThreshold) {
+          return { shouldReject: true, reason: "worse_than_baseline_and_not_better_than_top1", worseRate, trialResult: null };
+        }
+      }
+    } else if (Number.isFinite(candidatePhase3) && Number.isFinite(baselinePhase3)) {
+      // Fallback: if top1Phase3 is not available, only check baseline
+      const worseThanBaseline = candidatePhase3 > baselinePhase3;
+      if (worseThanBaseline) {
+        const worseRate = 1.0;
+        if (worseRate >= worseThreshold) {
+          return { shouldReject: true, reason: "worse_than_baseline", worseRate, trialResult: null };
+        }
+      }
+    }
+    
+    // Return trial result for reuse (not rejected)
+    return { shouldReject: false, reason: null, worseRate: 0, trialResult: res };
   }
 
   // 3) Build trial candidate list (Phase1)
@@ -2463,6 +2760,9 @@ async function processOne(url, opts, outHandle) {
   considerCandidate(top1Res);
   const top1Phase3 = Number(top1Res.trial?.injected_phase3 ?? NaN);
   let tieStreak = 0;
+  
+  // Week6: Cache for pre-evaluated trial results (to avoid re-running)
+  const preEvaluatedTrials = new Map();
 
   if (opts.repairFromTop1 && Number(opts.repairMax) > 0 && opts.trialMax > 1) {
     // Best-effort tsserver-like resolution (uses repo's own typescript if present)
@@ -2500,16 +2800,57 @@ async function processOne(url, opts, outHandle) {
             let dtsText = null;
             let op = "";
             if (rr.via === "call-return") {
-              // obj is local var; widen the imported callee return/source symbol.
-              dtsText = widenExportToAnyInModuleBlock(baseDts, mod, rr.imported);
-              op = "widen-callee-to-any";
+              // obj is local var; try partial widen first, then full widen (Week5: TS2339 extension)
+              // Try to widen only the specific property in return type
+              const rng = getDeclareModuleBlockRange(baseDts, mod);
+              const hasBlock = Boolean(rng);
+              if (hasBlock) {
+                // Block exists: try to modify return type property
+                dtsText = widenReturnTypePropertyInDeclareModuleBlock(baseDts, mod, rr.imported, rr.prop);
+                op = "widen-return-prop";
+              }
+              // Fallback to full callee widen if partial widen fails or block doesn't exist
+              if (!dtsText) {
+                // Debug: log why partial widen failed (only once)
+                if (result.phase3.repair && !result.phase3.repair.widenReturnPropDebug) {
+                  const block = rng?.text ?? "";
+                  const exp = escapeRegex(rr.imported);
+                  const hasFunc = hasBlock && new RegExp(`export\\s+function\\s+${exp}`, "m").test(block);
+                  const hasConst = hasBlock && new RegExp(`export\\s+const\\s+${exp}`, "m").test(block);
+                  result.phase3.repair.widenReturnPropDebug = {
+                    mod,
+                    imported: rr.imported,
+                    prop: rr.prop,
+                    hasBlock,
+                    hasFunc,
+                    hasConst,
+                    blockSnippet: block.slice(0, 300),
+                  };
+                }
+                dtsText = widenExportToAnyInModuleBlock(baseDts, mod, rr.imported);
+                op = "widen-callee-to-any";
+              }
             } else if (rr.importKind === "namespace" || rr.importKind === "require" || rr.importKind === "namespace-member") {
               dtsText = addExportConstToDeclareModuleBlock(baseDts, mod, rr.prop) ?? (buildMinimalDeclareModule(mod, [`export const ${rr.prop}: any;`]) ? `${baseDts}\n${buildMinimalDeclareModule(mod, [`export const ${rr.prop}: any;`])}` : null);
               op = "add-export-const";
             } else if (rr.importKind === "named" || rr.importKind === "default") {
               const exportName = rr.importKind === "default" ? "__default" : rr.imported;
-              dtsText = widenExportToAnyInModuleBlock(baseDts, mod, exportName);
-              op = "widen-imported-to-any";
+              // Week5: Try type-add-prop and ns-member-add before full widen
+              dtsText = addPropertyToExportedInterfaceInDeclareModuleBlock(baseDts, mod, exportName, rr.prop);
+              op = "iface-add-prop";
+              if (!dtsText) {
+                dtsText = addPropertyToExportedTypeInDeclareModuleBlock(baseDts, mod, exportName, rr.prop);
+                op = "type-add-prop";
+              }
+              if (!dtsText) {
+                dtsText = addNamespaceMemberToDeclareModuleBlock(baseDts, mod, exportName, rr.prop);
+                op = "ns-member-add";
+              }
+              // Fallback to full widen
+              if (!dtsText) {
+                dtsText = widenExportToAnyInModuleBlock(baseDts, mod, exportName);
+                op = "widen-imported-to-any";
+              }
             }
             if (dtsText) {
               const key =
@@ -2559,21 +2900,40 @@ async function processOne(url, opts, outHandle) {
             op = "append-module-export-const";
           }
         } else if (im.kind === "named") {
-          // Named import Foo.Prop => make Foo permissive (export-to-any) or try interface prop add.
+          // Named import Foo.Prop => try multiple strategies (Week5: TS2339 extension)
+          // Priority: 1) interface prop add, 2) type prop add, 3) namespace member add, 4) export-to-any, 5) type-to-any
           if (hasBlock) {
-            const reps = new Map();
-            reps.set(im.imported, { kind: "const" });
-            dtsText = replaceExportsInDeclareModuleBlock(baseDts, mod, reps);
-            op = "export-to-any";
-          } else {
-            const blk = buildMinimalDeclareModule(mod, [`export const ${im.imported}: any;`]);
-            dtsText = blk ? `${baseDts}\n${blk}` : null;
-            op = "append-module-export-const";
-          }
-          if (!dtsText) {
+            // Try interface property addition first
             dtsText = addPropertyToExportedInterfaceInDeclareModuleBlock(baseDts, mod, im.imported, prop);
             op = "iface-add-prop";
+            // If interface doesn't exist, try type alias property addition
+            if (!dtsText) {
+              dtsText = addPropertyToExportedTypeInDeclareModuleBlock(baseDts, mod, im.imported, prop);
+              op = "type-add-prop";
+            }
+            // If type doesn't exist, try namespace member addition
+            if (!dtsText) {
+              dtsText = addNamespaceMemberToDeclareModuleBlock(baseDts, mod, im.imported, prop);
+              op = "ns-member-add";
+            }
+            // Fallback to export-to-any
+            if (!dtsText) {
+              const reps = new Map();
+              reps.set(im.imported, { kind: "const" });
+              dtsText = replaceExportsInDeclareModuleBlock(baseDts, mod, reps);
+              op = "export-to-any";
+            }
+          } else {
+            // No block exists: try namespace member (creates namespace) or append export
+            dtsText = addNamespaceMemberToDeclareModuleBlock(baseDts, mod, im.imported, prop);
+            op = "ns-member-add";
+            if (!dtsText) {
+              const blk = buildMinimalDeclareModule(mod, [`export const ${im.imported}: any;`]);
+              dtsText = blk ? `${baseDts}\n${blk}` : null;
+              op = "append-module-export-const";
+            }
           }
+          // Final fallback: type-to-any
           if (!dtsText) {
             dtsText = replaceTypeDeclToAnyInDeclareModuleBlock(baseDts, mod, im.imported);
             op = "type-to-any";
@@ -2596,7 +2956,8 @@ async function processOne(url, opts, outHandle) {
       // TS2345/TS2322/TS2769/TS2554: prefer TS Program-based call-callee resolution.
       if ((["TS2345", "TS2322", "TS2769", "TS2554"].includes(String(d.code))) && d.file && d.line && tsProg?.program && tsProg?.checker) {
         if (result.phase3.repair) result.phase3.repair.tsCallAttempted++;
-        let rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
+        // Week7: Pass opts for strict external check
+        let rr = await resolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1, opts: { ...opts, strictExternalCheck: true } });
         // If debugging enabled, store a few samples of why resolution fails or what it resolves to.
         if (result.phase3.repair && Number(result.phase3.repair.callDebugMax) > 0 && (result.phase3.repair.callDebugSamples?.length ?? 0) < Number(result.phase3.repair.callDebugMax)) {
           const dbg = await debugResolveCallCalleeViaTs({ ts, program: tsProg.program, checker: tsProg.checker, repoDir, file: d.file, line: d.line, col: d.col ?? 1 });
@@ -2613,7 +2974,16 @@ async function processOne(url, opts, outHandle) {
           (opts.onlyExternal
             ? (opts.externalFilter === "deps" ? isExternalByDeps(rr.mod, opts) : isExternalModuleSpecifier(rr.mod, opts))
             : true);
-        if (externalOk) {
+        // Week7: Stricter external check - require external argument types for TS2345/TS2322
+        // Note: hasExternalArgType is only set when strictExternalCheck is enabled
+        // If not enabled or undefined, fall back to original logic
+        const strictExternalOk = externalOk && (
+          String(d.code) === "TS2339" || // TS2339 doesn't need argument type check
+          !opts.strictExternalCheck || // If strict check disabled, use original logic
+          rr.hasExternalArgType === undefined || // If not checked, allow (backward compatibility)
+          rr.hasExternalArgType === true // Week7: Only repair if argument types are from external modules
+        );
+        if (strictExternalOk) {
           if (result.phase3.repair) result.phase3.repair.tsCallExternalOk++;
           if (result.phase3.repair) result.phase3.repair.tsCallResolvedCount++;
           const mod = rr.mod;
@@ -2693,14 +3063,43 @@ async function processOne(url, opts, outHandle) {
         if (result.phase3.repair) result.phase3.repair.candidatesAdded++;
       }
     }
+    
+    // Week6: Pre-evaluate repair candidates to reject worse ones before full evaluation
+    const sampleSize = Number(opts.repairSafeguardSample ?? 0) || 0;
+    const worseThreshold = Number(opts.repairSafeguardWorseThreshold ?? 0.5) || 0.5;
+    const filteredRepairs = [];
+    
+    if (sampleSize > 0 && repairs.length > 0) {
+      for (const repair of repairs) {
+        const evalResult = await evaluateRepairCandidateWithSample(repair, baselinePhase3, top1Phase3, sampleSize, worseThreshold);
+        if (evalResult.shouldReject) {
+          if (result.phase3.repair?.safeguard) result.phase3.repair.safeguard.rejectedBySample++;
+          // Skip this repair candidate
+          continue;
+        }
+        filteredRepairs.push(repair);
+        // Cache trial result if available (to avoid re-running)
+        if (evalResult.trialResult) {
+          preEvaluatedTrials.set(repair.candidateId, evalResult.trialResult);
+        }
+      }
+    } else {
+      // No pre-evaluation: use all repairs
+      filteredRepairs.push(...repairs);
+    }
+    
     // Put repairs early so trial budget is spent on targeted candidates.
-    candidates = [top1Cand, ...repairs, ...candidates.filter((c) => c.candidateId !== top1Cand.candidateId)];
+    candidates = [top1Cand, ...filteredRepairs, ...candidates.filter((c) => c.candidateId !== top1Cand.candidateId)];
   } else {
     candidates = [top1Cand, ...candidates.filter((c) => c.candidateId !== top1Cand.candidateId)];
   }
 
   for (const c of candidates.slice(1, opts.trialMax)) {
-    const res = await runTrial(c);
+    // Week6: Reuse pre-evaluated trial result if available
+    let res = preEvaluatedTrials.get(c.candidateId);
+    if (!res) {
+      res = await runTrial(c);
+    }
     result.trials.push(res.trial);
     result.phase3.trial.trialsRun++;
     considerCandidate(res);
