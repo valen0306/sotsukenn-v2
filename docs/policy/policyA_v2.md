@@ -817,12 +817,15 @@ smoke（max=10）例: `evaluation/real/out/smoke-A1-pererror-sweep-repairfromtop
 #### 10.2.1 React層の定義（推奨）
 
 **必須条件:**
-1. **Phase3 coreでTS2339を含む**（対象エラーを固定）
-2. **LocalizerのTop3モジュールに `react` が入る**（"react依存"をログで定義）
+1. **LocalizerのTop3モジュールに `react` が入る**（"react依存"をログで定義）
    - Localizer自体が「エラー位置から依存モジュールを特定して範囲を絞る」設計
    - この条件により、恣意性を排除
+   - **Week8改善**: React由来のエラーが多いという結果から、TS2339=0でも含める（より包括的なケーススタディ）
 
 **推奨条件（可能なら追加）:**
+2. **Phase3 coreでTS2339を含む**（対象エラーを固定）
+   - ただし、TS2339=0でもReact依存のリポジトリは含める（他のエラー型も分析対象）
+
 3. **TS2339の対象シンボルが `React.Component` / `React.memo` / `React.createContext` 等**（勝ち筋に寄せる）
    - 実際に改善例がそれらで出ているため
 
